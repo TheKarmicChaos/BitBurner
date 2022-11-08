@@ -103,6 +103,7 @@ let updArg3;
 
 // Settings ----------------------------------------------------------------------------
 const showHiddenRows = false; // Debug tool to unhide all hidden text rows; only applies to rows that are currently being updated, or to all rows when resetting hud via "kill all running scripts"
+const lineColSpan = 2; // Number of columns your separator lines should occupy.
 let ToolTipStyleParams =
 `font-family: "Lucida Console", "Lucida Sans Unicode", "Fira Mono", Consolas, "Courier New", Courier, monospace, "Times New Roman";
 padding: 4px 8px;
@@ -360,23 +361,25 @@ function AddDefault(hookName, nextRowHook = "extra") {
 	}
 };
 
-/** Inserts a decorative separator line at the bottom of the hud.
+/** Updates or inserts a decorative separator line at the bottom of the hud.
  * @param {number} lineNum - Unique number used to construct the hook for this line.
  * - Must be distinct from all other line numbers.
  * */
 function AddLine(lineNum) {
-	// check if this hook already exists. If so, return that.
 	let rowElement = d.getElementById(`ovv-row-line${lineNum}`);
-	if (rowElement !== null) return rowElement;
+	let desiredHTML = `<th class="jss12 MuiTableCell-root MuiTableCell-body MuiTableCell-sizeMedium css-hadb7u" scope="row" colspan="${lineColSpan}"></th>`
+	// If this element already exists, update it if needed, then return it.
+	if (rowElement !== null) { 
+		if (rowElement.innerHTML != desiredHTML) rowElement.innerHTML = desiredHTML;
+		return rowElement;
+	}
 	// Get an existing display element from HUD.
 	let existingRow = d.getElementById(`ovv-row-extra`);
 	// Make a clone of it for our new hud element
 	let newHudRow = existingRow.cloneNode(true);
-	// Remove all childNodes
-	newHudRow.querySelectorAll("th").forEach((el) => el.parentElement.removeChild(el));
-	// Insert a new childNode to create the line
-	newHudRow.innerHTML = `<th class="jss12 MuiTableCell-root MuiTableCell-body MuiTableCell-sizeMedium css-hadb7u" scope="row" colspan="${lineColSpan}"></th>`
-	// give hook id to our new row-level element
+	// Replace existing childNodes with a new childNode to create the line
+	newHudRow.innerHTML = desiredHTML
+	// Give hook id to our new row-level element
 	newHudRow.id = `ovv-row-line${lineNum}`
 	// Insert our element at the bottom of the hud
 	existingRow.parentElement.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
