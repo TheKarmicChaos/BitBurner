@@ -524,6 +524,8 @@ function InitHud() {
 	let nodeToDel = d.getElementById("overview-hack-hook").parentElement.parentElement;
 	d.getElementById("overview-hack-hook").parentElement.parentElement.parentElement.removeChild(nodeToDel);
 	d.getElementById("ovv-row-hack").nextSibling.id = `ovv-row-hack-progr`;
+	// Remove all separator lines from the default hud.
+	ovvTableCont.innerHTML = ovvTableCont.innerHTML.replaceAll('jss12', 'jss11');
 }
 
 /** Creates or updates a custom css style used for our custom-made tooltips */
