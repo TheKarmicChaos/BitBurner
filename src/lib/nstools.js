@@ -290,92 +290,21 @@ export async function GetJobGains(ns, company, stat, sleeveid = -1) {
 	return gainsPerSec;
 };
 
-/** Returns the average gains per second for a specified stat for your job at a specified company.
+/** WIP :: Retrieves a global variable from global-vars.txt
  * @param {import("../..").NS} ns
- * @param {string} company - Name of company (must have a job here).
- * @param {string} stat - The name of the stat of which to calculate the avg gains per second.
- * - Possible values: "money", "hacking_exp", "strength_exp", "defense_exp", "dexterity_exp", "agility_exp",
- * "charisma_exp", "intelligence_exp"
- * - "rep" not yet supported.
- * @param {number} sleeveid - The numerical ID of the sleeve working this job.
- * - Leave as default value if the player is the one working.
+ * @param {string} key - Key name of the global var to retrieve.
  * */
-export async function WriteGlobalVar(ns, key, value) {
-	checkNsInstance(ns, 'GetJobGains');
-	const player = await RunCom(ns, "ns.getPlayer()");
-	let skills; let mults;
-	if (sleeveid == -1) {skills = player.skills; mults = player.mults }
-	else {
-		skills = await RunCom(ns, "ns.sleeve.getSleeveStats()", [sleeveid]);
-		let sleeve = await RunCom(ns, "ns.sleeve.getInformation()", [sleeveid]);
-		mults = sleeve.mult;
-	}
+export async function getGlobalVar(ns, key) {
+	checkNsInstance(ns, 'GetGlobalVar');
 
-	const companyPositionName = player.jobs[company];
-	const companyPositionData = tb.GetBaseJobData(companyPositionName);
-	const salaryMult = 1; const expMult = 1;
+};
 
-	// If player has SF-11, calculate salary multiplier from favor
-	let favor = await RunCom(ns, "ns.singularity.getCompanyFavor()", [company])
-	let favorMult = 1 + favor / 100;
-	if (isNaN(favorMult)) {
-	  favorMult = 1;
-	}
-	let hasSF11 = false
-	for (let sf in PeekPort(ns, 1)["sourceFiles"]) { if (sf["n"] == 11 && sf["lvl"] > 0) hasSF11 = true; }
-	let bn11Mult = 1;
-	if (hasSF11) {
-	  bn11Mult = favorMult;
-	}
-
-	/*
-	let jobPerformance = companyPosition.calculateJobPerformance(
-	  skills.hacking,
-	  skills.strength,
-	  skills.defense,
-	  skills.dexterity,
-	  skills.agility,
-	  skills.charisma,
-	);
-	jobPerformance += skills.intelligence / 975;
-	*/
-	let jobPerformance = 0;
-
-	let gainsPerSec = 0;
-	switch (stat) {
-		case "money":
-			gainsPerSec = companyPositionData.baseSalary * salaryMult * mults.work_money * PeekPort(ns, 1)["mults"].CompanyWorkMoney * bn11Mult;
-			break;
-		case "rep":
-			gainsPerSec = jobPerformance * mults.company_rep * favorMult;
-			break;
-		case "hacking_exp":
-			let hackExpGain = companyPositionData.hackingExpGain || 0
-			gainsPerSec = hackExpGain * expMult * mults.hacking_exp * PeekPort(ns, 1)["mults"].CompanyWorkExpGain;
-			break;
-		case "strength_exp":
-			let strExpGain = companyPositionData.strengthExpGain || 0
-			gainsPerSec = strExpGain * expMult * mults.strength_exp * PeekPort(ns, 1)["mults"].CompanyWorkExpGain;
-			break;
-		case "defense_exp":
-			let defExpGain = companyPositionData.defenseExpGain || 0
-			gainsPerSec = defExpGain * expMult * mults.defense_exp * PeekPort(ns, 1)["mults"].CompanyWorkExpGain;
-			break;
-		case "dexterity_exp":
-			let dexExpGain = companyPositionData.dexterityExpGain || 0
-			gainsPerSec = dexExpGain * expMult * mults.dexterity_exp * PeekPort(ns, 1)["mults"].CompanyWorkExpGain;
-			break;
-		case "agility_exp":
-			let agiExpGain = companyPositionData.agilityExpGain || 0
-			gainsPerSec = agiExpGain * expMult * mults.agility_exp * PeekPort(ns, 1)["mults"].CompanyWorkExpGain;
-			break;
-		case "charisma_exp":
-			let chaExpGain = companyPositionData.charismaExpGain || 0
-			gainsPerSec = chaExpGain * expMult * mults.charisma_exp * PeekPort(ns, 1)["mults"].CompanyWorkExpGain;
-			break;
-		case "intelligence_exp":
-			gainsPerSec = 0;
-			break;
-	}
-	return gainsPerSec;
+/** WIP :: Updates/Creates a global variable and writes it to global-vars.txt
+ * @param {import("../..").NS} ns
+ * @param {string} key - Key name of the global var to update/create.
+ * @param {any} value - Value to be stored with this key.
+ * */
+ export async function UpdGlobalVar(ns, key, value) {
+	checkNsInstance(ns, 'UpdGlobalVar');
+	
 };
