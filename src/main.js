@@ -221,15 +221,15 @@ export async function main(ns) {
 				if ("crime_money" in strats || 'gang' in strats || "work_money" in strats) { BankStrat('op_task-manager.js'); };
 				BankStrat('op_bupgr.js');
 				if ('hackn' in strats) { BankStrat('op_bhnodes.js') };
-				if ("stocks" in strats && player.money >= 2e6) { BankStrat('lp_stockmaster.js'); };
-				if (bndata.PurchasedServerLimit > 0) { BankStrat('op_bservs.js') };
-				BankStrat('lp_svhack.js');
-				BankStrat('mp_nuke-backdoor.js');
+				if ('gang' in strats) { BankStrat('lp_gang.js') };
 				BankStrat('op_sleeve.js');
-				if ('cct' in strats) { BankStrat('cct_solve.js') }
+				if ("stocks" in strats && player.money >= 2e6) { BankStrat('lp_stockmaster.js'); };
 				BankStrat('op_joinfacs.js');
 				BankStrat('op_graft.js');
-				if ('gang' in strats) { BankStrat('lp_gang.js') };
+				if ('cct' in strats) { BankStrat('cct_solve.js') };
+				BankStrat('lp_svhack.js');
+				BankStrat('mp_nuke-backdoor.js');
+				if (bndata.PurchasedServerLimit > 0) { BankStrat('op_bservs.js') };
 				if ('corp' in strats) { BankStrat('mp_corp.js') };
 				if ('hack_money' in strats) { BankStrat('lp_loopmaster.js') };
 
