@@ -12,7 +12,7 @@ import { getNsDataThroughFile, runCommand, checkNsInstance } from "/lib/helpers"
  * - Determines whether the result should include hacknet node servers.
  * */
 export function ScanAll(ns, includePservs = false, includeHnodes = false) {
-	checkNsInstance(ns, 'ScanAll_NS');
+	checkNsInstance(ns, 'ScanAll');
 	const pservs = [];
 	const hservs = [];
 	var servQueue = new Queue();
@@ -53,7 +53,7 @@ export function ScanAll(ns, includePservs = false, includeHnodes = false) {
  * - ALWAYS set to false if running a command that has no return value.
  * */
 export async function RunCom(ns, command, argList, shouldreturn = true) {
-	checkNsInstance(ns, 'Comm_NS');
+	checkNsInstance(ns, 'RunCom');
 	let basecommand = command.split("(")[0]
 
 	let filePath = null //'/MiscTemp/' + basecommand.slice(3) + ".txt"
@@ -95,7 +95,7 @@ export async function RunCom(ns, command, argList, shouldreturn = true) {
  * - "sumdict": Use on a dict port to return the sum of all values in the dict.
  * */
 export function PeekPort(ns, port, extraFunc = "none") {
-	checkNsInstance(ns, 'PeekPort_NS');
+	checkNsInstance(ns, 'PeekPort');
 	// get total income
 	let portData = ns.readPort(port);
 	ns.getPortHandle(port).write(portData);
@@ -128,16 +128,16 @@ export function PeekPort(ns, port, extraFunc = "none") {
  * - Example: ["key1", 10, "key2", true, "key3", "redpill"]
  * */
 export function UpdPort(ns, port, dataStruct = "array", args = []) {
-	checkNsInstance(ns, 'UpdPort_NS');
+	checkNsInstance(ns, 'UpdPort');
 	let portData = ns.readPort(port);
 	switch (dataStruct) {
 		case "arr" || "array":
 			try { portData = portData.concat(args); }
-			catch (err) { ns.toast("ERROR: UpdPort_NS was passed invalid args array for the specified dataStruct.") };
+			catch (err) { ns.toast("ERROR: UpdPort was passed invalid args array for the specified dataStruct.") };
 			break;
 		case "dict" || "dictionary":
 			try { while (args.length > 0) { portData[args.shift()] = args.shift(); }; }
-			catch (err) { ns.toast("ERROR: UpdPort_NS was passed invalid args array for the specified dataStruct.") };
+			catch (err) { ns.toast("ERROR: UpdPort was passed invalid args array for the specified dataStruct.") };
 			break;
 	}
 	ns.getPortHandle(port).write(portData);
@@ -154,7 +154,7 @@ export function UpdPort(ns, port, dataStruct = "array", args = []) {
  * - If using this function for sleeves, you must calculate this chance yourself and pass it into the function.
  * */
 export async function GetCrimeGains(ns, crime, stat, crimeChance = -1) {
-	checkNsInstance(ns, 'GetCrimeGains_NS');
+	checkNsInstance(ns, 'GetCrimeGains');
 	if (crimeChance == -1) crimeChance = await RunCom(ns, 'ns.singularity.getCrimeChance()', [crime]);
 	const crimeStats = await RunCom(ns, 'ns.singularity.getCrimeStats()', [crime])
 	const time = Math.ceil(crimeStats.time / 1000);
@@ -175,7 +175,7 @@ export async function GetCrimeGains(ns, crime, stat, crimeChance = -1) {
  * - Possible values: "MUG", "HOMICIDE"
  * */
 export async function GetSleeveCrimeChance(ns, id, crime) {
-	checkNsInstance(ns, 'GetSleeveCrimeChance_NS');
+	checkNsInstance(ns, 'GetSleeveCrimeChance');
 	const slstats = await RunCom(ns, 'ns.sleeve.getSleeveStats()', [id])
 	let slchance = 0;
 	switch (crime) {
@@ -211,7 +211,7 @@ export async function GetSleeveCrimeChance(ns, id, crime) {
  * - Leave as default value if the player is the one working.
  * */
 export async function GetJobGains(ns, company, stat, sleeveid = -1) {
-	checkNsInstance(ns, 'GetJobGains_NS');
+	checkNsInstance(ns, 'GetJobGains');
 	const player = await RunCom(ns, "ns.getPlayer()");
 	let skills; let mults;
 	if (sleeveid == -1) {skills = player.skills; mults = player.mults }
@@ -301,7 +301,7 @@ export async function GetJobGains(ns, company, stat, sleeveid = -1) {
  * - Leave as default value if the player is the one working.
  * */
 export async function WriteGlobalVar(ns, key, value) {
-	checkNsInstance(ns, 'GetJobGains_NS');
+	checkNsInstance(ns, 'GetJobGains');
 	const player = await RunCom(ns, "ns.getPlayer()");
 	let skills; let mults;
 	if (sleeveid == -1) {skills = player.skills; mults = player.mults }
