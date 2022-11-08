@@ -24,7 +24,7 @@ export async function main(ns) {
 			if (nextHTML[0] == '/') {
 				ns.print("   ".repeat(curDepth), "<" + nextHTML)
 				curDepth -= 1;
-			} else if (nextHTML[nextHTML.length - 1] == '/') {
+			} else if (nextHTML[nextHTML.length - 1] == '/' || nextHTML.substring(0,2) == "br") {
 				curDepth += 1;
 				ns.print("   ".repeat(curDepth), "<" + nextHTML)
 				curDepth -= 1;
