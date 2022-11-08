@@ -66,6 +66,7 @@ itself. For text rows, you will need to add and update tooltips manually.
 -------------------------------------------
 
 		TODO LIST:
+	- Overhaul all "Add" functions to try to update the element if they already exist (allowing for changes to be made without killing all scripts)
 	- Construct custom hud text rows from scratch instead of copying existing ones, so they can be further customized.
 	- Use the above change to implement support for all colors in the player's "theme".
 	- Ingame progress bar tooltips still look a bit different from the ones this script generates.
