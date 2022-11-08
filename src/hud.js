@@ -531,6 +531,8 @@ function InitHud() {
 	d.getElementById("ovv-row-hack").nextSibling.id = `ovv-row-hack-progr`;
 	// Remove all separator lines from the default hud.
 	ovvTableCont.innerHTML = ovvTableCont.innerHTML.replaceAll('jss12', 'jss11');
+	// Re-insert the separator line for ovv-row-extra
+	d.getElementById("ovv-row-extra").innerHTML = d.getElementById("ovv-row-extra").innerHTML.replaceAll('jss11', 'jss12');
 }
 
 /** Creates or updates a custom css style used for our custom-made tooltips */
