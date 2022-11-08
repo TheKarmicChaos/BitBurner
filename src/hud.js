@@ -102,7 +102,7 @@ let updArg3;
 
 
 // Settings ----------------------------------------------------------------------------
-const showHiddenRows = false; // Debug tool; only applies to rows that are currently being updated or when resetting hud via "kill all running scripts"
+const showHiddenRows = false; // Debug tool to unhide all hidden text rows; only applies to rows that are currently being updated, or to all rows when resetting hud via "kill all running scripts"
 let ToolTipStyleParams =
 `font-family: "Lucida Console", "Lucida Sans Unicode", "Fira Mono", Consolas, "Courier New", Courier, monospace, "Times New Roman";
 padding: 4px 8px;
@@ -207,20 +207,24 @@ export async function main(ns) {
 		// Kills
 		let kills = ns.getPlayer().numPeopleKilled;
 		UpdateTextRow("kill", "Kills", kills);
+
 		// Kill progress (toward the 30 required to access all factions)
 		let killProgr = kills / 30;
 		if (killProgr < 1) {
 			ShowProgrBar("kill");
 			UpdateProgrBar("kill", kills, 30);
 		} else { HideProgrBar("kill") };
+
 		// Karma
 		var karma = ns.heart.break();
 		UpdateTextRow("karma", "Karma", StandardNotation(karma, 3));
+
 		// Karma progress (toward unlocking gang)
 		if ((Math.abs(karma) / 54000) < 1 && nstb.PeekPort(ns, 7)["wantGang"]) {
 			ShowProgrBar("karma");
 			UpdateProgrBar("karma", Math.abs(karma), 54000);
 		} else { HideProgrBar("karma") };
+
 		// Income
 		let totalCashPerSec = nstb.PeekPort(ns, 2, "sumdict")
 		UpdateTextRow("income", "$/sec", `$${StandardNotation(totalCashPerSec, 3)}`);
@@ -383,6 +387,8 @@ function AddLine(lineNum) {
  * @param {string} elhook - Name of the hook to add the tooltip to
  * @param {string} content - Text content of the tooltip.
  * @param {any} params - (optional) Dictionary of any additional params you want to use to further customizee this tooltip.
+ * - Supported params:
+ * - textAlign
  * */
 function AddTooltip(elhook, content, params = {}) {
 	params.tooltiptext = content
