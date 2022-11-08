@@ -621,7 +621,7 @@ function setElementTooltip(el, params) {
  * @param {number} num - Number to convert to standard notation
  * @param {number} decimalplaces - Number of decimal places to round to.
  * */
-export function StandardNotation(num, decimalplaces = 1) {
+function StandardNotation(num, decimalplaces = 1) {
 	let formattedNum = formatNumberShort(num, 6, decimalplaces);
 	
 	if (String(num).length <= formattedNum.length && (num % 1) == 0) {
@@ -634,7 +634,7 @@ export function StandardNotation(num, decimalplaces = 1) {
  * @param {number=} maxSignificantFigures - (default: 6) The maximum significant figures you wish to see (e.g. 123, 12.3 and 1.23 all have 3 significant figures)
  * @param {number=} maxDecimalPlaces - (default: 3) The maximum decimal places you wish to see, regardless of significant figures. (e.g. 12.3, 1.2, 0.1 all have 1 decimal)
  **/
-export function formatNumberShort(num, maxSignificantFigures = 6, maxDecimalPlaces = 3) {
+function formatNumberShort(num, maxSignificantFigures = 6, maxDecimalPlaces = 3) {
     if (Math.abs(num) > 10 ** (3 * symbols.length)) // If we've exceeded our max symbol, switch to exponential notation
         return num.toExponential(Math.min(maxDecimalPlaces, maxSignificantFigures - 1));
     for (var i = 0, sign = Math.sign(num), num = Math.abs(num); num >= 1000 && i < symbols.length; i++) num /= 1000;
