@@ -210,8 +210,7 @@ export async function main(ns) {
 		UpdateTextRow("kill", "Kills", kills);
 
 		// Kill progress (toward the 30 required to access all factions)
-		let killProgr = kills / 30;
-		if (killProgr < 1) {
+		if ((kills / 30) < 1) {
 			ShowProgrBar("kill");
 			UpdateProgrBar("kill", kills, 30);
 		} else { HideProgrBar("kill") };
