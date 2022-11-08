@@ -406,12 +406,10 @@ function AddTooltip(elhook, content, params = {}) {
  * */
 function UpdateTextRow(hookToUpdate, textL, textR, text3 = null) {
 	// Determine the text we want in each column
-	if (textL == null) {
-		if (showHiddenRows) textL = hookToUpdate;
-		else textL = "";
-	}
-	if (textL == null) { textR = "" };
-	if (text3 == null) { text3 = "" };
+	if (showHiddenRows) textL = hookToUpdate;
+	else if (textL == null) textL = "";
+	if (textL == null) textR = "";
+	if (text3 == null) text3 = "";
 	// Update the relevant elements' innerText
 	d.getElementById(`ovv-${hookToUpdate}-0`).innerText = textL;
 	d.getElementById(`ovv-${hookToUpdate}-1`).innerText = textR;
