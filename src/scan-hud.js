@@ -1,14 +1,14 @@
 /** @param {import("..").NS} ns */
 export async function main(ns) {
 	ns.tail('scan-hud.js'); ns.disableLog("ALL"); ns.clearLog();
-	await ns.sleep(1000)
+	await ns.sleep(10);
 
-	const d = eval("document");
+	const d = eval("document")
 	const ovv = d.getElementsByClassName('MuiPaper-root')[0];
 	const ovvHeader = ovv.childNodes[0].firstChild.firstChild.firstChild;
 	const ovvTableCont = ovv.childNodes[1].firstChild.firstChild.firstChild;
 
-	
+
 	PrintHTML(ovvTableCont);
 
 
@@ -31,7 +31,7 @@ export async function main(ns) {
 			} else {
 				curDepth += 1;
 				ns.print("   ".repeat(curDepth), "<" + nextHTML)
-				if (nextNonHTML != "") ns.print("INFO", "   ".repeat(curDepth + 1), nextNonHTML);
+				if (nextNonHTML != "") ns.print("INFO ", "   ".repeat(curDepth - 1), nextNonHTML);
 			}
 		}
 	}
@@ -46,13 +46,13 @@ export async function main(ns) {
 		}
 	}
 	// Depricated by PrintHTML
-    function PrintChildren(node, myAsciiStr, childAsciiStr, depth, maxdepth) {
-        ns.print(`${myAsciiStr}   ${node.nodeName} ${node.id} "${node.textContent}"`)
+	function PrintChildren(node, myAsciiStr, childAsciiStr, depth, maxdepth) {
+		ns.print(`${myAsciiStr}   ${node.nodeName} ${node.id} "${node.textContent}"`)
 		if (node.hasChildNodes() && depth + 1 <= maxdepth) {
 			for (let subNode of node.childNodes) {
 				if (node.childNodes[node.childNodes.length - 1] === subNode) { PrintChildren(subNode, childAsciiStr + "|-o", childAsciiStr + "  ", depth + 1, maxdepth); }
 				else { PrintChildren(subNode,  childAsciiStr + "|-o", childAsciiStr + "| ", depth + 1, maxdepth) }
 			}
 		}
-    }
+	}
 }
