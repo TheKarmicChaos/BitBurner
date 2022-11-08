@@ -368,9 +368,10 @@ function AddLine(lineNum) {
 	let existingRow = d.getElementById(`ovv-row-extra`);
 	// Make a clone of it for our new hud element
 	let newHudRow = existingRow.cloneNode(true);
-	// Remove any nested elements created by stats.js
-	newHudRow.querySelectorAll("p > p").forEach(el => el.parentElement.removeChild(el));
-	newHudRow.querySelectorAll("p").forEach((el) => el.parentElement.removeChild(el));
+	// Remove all childNodes
+	newHudRow.querySelectorAll("th").forEach((el) => el.parentElement.removeChild(el));
+	// Insert a new childNode to create the line
+	newHudRow.innerHTML = `<th class="jss12 MuiTableCell-root MuiTableCell-body MuiTableCell-sizeMedium css-hadb7u" scope="row" colspan="${lineColSpan}"></th>`
 	// give hook id to our new row-level element
 	newHudRow.id = `ovv-row-line${lineNum}`
 	// Insert our element at the bottom of the hud
