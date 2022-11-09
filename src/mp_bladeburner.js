@@ -1,4 +1,3 @@
-import { checkNsInstance } from "./lib/helpers";
 import * as nstb from "./lib/nstools";
 import * as tb from "./lib/toolbox";
 
