@@ -226,6 +226,9 @@ export async function main(ns) {
 				if ("stocks" in strats && player.money >= 2e6) { BankStrat('lp_stockmaster.js'); };
 				BankStrat('op_joinfacs.js');
 				BankStrat('op_graft.js');
+
+				BankStrat('mp_bladeburner.js');
+
 				if ('cct' in strats) { BankStrat('cct_solve.js') };
 				BankStrat('lp_svhack.js');
 				BankStrat('mp_nuke-backdoor.js');
