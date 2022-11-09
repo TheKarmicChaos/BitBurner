@@ -396,5 +396,6 @@ export async function main(ns) {
 		else { ns.print("🗡:" + warfare + "  ✊:" + ganginwar + "/" + warguys + "  🥥Tr: " + gangt2p + "> " + gangtxp); }
 
 		nstb.UpdPort(ns, 2, "dict", ["gang", 5 * ns.gang.getGangInformation().moneyGainRate])
+		nstb.UpdPort(ns, 7, "dict", ["territory", gangtx])
 	}
 }
