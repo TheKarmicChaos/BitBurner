@@ -25,112 +25,67 @@ export async function main(ns) {
         }
         // if we are not currently recovering back to full stamina, start automating actions.
         else if (!(shouldRecover && curAct().name == 'Hyperbolic Regeneration Chamber')) {
-            let cityBests = await getBestForCities();
 
-            await levelSkills(cityBests);
+            await updateCity();
 
-            await doNextAction(cityBests);
+            await doNextAction();
 
-            // If variance is too high in any city, reduce uncertainty with analysis
-
-            // If variance is too high in an
-
+            await levelSkills();
         }
 
-        async function getBestForCities() {
-            let cityDict = {"All": {type: 'Contracts', name: 'Tracking', city: "Aevum", chance: 0}, "Aevum": {}, "Chongqing": {}, "Sector-12": {}, "New Tokyo": {}, "Ishima": {}, "Volhaven": {}};
-            for (let city of cities) { // For each city
-                await nstb.RunCom(ns, 'ns.bladeburner.switchCity()', [city]);
-                let highVariance = true;
-                
-                while (highVariance) {
-                    // Get the success range of all important actions
-                    ns.print('Tracking variance of ', city);
-                    let [trackLo, trackHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['Contracts', 'Tracking']);
-                    let [bountyLo, bountyHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['Contracts', 'Bounty Hunter']);
-                    let [raidLo, raidHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['Operations', 'Raid']);
-                    let [assLo, assHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['Operations', 'Assassination']);
-                    // While variance is too high, reduce it.
-                    if (Math.max(trackHi - trackLo, bountyHi - bountyLo, raidHi - raidLo, assLo - assHi) >= 0.15) {
-                        if (curAct().name != 'Field Analysis') ns.bladeburner.startAction('General', 'Field Analysis');
-                        await ns.sleep(10000);
-                    } else { // Once variance is at acceptable levels...
-                        highVariance = false;
-                        // Determine the best action for this city
+        async function updateCity() {
+            let [bestCity, bestPop] = await getBestCity(); // city with highest population
+            let curCity = await nstb.RunCom(ns, 'ns.bladeburner.getCity()'); // current city
+            let curCityPop = await nstb.RunCom(ns, 'ns.bladeburner.getCityEstimatedPopulation()', [curCity]); 
+            // If current city's pop is < 1b or 20% less than best city pop, switch to best city
+            if (curCityPop < 1e9 || curCityPop < bestPop * 0.8) await nstb.RunCom(ns, 'ns.bladeburner.switchCity()', [bestCity]);
+        }
 
-                        // Check Assasination
-                        if (assLo >= 0.4 && await nstb.RunCom(ns, 'ns.bladeburner.getActionCountRemaining()', ['Operations', 'Assassination']) > 0) {
-                            // update this city's cityDict vals
-                            cityDict[city].type = 'Operations';
-                            cityDict[city].name = 'Assassination';
-                            cityDict[city].chance = assLo;
-                            // update cityDict "All" if this is better
-                            if (!(cityDict["All"].name == 'Assassination' && cityDict["All"].chance > assLo)) {
-                                cityDict["All"].type = 'Operations';
-                                cityDict["All"].name = 'Assassination';
-                                cityDict["All"].city = city;
-                                cityDict["All"].chance = assLo;
-                            }
-                        }
-                        // Check Raid
-                        else if (raidLo >= 0.4 && await nstb.RunCom(ns, 'ns.bladeburner.getActionCountRemaining()', ['Operations', 'Raid']) > 0) {
-                            // update this city's cityDict vals
-                            cityDict[city].type = 'Operations';
-                            cityDict[city].name = 'Raid';
-                            cityDict[city].chance = raidLo;
-                            // update cityDict "All" if this is better
-                            if (cityDict["All"].name != 'Assassination' && !(cityDict["All"].name == 'Raid' && cityDict["All"].chance > raidLo)) {
-                                cityDict["All"].type = 'Operations';
-                                cityDict["All"].name = 'Raid';
-                                cityDict["All"].city = city;
-                                cityDict["All"].chance = raidLo;
-                            }
-                        }
-                        // Check Bounty Hunter
-                        else if (bountyLo >= 0.4 && await nstb.RunCom(ns, 'ns.bladeburner.getActionCountRemaining()', ['Contracts', 'Bounty Hunter']) > 0) {
-                            // update this city's cityDict vals
-                            cityDict[city].type = 'Contracts';
-                            cityDict[city].name = 'Bounty Hunter';
-                            cityDict[city].chance = bountyLo;
-                            // update cityDict "All" if this is better
-                            if (cityDict["All"].name == 'Tracking' || (cityDict["All"].name == 'Bounty Hunter' && cityDict["All"].chance < bountyLo)) {
-                                cityDict["All"].type = 'Contracts';
-                                cityDict["All"].name = 'Bounty Hunter';
-                                cityDict["All"].city = city;
-                                cityDict["All"].chance = bountyLo;
-                            }
-                        }
-                        // Otherwise default to Tracking
-                        else {
-                            // update this city's cityDict vals
-                            cityDict[city].type = 'Contracts';
-                            cityDict[city].name = 'Tracking';
-                            cityDict[city].chance = trackLo;
-                            // update cityDict "All" if this is better
-                            if (cityDict["All"].name == 'Tracking' && cityDict["All"].chance < trackLo) {
-                                cityDict["All"].type = 'Contracts';
-                                cityDict["All"].name = 'Tracking';
-                                cityDict["All"].city = city;
-                                cityDict["All"].chance = trackLo;
-                            }
-                        }
-                       // await ns.sleep(1);
-                    }
+        async function getBestCity() {
+            let bestCity = null;
+            let bestPop = 0;
+            for (let city of cities) {
+                let cityPop = await nstb.RunCom(ns, 'ns.bladeburner.getCityEstimatedPopulation()', [city])
+                if (bestCity == null || bestPop < cityPop) {
+                    bestCity = city;
+                    bestPop = cityPop;
                 }
+                await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['Contracts', 'Tracking']);
             }
-            ns.print(cityDict);
-            return cityDict;
+            return [bestCity, bestPop]
         }
 
-        async function levelSkills(cityBests) {
+        async function doNextAction() {
+            let [trackLo, trackHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['Contracts', 'Tracking']);
+            let [bountyLo, bountyHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['Contracts', 'Bounty Hunter']);
+            let [raidLo, raidHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['Operations', 'Raid']);
+            let [assLo, assHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['Operations', 'Assassination']);
+            let actType;
+            let actName;
+            // Determine what our best action would be
+            if (nstb.PeekPort(ns, 6)["sleeveShock"] > 0 && Math.max(trackHi - trackLo, bountyHi - bountyLo, raidHi - raidLo, assLo - assHi) >= 0.15) {
+                actType = "General";
+                actName = "Field Analysis";       
+            } else if (assLo >= 0.4 && await nstb.RunCom(ns, 'ns.bladeburner.getActionCountRemaining()', ['Operations', 'Assassination']) > 0) {
+                actType = "Operations";
+                actName = "Assasination";
+            } else if (raidLo >= 0.4 && await nstb.RunCom(ns, 'ns.bladeburner.getActionCountRemaining()', ['Operations', 'Raid']) > 0) {
+                actType = "Operations";
+                actName = "Raid";
+            } else if (bountyLo >= 0.4 && await nstb.RunCom(ns, 'ns.bladeburner.getActionCountRemaining()', ['Contracts', 'Bounty Hunter']) > 0) {
+                actType = "Contracts";
+                actName = "Bounty Hunter";
+            } else {
+                actType = "Contracts";
+                actName = "Tracking";
+            }
+            // Start doing our best action if we aren't already.
+            if (curAct().name != actName) ns.bladeburner.startAction(actType, actName);
+        }
+
+        async function levelSkills() {
             return;
         }
-
-        async function doNextAction(cityBests) {
-            // Go to the city with our best action.
-            if (await nstb.RunCom(ns, 'ns.bladeburner.getCity()') != cityBests["All"].city) await nstb.RunCom(ns, 'ns.bladeburner.switchCity()', [cityBests["All"].city]);
-            // Start doing our best action if we aren't already.
-            if (curAct().name != cityBests["All"].name) ns.bladeburner.startAction(cityBests["All"].type, cityBests["All"].name);
-        }
     }
+    
 }
