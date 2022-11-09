@@ -9,11 +9,11 @@ export async function main(ns) {
     nstb.UpdPort(ns, 9, "dict", ["hasBB", true]);
 
     if (nstb.PeekPort(ns, 9)["hasSimu"] || !ns.singularity.isBusy() || ns.singularity.getCurrentWork().type != "GRAFTING") {
-        if (!nstb.PeekPort(ns, 9)["hasSimu"]) ns.singularity.stopAction();
+        if (!nstb.PeekPort(ns, 9)["hasSimu"]) await nstb.RunCom(ns, 'ns.singularity.stopAction()');
 
         const player = ns.getPlayer();
         const cities = ["Aevum", "Chongqing", "Sector-12", "New Tokyo", "Ishima", "Volhaven"];
-        let [curSta, maxSta] = ns.bladeburner.getStamina()
+        let [curSta, maxSta] = await nstb.RunCom(ns, 'ns.bladeburner.getStamina()')
         const curAct = () => ns.bladeburner.getCurrentAction();
 
         const shouldRecover = (/*player.hp.current / player.hp.max < 0.5 ||*/ curSta / maxSta < 0.80)
