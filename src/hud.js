@@ -21,7 +21,7 @@ The functions in this script should handle all of the heavy lifting for you and 
 
 - Go down to the section labelled "LIST EACH ROW OF YOUR CUSTOM HUD BELOW"
 - List every row you want your hud to contain, in order from top to bottom, using any of the following functions:
-	(check function paramaters/definitions and the examples for more details)
+	(check function paramaters/definitions and the examples I use for more details)
 	- AddTextRow(hook, color)
 	- AddProgrBar(hook, color)
 	- AddDefault(hook, nextRowHook)
@@ -66,7 +66,7 @@ itself. For text rows, you will need to add and update tooltips manually.
 -------------------------------------------
 
 		TODO LIST:
-	- Overhaul all "Add" functions to try to update the element if they already exist (allowing for changes to be made without killing all scripts)
+	- Overhaul all "Add" functions to try to update the element if they already exist (allowing for function changes to be made without killing all scripts)
 	- Construct custom hud text rows from scratch instead of copying existing ones, so they can be further customized.
 	- Use the above change to implement support for all colors in the player's "theme".
 	- Ingame progress bar tooltips still look a bit different from the ones this script generates.
@@ -104,7 +104,7 @@ let updArg3;
 // Settings ----------------------------------------------------------------------------
 const showHiddenRows = false; // Debug tool to unhide all hidden text rows; only applies to rows that are currently being updated, or to all rows when resetting hud via "kill all running scripts"
 const lineColSpan = 2; // Number of columns your separator lines should occupy.
-let ToolTipStyleParams =
+let ToolTipStyleParams = // Default css style parameters used for your tooltips.
 `font-family: "Lucida Console", "Lucida Sans Unicode", "Fira Mono", Consolas, "Courier New", Courier, monospace, "Times New Roman";
 padding: 4px 8px;
 margin: 2px;
@@ -125,8 +125,8 @@ transition: opacity 0.2s;`;
 
 // Unused settings
 const maxHudHeight = 1000 // Maximum vertical space (in pixels) the hud can occupy before requiring the player to scroll.
-const LAr = "◄"; // Text used for "contracted dropdown" button
-const DAr = "▼"; // Text used for "expanded dropdown" button
+const CAr = "◄"; // Text used for "Contracted dropdown" button
+const EAr = "▼"; // Text used for "Expanded dropdown" button
 
 
 // Main Function -----------------------------------------------------------------------
@@ -532,8 +532,8 @@ function InitHud() {
 	d.getElementById("overview-hack-hook").parentElement.parentElement.parentElement.removeChild(nodeToDel);
 	d.getElementById("ovv-row-hack").nextSibling.id = `ovv-row-hack-progr`;
 	// Remove all separator lines from the default hud.
-	d.getElementById("ovv-row-agi").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'))
-	d.getElementById("ovv-row-int").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'))
+	d.getElementById("ovv-row-agi").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
+	d.getElementById("ovv-row-int").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
 }
 
 /** Creates or updates a custom css style used for our custom-made tooltips */
