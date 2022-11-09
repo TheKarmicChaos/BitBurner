@@ -1,5 +1,5 @@
-import { PeekPort_NS } from './lib/nstools';
-import { RecursivePrint } from './lib/toolbox';
+import * as nstb from './lib/nstools';
+import * as tb from './lib/toolbox';
 
 /** @param {import("../").NS} ns */
 export async function main(ns) {
