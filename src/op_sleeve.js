@@ -5,7 +5,7 @@ import * as tb from "./lib/toolbox";
 export async function main(ns) {
 	//ns.tail('op_sleeve.js'); ns.disableLog("ALL"); ns.clearLog();
 
-	var playerdata = await nstb.RunCom(ns, 'ns.getPlayer()')
+	var player = await nstb.RunCom(ns, 'ns.getPlayer()')
 	const bndata = nstb.PeekPort(ns, 1)["mults"]
 	const strats = nstb.PeekPort(ns, 1)["strats"]
 	const runType = nstb.PeekPort(ns, 1)["runType"]
@@ -15,8 +15,8 @@ export async function main(ns) {
 	if (('hack_money' in strats) && ("gang" in strats)) { metaPlan = "all" }
 	else if (!('hack_money' in strats)) { metaPlan = "pillonly" }
 
-	let maxSpend = playerdata.money / 2
-	if (metaPlan == "pillonly") { maxSpend = playerdata.money / 900 }
+	let maxSpend = player.money / 2
+	if (metaPlan == "pillonly") { maxSpend = player.money / 900 }
 
 
 	const hasGang = await nstb.RunCom(ns, 'ns.gang.inGang()')
@@ -28,7 +28,7 @@ export async function main(ns) {
 	//ns.print("NeededAugs: ", neededAugs)
 
 	let factions = await GetFactions();
-	let joinedfactions = playerdata.factions
+	let joinedfactions = player.factions
 	ns.print(">> Factions:\n", factions)
 
 	let companiesNeeded = await GetCompanyFacsNeeded();
@@ -54,8 +54,8 @@ export async function main(ns) {
 	}
 
 	for (let id = 0; id < slnum; ++id) { // iterate over every sleeve
-		playerdata = await nstb.RunCom(ns, 'ns.getPlayer()');
-		let plstats = playerdata.skills;
+		player = await nstb.RunCom(ns, 'ns.getPlayer()');
+		let plstats = player.skills;
 		let stats = await nstb.RunCom(ns, 'ns.sleeve.getSleeveStats()', [id]);
 		var buyableAugs = await nstb.RunCom(ns, 'ns.sleeve.getSleevePurchasableAugs()', [id]);
 		ns.print("\nSleeve #" + id);
@@ -95,7 +95,7 @@ export async function main(ns) {
 			else if (tb.ArrSubtract(factions, occupiedFacs).length > 0) { ns.print("Working for fac"); await WorkForFac(id, tb.ArrSubtract(factions, occupiedFacs).shift()) }
 
 			// Step 7: If any are unoccupied, work for a company until we can join its faction.
-			else if (companiesNeeded.length > 0 && metaPlan != "pillonly" && playerdata.skills.hacking >= 225) { ns.print("Working for comp"); await WorkForCom(id) }
+			else if (companiesNeeded.length > 0 && metaPlan != "pillonly" && player.skills.hacking >= 225) { ns.print("Working for comp"); await WorkForCom(id) }
 
 			// Otherwise, build player stats infinitely
 			else { ns.print("Building Player Stats infinitely"); await BuildStats(id, plstats) }
@@ -166,7 +166,7 @@ export async function main(ns) {
 
 
 	async function GetNeededAugs(aug) {
-		let joinedfactions = playerdata.factions;
+		let joinedfactions = player.factions;
 		let neededAugs = [];
 		for (var faction of joinedfactions) {
 			let faugs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationsFromFaction()', [faction])
@@ -205,7 +205,7 @@ export async function main(ns) {
 	}
 
 	async function GetFactions() {
-		let joinedfactions = playerdata.factions
+		let joinedfactions = player.factions
 		let factions = [];
 
 		for (let faction of joinedfactions) {
@@ -231,7 +231,7 @@ export async function main(ns) {
 			if (comp == "Fulcrum Technologies") { compfac = "Fulcrum Secret Technologies" }
 			else { compfac = comp }
 			// If the related faction has not yet been joined, add it to the list
-			if (!playerdata.factions.includes(compfac)) { companies.push(comp) }
+			if (!player.factions.includes(compfac)) { companies.push(comp) }
 		}
 		return companies;
 	}
@@ -240,7 +240,7 @@ export async function main(ns) {
 		ns.print("Buyable Augs: "); ns.print(augslist);
 		let totalcost = 0
 		for (var aug of augslist) {
-			if (playerdata.money >= aug.cost && aug.cost <= maxSpend) {
+			if (player.money >= aug.cost && aug.cost <= maxSpend) {
 				if (await nstb.RunCom(ns, 'ns.sleeve.purchaseSleeveAug()', [id, aug.name])) {
 					ns.toast("Bought aug " + aug.name + " for Sleeve " + id, "info", 1500)
 				}
@@ -258,13 +258,13 @@ export async function main(ns) {
 	}
 
 	async function TryDonate(faction) {
-		playerdata = await nstb.RunCom(ns, 'ns.getPlayer()')
+		player = await nstb.RunCom(ns, 'ns.getPlayer()')
 		let repReq = await GetRepNeeded(faction) - await nstb.RunCom(ns, 'ns.singularity.getFactionRep()', [faction]);
-		var repMulti = playerdata.mults.faction_rep
+		var repMulti = player.mults.faction_rep
 		// (donation amt * rep multi) / 10^6 = rep gain
 		// (rep gain * 10^6) / rep multi = donation amt
 		let reqDonation = Math.ceil((repReq * (10 ** 6)) / repMulti)
-		if (playerdata.money >= reqDonation && reqDonation <= maxSpend) { await nstb.RunCom(ns, 'ns.singularity.donateToFaction()', [faction, reqDonation]) }
+		if (player.money >= reqDonation && reqDonation <= maxSpend) { await nstb.RunCom(ns, 'ns.singularity.donateToFaction()', [faction, reqDonation]) }
 	}
 
 
