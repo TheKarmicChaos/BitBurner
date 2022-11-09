@@ -9,7 +9,7 @@ Num | Topic of Contents     | Contents
 3   | Hashes                | { "hashes": 0, "income": 0, "maxhashes": 1 }
 4   |                       | 
 5   |                       | 
-6   | Run Progress          | { "backdoors": [] }
+6   | Run Progress          | { "backdoors": ["home"], "sleeveShock": 100 }
 7   | Gang                  | { "wantGang": false, "hasGang": false, "territory": 0 }
 8   | Corporation           | { "wantCorp": false, "hasCorp": false, "hasProd": false, "hasLab": false, "hasTA.II": false, "research": 0, "funds": 0, "profit": 0, "products": [] }
 9   | BladeBurner           | { "wantBB": false, "hasBB": false, "hasSimu": false }

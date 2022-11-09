@@ -45,7 +45,7 @@ export async function main(ns) {
 
 	// PORT 6: RUN PROGRESS TRACKER
 	ns.getPortHandle(6).clear()
-	ns.getPortHandle(6).write({ "backdoors": ["home"] })
+	ns.getPortHandle(6).write({ "backdoors": ["home"], "sleeveShock": 100 })
 
 	// PORT 7: GANG PROGRESS TRACKER
 	ns.getPortHandle(7).clear()
