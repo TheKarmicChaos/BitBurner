@@ -18,19 +18,21 @@ export async function main(ns) {
 	// Constantly apply to every company of interest and ask for promotions
 	for (let company of allComps) { await nstb.RunCom(ns, 'ns.singularity.applyToCompany()', [company, "Software"]) }
 
-	let [bestcrime, canDoWork] = await GetBestCrime();
-	let bestCrimeinc = 0; if (bestcrime) bestCrimeinc = await nstb.GetCrimeGains(ns, bestcrime, "money");
+    if (!nstb.PeekPort(ns, 9)["hasBB"] || nstb.PeekPort(ns, 9)["hasSimu"]) { // Bladeburner actions take player priority if we have them unlocked.
+        let [bestcrime, canDoWork] = await GetBestCrime();
+        let bestCrimeinc = 0; if (bestcrime) bestCrimeinc = await nstb.GetCrimeGains(ns, bestcrime, "money");
 
-	let [bestwork, canDoCrime] = await GetBestWork();
-	let bestWorkinc = 0; if (bestwork) bestWorkinc = await nstb.GetJobGains(ns, bestwork, "money");
+        let [bestwork, canDoCrime] = await GetBestWork();
+        let bestWorkinc = 0; if (bestwork) bestWorkinc = await nstb.GetJobGains(ns, bestwork, "money");
 
-	// Do crime until we meet reqs to do work instead
-	if (!canDoWork || Object.keys(pldata().jobs).length == 0) { await DoCrime(bestcrime) }
-	// Then do work until we meet reqs to do crime instead
-	else if (!canDoCrime) { await DoWork(bestwork) }
-	// Then do the more profitable of the two; work or crime.
-	else if (bestCrimeinc < bestWorkinc) { await DoWork(bestwork) }
-	else { await DoCrime(bestcrime) }
+        // Do crime until we meet reqs to do work instead
+        if (!canDoWork || Object.keys(pldata().jobs).length == 0) { await DoCrime(bestcrime) }
+        // Then do work until we meet reqs to do crime instead
+        else if (!canDoCrime) { await DoWork(bestwork) }
+        // Then do the more profitable of the two; work or crime.
+        else if (bestCrimeinc < bestWorkinc) { await DoWork(bestwork) }
+        else { await DoCrime(bestcrime) }
+    }
 
 
 	// ==================================================================================================
