@@ -225,7 +225,7 @@ export async function main(ns) {
 
 
 		// write income to port
-		nstb.UpdPort(ns, 2, "dict", ["corp", getCorp().dividendEarnings]);
+		if (getCorp().dividendEarnings > 0) nstb.UpdPort(ns, 2, "dict", ["corp", getCorp().dividendEarnings]);
 		nstb.UpdPort(ns, 8, "dict", ["wantCorp", false, "hasCorp", true, "funds", getCorp().funds]);
 
 
