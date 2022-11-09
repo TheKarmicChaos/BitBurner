@@ -57,7 +57,7 @@ export async function main(ns) {
 
 	// PORT 9: BLADEBURNER PROGRESS TRACKER
 	ns.getPortHandle(9).clear()
-	ns.getPortHandle(9).write({ "wantBB": false, "hasBB": false })
+	ns.getPortHandle(9).write({ "wantBB": false, "hasBB": false, "hasSimu": false })
 
 
 
