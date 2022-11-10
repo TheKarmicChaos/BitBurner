@@ -41,6 +41,7 @@ export async function main(ns) {
         // If current city's pop is < 1b or 20% less than best city pop, switch to best city
         if (curCityPop < 1e9 || curCityPop < bestPop * 0.8) await nstb.RunCom(ns, 'ns.bladeburner.switchCity()', [bestCity]);
         curCity = await nstb.RunCom(ns, 'ns.bladeburner.getCity()'); // update current city
+        nstb.UpdPort(ns, 9, "dict", ["city", curCity])
     }
 
     async function getBestCity() {
