@@ -71,42 +71,42 @@ export async function main(ns) {
 		// -------------------------
 		const hasCorp = player.hasCorporation
 		const wantCorp = nstb.PeekPort(ns, 8)["wantCorp"]
-		const fundCost = ns.hacknet.hashCost("Sell for Corporation Funds");
-		const resrCost = ns.hacknet.hashCost("Exchange for Corporation Research");
-		const isFundNotNeeded = (nstb.PeekPort(ns, 8)["profit"] >= 500e6)
-		const isResrNotNeeded = (nstb.PeekPort(ns, 8)["hasTA.II"] && nstb.PeekPort(ns, 8)["research"] >= 10e6)
 		// - Has corp (if we want one)
 		const check3a = (!wantCorp)
 		// - Has Lab
 		const check3b = (!hasCorp || nstb.PeekPort(ns, 8)["hasLab"])
 		// - Has >= 3 products
 		const check3c = (!hasCorp || nstb.PeekPort(ns, 8)["products"].length >= 3)
-		// - buying funds w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
-		const check3d = (!hasCorp || !("hackn" in strats) || isFundNotNeeded || (fundCost > 2000 * strats["hackn"] && fundCost > nstb.PeekPort(ns, 3)["income"] * 2))
-		// - buying research w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
-		const check3e = (!hasCorp || !("hackn" in strats) || isResrNotNeeded || (resrCost > 3000 * strats["hackn"] && resrCost > nstb.PeekPort(ns, 3)["income"] * 5))
-		const checksum3 = (check3a && check3b && check3c && check3d && check3e)
+		const checksum3 = (check3a && check3b && check3c)
 		let checkmark3 = "[ ]"; if (checksum3) checkmark3 = "[✓]";
 		ns.print(`\n${checkmark3} Check #3: Corporation`)
 		if (!check3a) ns.print("• Need Corp");
 		if (!check3b) ns.print("• Need Lab");
 		if (!check3c) ns.print("• Need >= 3 products");
-		if (!check3d) ns.print("• B>CorpFund# too affordable!");
-		if (!check3e) ns.print("• B>CorpResr# too affordable!");
 
 
 
 		// Check 4: Upgrades
 		// -------------------------
+		const fundCost = ns.hacknet.hashCost("Sell for Corporation Funds");
+		const resrCost = ns.hacknet.hashCost("Exchange for Corporation Research");
+		const isFundNotNeeded = (nstb.PeekPort(ns, 8)["profit"] >= 500e6)
+		const isResrNotNeeded = (nstb.PeekPort(ns, 8)["hasTA.II"] && nstb.PeekPort(ns, 8)["research"] >= 10e6)
 		// - Has 4sData TIX API
 		const check4a = (ns.stock.has4SDataTIXAPI())
 		// - Has decent homeRAM size
 		const check4b = (ns.getServerMaxRam("home") >= 4096)
-		const checksum4 = (check4a && check4b)
+		// - buying funds w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
+		const check4c = (!hasCorp || !("hackn" in strats) || isFundNotNeeded || (fundCost > 2000 * strats["hackn"] && fundCost > nstb.PeekPort(ns, 3)["income"] * 2))
+		// - buying research w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
+		const check4d = (!hasCorp || !("hackn" in strats) || isResrNotNeeded || (resrCost > 3000 * strats["hackn"] && resrCost > nstb.PeekPort(ns, 3)["income"] * 5))
+		const checksum4 = (check4a && check4b && check4c && check4d)
 		let checkmark4 = "[ ]"; if (checksum4) checkmark4 = "[✓]";
 		ns.print(`\n${checkmark4} Check #4: Upgrades`)
 		if (!check4a) ns.print("• Need 4s TIX API");
 		if (!check4b) ns.print("• Need homeRAM >= 4TB");
+		if (!check4c) ns.print("• B>CorpFund# too affordable!");
+		if (!check4d) ns.print("• B>CorpResr# too affordable!");
 
 
 
