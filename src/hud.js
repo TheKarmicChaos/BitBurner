@@ -308,6 +308,27 @@ function AddTextRow(hookName, color) {
 	return newHudRow;
 };
 
+/** Updates a custom text row with new text in each column.
+ * - If textL, textR, and text3 are all set to the string "null", this row will be hidden.
+ * @param {string} hookToUpdate - Name of the hook for text row
+ * @param {string} textL - Text to display in column 1 of this row (left side)
+ * @param {string} textR - Text to display in column 2 of this row (right side)
+ * @param {string} text3 - (optional) Text to display in column 3 of this row
+ * - Default value: "null"
+ * */
+ function UpdateTextRow(hookToUpdate, textL, textR, text3 = null) {
+	// Determine the text we want in each column
+	if (showHiddenRows) textL = hookToUpdate + ` `;
+	else if (textL == null) textL = "";
+	else textL += ` `;
+	if (textR == null) textR = "";
+	if (text3 == null) text3 = "";
+	// Update the relevant elements' innerText
+	d.getElementById(`ovv-${hookToUpdate}-0`).innerHTML = textL;
+	d.getElementById(`ovv-${hookToUpdate}-1`).innerHTML = textR;
+	d.getElementById(`ovv-${hookToUpdate}-2`).innerHTML = text3;
+};
+
 /** Inserts a progress bar at the bottom of the hud.
  * @param {string} hookName - Unique hook name for this progress bar.
  * - Must be distinct from all other progress bar hooks.
@@ -330,6 +351,71 @@ function AddProgrBar(hudHook, color) {
 	// Insert our element at the bottom of the hud
 	existingRow.parentElement.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
 	return newHudRow;
+};
+
+// Unused - this function does not work
+function RecolorProgrBar(hookToRecolor, r, g, b) {
+	d.getElementById(`ovv-row-${hookToRecolor}`).firstChild.firstChild.style.backgroundColor =	`rgb(${r},${g},${b})`
+};
+
+/** Updates a progress bar and its tooltip with a new percentage.
+ * - If textL, textR, and text3 are all set to the string "null", this row will be hidden.
+ * @param {string} hookToUpdate - Name of the hook for text row
+ * @param {number} curAmt - How much of the "thing" we currently have
+ * @param {number} maxAmt - How much of the "thing" we need to have in order for progr bar to be 100% full.
+ * */
+ function UpdateProgrBar(hookToUpdate, curAmt, maxAmt) {
+	let elementToUpdate = d.getElementById(`ovv-row-${hookToUpdate}-progr`).firstChild.firstChild
+	// calculate the percentage progress
+	let remaining =  Math.max(0, maxAmt - curAmt)
+	let percent = Math.min(curAmt, maxAmt) * 100 / maxAmt
+	// update the tooltip
+	let ttContent = `<strong>Progress:</strong> ${StandardNotation(Math.abs(curAmt), 3)} / ${StandardNotation(Math.abs(maxAmt), 3)}<br /><strong>Remaining:</strong> ${StandardNotation(remaining, 3)} (${percent.toFixed(2)}%)`
+	AddTooltip(`${hookToUpdate}-progr`, ttContent, {textAlign: "right"});
+	// get existing HTML
+	let existingHTML = elementToUpdate.innerHTML;
+	// split the HTML so we get the sections we want to edit
+	let leftHTML = String(existingHTML).split("translateX(")[0] + "translateX(";
+	let rightHTML = "%);" + String(existingHTML).split("%);")[1];
+	// update the HTML
+	let newHTML = `${leftHTML}-${(100 - percent).toFixed(2)}${rightHTML}`;
+	elementToUpdate.innerHTML = newHTML;
+};
+
+/** Hides a visbile progress bar on the hud.
+ * @param {string} hudHook - Name of the hook for the progress bar
+ * */
+ function HideProgrBar(hudHook) {
+	let rowElement = d.getElementById(`ovv-row-${hudHook}-progr`);
+	if (rowElement !== null) {
+		// Remove all HTML from the deepest child so the HTML doesn't auto-update
+		rowElement.firstChild.firstChild.innerHTML = "";
+
+		// Rename "class" to "clss" in the HTML of the first-depth child so the information cannot be parsed.
+		let curHTML = rowElement.innerHTML
+		let htmlL = curHTML.split(`-3px;"><span cl`)[0] + `-3px;"><span cl`
+		let htmlR = curHTML.split(`-3px;"><span cl`)[1]
+		
+		if (htmlR[0] == "a") { rowElement.innerHTML = htmlL + curHTML.split(`-3px;"><span cla`)[1]; }
+	}
+};
+
+/** Un-hides a hidden progress bar on the hud.
+ * @param {string} hudHook - Name of the hook for the progress bar
+ * */
+function ShowProgrBar(hudHook) {
+	let rowElement = d.getElementById(`ovv-row-${hudHook}-progr`);
+	if (rowElement !== null) {
+		// Replace the missing HTML in the deepest child
+		let existingHTML = d.getElementById("ovv-row-str-progr").firstChild.firstChild.innerHTML;
+		rowElement.firstChild.firstChild.innerHTML = existingHTML.split(`></span>`)[0] + `></span>`
+
+		// Rename "class" back to "clss" in the HTML of the first-depth child so the information can be parsed once again.
+		let curHTML = rowElement.innerHTML
+		let htmlL = curHTML.split(`-3px;"><span cl`)[0] + `-3px;"><span cl`
+		let htmlR = curHTML.split(`-3px;"><span cl`)[1]
+		if (htmlR[0] != "a") { rowElement.innerHTML = htmlL + "a" + htmlR; }
+	}
 };
 
 /** Inserts a default hud row (and its corresponding progress bar) at the bottom of the hud.
@@ -396,92 +482,6 @@ function AddTooltip(elhook, content, params = {}) {
 	params.tooltiptext = content
 	let el = d.getElementById(`ovv-row-${elhook}`)
 	setElementTooltip(el, params)
-};
-
-/** Updates a text row with new text in each column.
- * - If textL, textR, and text3 are all set to the string "null", this row will be hidden.
- * @param {string} hookToUpdate - Name of the hook for text row
- * @param {string} textL - Text to display in column 1 of this row (left side)
- * @param {string} textR - Text to display in column 2 of this row (right side)
- * @param {string} text3 - (optional) Text to display in column 3 of this row
- * - Default value: "null"
- * */
-function UpdateTextRow(hookToUpdate, textL, textR, text3 = null) {
-	// Determine the text we want in each column
-	if (showHiddenRows) textL = hookToUpdate;
-	else if (textL == null) textL = "";
-	if (textL == null) textR = "";
-	if (text3 == null) text3 = "";
-	// Update the relevant elements' innerText
-	d.getElementById(`ovv-${hookToUpdate}-0`).innerText = textL;
-	d.getElementById(`ovv-${hookToUpdate}-1`).innerText = textR;
-	//d.getElementById(`ovv-${hookToUpdate}-2`).innerText = text3;
-};
-
-/** Updates a progress bar and its tooltip with a new percentage.
- * - If textL, textR, and text3 are all set to the string "null", this row will be hidden.
- * @param {string} hookToUpdate - Name of the hook for text row
- * @param {number} curAmt - How much of the "thing" we currently have
- * @param {number} maxAmt - How much of the "thing" we need to have in order for progr bar to be 100% full.
- * */
-function UpdateProgrBar(hookToUpdate, curAmt, maxAmt) {
-	let elementToUpdate = d.getElementById(`ovv-row-${hookToUpdate}-progr`).firstChild.firstChild
-	// calculate the percentage progress
-	let remaining =  Math.max(0, maxAmt - curAmt)
-	let percent = Math.min(curAmt, maxAmt) * 100 / maxAmt
-	// update the tooltip
-	let ttContent = `<strong>Progress:</strong> ${StandardNotation(Math.abs(curAmt), 3)} / ${StandardNotation(Math.abs(maxAmt), 3)}<br /><strong>Remaining:</strong> ${StandardNotation(remaining, 3)} (${percent.toFixed(2)}%)`
-	AddTooltip(`${hookToUpdate}-progr`, ttContent, {textAlign: "right"});
-	// get existing HTML
-	let existingHTML = elementToUpdate.innerHTML;
-	// split the HTML so we get the sections we want to edit
-	let leftHTML = String(existingHTML).split("translateX(")[0] + "translateX(";
-	let rightHTML = "%);" + String(existingHTML).split("%);")[1];
-	// update the HTML
-	let newHTML = `${leftHTML}-${(100 - percent).toFixed(2)}${rightHTML}`;
-	elementToUpdate.innerHTML = newHTML;
-};
-
-/** Hides a visbile progress bar on the hud.
- * @param {string} hudHook - Name of the hook for the progress bar
- * */
-function HideProgrBar(hudHook) {
-	let rowElement = d.getElementById(`ovv-row-${hudHook}-progr`);
-	if (rowElement !== null) {
-		// Remove all HTML from the deepest child so the HTML doesn't auto-update
-		rowElement.firstChild.firstChild.innerHTML = "";
-
-		// Rename "class" to "clss" in the HTML of the first-depth child so the information cannot be parsed.
-		let curHTML = rowElement.innerHTML
-		let htmlL = curHTML.split(`-3px;"><span cl`)[0] + `-3px;"><span cl`
-		let htmlR = curHTML.split(`-3px;"><span cl`)[1]
-		if (htmlR[0] == "a") { rowElement.innerHTML = htmlL + curHTML.split(`-3px;"><span cla`)[1]; }
-	}
-};
-
-/** Un-hides a hidden progress bar on the hud.
- * @param {string} hudHook - Name of the hook for the progress bar
- * */
-function ShowProgrBar(hudHook) {
-	let rowElement = d.getElementById(`ovv-row-${hudHook}-progr`);
-	if (rowElement !== null) {
-		// Replace the missing HTML in the deepest child
-		let existingHTML = d.getElementById("ovv-row-str-progr").firstChild.firstChild.innerHTML;
-		rowElement.firstChild.firstChild.innerHTML = existingHTML.split(`></span>`)[0] + `></span>`
-
-		// Rename "class" back to "clss" in the HTML of the first-depth child so the information can be parsed once again.
-		let curHTML = rowElement.innerHTML
-		let htmlL = curHTML.split(`-3px;"><span cl`)[0] + `-3px;"><span cl`
-		let htmlR = curHTML.split(`-3px;"><span cl`)[1]
-		if (htmlR[0] != "a") { rowElement.innerHTML = htmlL + "a" + htmlR; }
-	}
-};
-
-
-
-// Unused - this function does not work
-function RecolorProgrBar(hookToRecolor, r, g, b) {
-	d.getElementById(`ovv-row-${hookToRecolor}`).firstChild.firstChild.style.backgroundColor =	`rgb(${r},${g},${b})`
 };
 
 // Incomplete - this function works, but not as intended.
