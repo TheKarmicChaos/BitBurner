@@ -58,8 +58,8 @@ export async function main(ns) {
 		const check2c = (!hasGang || tb.GetMinOfArray(thugmults) >= 8)
 		// - >= 20% territory.
 		const check2d = (!hasGang || territory >= 0.20)
-		// - >= 1b resp.
-		const check2e = (!hasGang || rep >= 1e9)
+		// - >= 2b resp.
+		const check2e = (!hasGang || rep >= 2e9)
 		const checksum2 = (check2a && check2b && check2c && check2d && check2e)
 		let checkmark2 = "[ ]"; if (checksum2) checkmark2 = "[✓]";
 		ns.print(`\n${checkmark2} Check #2: Gang`)
@@ -67,7 +67,7 @@ export async function main(ns) {
 		if (!check2b) ns.print("• Need 12 thugs");
 		if (!check2c) ns.print("• Need all thugs >= lv 4");
 		if (!check2d) ns.print("• Need 20% territory");
-		if (!check2e) ns.print("• Need 1b resp");
+		if (!check2e) ns.print("• Need 2b resp");
 
 
 

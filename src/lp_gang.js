@@ -263,7 +263,7 @@ export async function main(ns) {
 
 			var memResCap = ((ganginfo.territory ** 4) * (rnkmem[ij] ** 2) * memstr * 200)
 			if (memResCap > resCap) { resCap = memResCap }
-			resCap = Math.min(resCap, 1e9) // 1b respect hard cap
+			resCap = Math.min(resCap, 2e9) // 2b respect hard cap
 
 			var gangtask;
 
