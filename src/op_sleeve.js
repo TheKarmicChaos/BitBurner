@@ -21,6 +21,7 @@ export async function main(ns) {
 
 
 	const hasGang = await nstb.RunCom(ns, 'ns.gang.inGang()')
+	const hasBB = nstb.PeekPort(ns, 9)["hasBB"]
 	const slnum = await nstb.RunCom(ns, 'ns.sleeve.getNumSleeves()')
 	let occupiedFacs = []; if (hasGang) occupiedFacs.push("Slum Snakes");
 	let occupiedJobs = [];
@@ -92,7 +93,7 @@ export async function main(ns) {
 			// Step 5: Get shock down below 0
 			else if (stats.shock > 0) { ns.print("Lowering shock to 0"); await nstb.RunCom(ns, 'ns.sleeve.setToShockRecovery()', [id]) }
 
-			else if (metaPlan != "bladeburner") {
+			else if (metaPlan != "bladeburner" || !hasBB) {
 				// Step 6a: If any are unoccupied, work for a faction until it has enough rep to purchase all augs.
 				if (tb.ArrSubtract(factions, occupiedFacs).length > 0) { ns.print("Working for fac"); await WorkForFac(id, tb.ArrSubtract(factions, occupiedFacs).shift()) }
 				// Step 7a: If any are unoccupied, work for a company until we can join its faction.
@@ -115,21 +116,30 @@ export async function main(ns) {
 						break;
 					case 2: // Permanently do BB Field Analysis
 						ns.print("Doing BB Field Analysis");
-						if (task == null || task.type != null || task.actionType != "General" || task.actionName != "Field Analysis") {
-							ns.sleeve.setToBladeburnerAction(id, "Field analysis")
-						}
+						if (task == null || task.type != null || task.actionType != "General" || task.actionName != "Field Analysis")
+							ns.sleeve.setToBladeburnerAction(id, "Field analysis");
 						break;
 					case 3: // Permanently do BB Diplomacy
 						ns.print("Doing BB Diplomacy");
-						if (task == null || task.type == "CRIME" || task.actionType != "General" || task.actionName != "Diplomacy") {
-							await nstb.RunCom(ns, 'ns.sleeve.setToBladeburnerAction()', [id, "Diplomacy"])
-						}
+						if (task == null || task.type != null || task.actionType != "General" || task.actionName != "Diplomacy")
+							await nstb.RunCom(ns, 'ns.sleeve.setToBladeburnerAction()', [id, "Diplomacy"]);
 						break;
 					case 4: // Cycle through BB Contracts (WIP)
 						ns.print("Doing BB Contracts");
-						if (tb.ArrSubtract(factions, occupiedFacs).length > 0) { ns.print("Working for fac"); await WorkForFac(id, tb.ArrSubtract(factions, occupiedFacs).shift()) }
-						else if (companiesNeeded.length > 0 && metaPlan != "pillonly" && player.skills.hacking >= 225) { ns.print("Working for comp"); await WorkForCom(id) }
-						else { ns.print("Building Player Stats infinitely"); await BuildStats(id, plstats) }
+						let trackCount = await nstb.RunCom(ns, 'ns.bladeburner.getActionCountRemaining()', ['Contracts', 'Tracking']);
+						let bountyCount = await nstb.RunCom(ns, 'ns.bladeburner.getActionCountRemaining()', ['Contracts', 'Bounty Hunter']);
+						let retireCount = await nstb.RunCom(ns, 'ns.bladeburner.getActionCountRemaining()', ['Contracts', 'Retirement']);
+						if (trackCount + bountyCount + retireCount == 0) { // If no contracts left, infiltrate
+							if (task == null || task.type != "INFILTRATE")
+								await nstb.RunCom(ns, 'ns.sleeve.setToBladeburnerAction()', [id, "Infiltrate synthoids"]);
+						} else {
+							let contract = "Tracking";
+							if (retireCount > 0) contract = "Retirement";
+							else if (bountyCount > 0) contract = "Bounty Hunter";
+							else contract = "Tracking";
+							if (task == null || task.type != null || task.actionName != contract)
+								await nstb.RunCom(ns, 'ns.sleeve.setToBladeburnerAction()', [id, "Take on contracts", contract]);
+						}
 						break;
 					default: // Permanently do BB Infiltration
 						ns.print("Doing BB Infiltration");
