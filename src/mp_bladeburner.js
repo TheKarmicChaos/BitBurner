@@ -17,7 +17,7 @@ export async function main(ns) {
     const shouldRecover = (/*player.hp.current / player.hp.max < 0.5 ||*/ curSta / maxSta < 0.80)
     const hasSimu = nstb.PeekPort(ns, 9)["hasSimu"]
 
-
+    // Main function calls ---------------------------------
     await updateCity();
     await levelSkills();
     if (hasSimu || !ns.singularity.isBusy() || ns.singularity.getCurrentWork().type != "GRAFTING") {
@@ -33,7 +33,7 @@ export async function main(ns) {
         }
     }
 
-
+    // Function definitions --------------------------------
     async function updateCity() {
         let [bestCity, bestPop] = await getBestCity(); // city with highest population
         let curCityPop = await nstb.RunCom(ns, 'ns.bladeburner.getCityEstimatedPopulation()', [curCity]); 
@@ -78,7 +78,7 @@ export async function main(ns) {
             actName = "Field Analysis";
         } else if (assLo >= 0.4 && assCount > 0) {
             actType = "Operations";
-            actName = "Assasination";
+            actName = "Assassination";
         } else if (raidLo >= 0.4 && raidCount > 0) {
             actType = "Operations";
             actName = "Raid";
@@ -101,7 +101,7 @@ export async function main(ns) {
             case "Field Analysis":
                 await levelUpSelection(["Blade's Intuition", "Overclock"]);
                 break;
-            case "Assasination":
+            case "Assassination":
                 await levelUpSelection(["Blade's Intuition", "Overclock", "Digital Observer", "Short-Circuit", "Cloak"]);
                 break;
             case "Raid":
