@@ -238,54 +238,50 @@ export async function main(ns) {
 			hashToCashPerSec = 0; // stop buying cash
 
 			// Determine the next corp upgrade (if we have corp)
-			let nextCupgr; let nextCupgrCost; let portC = nstb.PeekPort(ns, 8);
-			let hasCorp = portC["hasCorp"];
-			let fundCost = ns.hacknet.hashCost("Sell for Corporation Funds");
-			let resrCost = ns.hacknet.hashCost("Exchange for Corporation Research");
+			let nextCupgr; let nextCupgrCost;
+			const portC = nstb.PeekPort(ns, 8);
+			const hasCorp = portC["hasCorp"];
+			const fundCost = ns.hacknet.hashCost("Sell for Corporation Funds");
+			const fundCostLim = Math.max(hPerSec * 60, 2000 * BITNODE_MULT);
+			const shouldBuyFund = portC["profit"] < 500e6 && fundCost <= fundCostLim
+			const resrCost = ns.hacknet.hashCost("Exchange for Corporation Research");
+			const resrCostLim = Math.max(hPerSec * 120, 3000 * BITNODE_MULT);
+			const shouldBuyResr = (portC["hasTA.II"] == false || portC["research"] <= 10e6) && resrCost <= resrCostLim
 
-			// should buy more funds if:	profit/s < $500m AND can easily afford more
-			const shouldBuyFund = portC["profit"] < 500e6 && fundCost <= Math.max(hPerSec * 60, 2000 * BITNODE_MULT)
-			// should buy more research if: (low on research(<140k) OR don't have TA.II) AND can easily afford more
-			const shouldBuyResr = (portC["hasTA.II"] == false || portC["research"] <= 10e6) && resrCost <= Math.max(hPerSec * 120, 3000 * BITNODE_MULT)
-
-			if (shouldBuyFund) {
+			if (shouldBuyFund || (!shouldBuyResr && resrCostLim - resrCost < fundCostLim - fundCost)) {
 				nextCupgr = "CorpFunds";
-				nextCupgrCost = fundCost
-			} else if (shouldBuyResr || Math.max(hPerSec * 120, 3000 * BITNODE_MULT) - resrCost >= Math.max(hPerSec * 60, 2000 * BITNODE_MULT) - fundCost) {
-				nextCupgr = "CorpResr";
-				nextCupgrCost = resrCost
+				nextCupgrCost = fundCost;
+				if (hasCorp && hashes() >= nextCupgrCost && shouldBuyFund) { ns.hacknet.spendHashes("Sell for Corporation Funds") }
 			} else {
-				nextCupgr = "CorpFunds";
-				nextCupgrCost = fundCost
+				nextCupgr = "CorpResr";
+				nextCupgrCost = resrCost;
+				if (hasCorp && hashes() >= nextCupgrCost && shouldBuyResr) { ns.hacknet.spendHashes("Exchange for Corporation Research") }
 			}
-			
-			if (hasCorp && hashes() >= nextCupgrCost) {
-				if (nextCupgrCost == fundCost) { ns.hacknet.spendHashes("Sell for Corporation Funds") }
-				else if (nextCupgrCost == resrCost) { ns.hacknet.spendHashes("Exchange for Corporation Research") }
-			}
-
 
 			// Determine the next bb upgrade (if this is a bladeburner run & we have access)
-			let nextBupgr; let nextBupgrCost; let hasBB = nstb.PeekPort(ns, 9)["hasBB"];
-			let BBrankCost = ns.hacknet.hashCost("Exchange for Bladeburner Rank");
-			let BBspCost = ns.hacknet.hashCost("Exchange for Bladeburner SP");
-			if (BBrankCost <= BBspCost){
+			let nextBupgr; let nextBupgrCost;
+			const hasBB = nstb.PeekPort(ns, 9)["hasBB"];
+			const BBrankCost = ns.hacknet.hashCost("Exchange for Bladeburner Rank");
+			const BBrankCostLim = Math.max(hPerSec * 120, 5250 * BITNODE_MULT)
+			const shouldBuyRank = hasBB && BBrankCost <= BBrankCostLim
+			const BBspCost = ns.hacknet.hashCost("Exchange for Bladeburner SP");
+			const BBspCostLim = Math.max(hPerSec * 120, 5000 * BITNODE_MULT)
+			const shouldBuySP = hasBB && BBspCost <= BBspCostLim
+
+			if (shouldBuyRank || (!shouldBuySP && BBspCostLim - BBspCost < BBrankCostLim - BBrankCost)){
 				nextBupgr = "BBrank";
 				nextBupgrCost = BBrankCost;
-				if (hashes() >= nextBupgrCost) { ns.hacknet.spendHashes("Exchange for Bladeburner Rank") }
+				if (hasBB && hashes() >= nextBupgrCost) { ns.hacknet.spendHashes("Exchange for Bladeburner Rank") }
 			} else {
 				nextBupgr = "BBsp";
 				nextBupgrCost = BBspCost;
-				if (hashes() >= nextBupgrCost) { ns.hacknet.spendHashes("Exchange for Bladeburner SP") }
+				if (hasBB && hashes() >= nextBupgrCost) { ns.hacknet.spendHashes("Exchange for Bladeburner SP") }
 			}
 
-
-
 			// Determine the next generic upgrade
-			let genericUpgrStr;
+			let genericUpgrStr; let nextGupgr;
 			let studyCost = ns.hacknet.hashCost("Improve Studying");
 			let gymCost = ns.hacknet.hashCost("Improve Gym Training");
-			let nextGupgr;
 			let nextGupgrCost = Math.min(gymCost, studyCost);
 			const shouldBuyStudy = (studyCost < hPerSec)
 			const shouldBuyGym = (gymCost < hPerSec)
@@ -296,8 +292,6 @@ export async function main(ns) {
 				nextGupgr = "GymUpg";
 				if (hashes() >= nextGupgrCost && shouldBuyGym) { ns.hacknet.spendHashes("Improve Gym Training") }
 			}
-
-
 
 			// If we don't have the capacity for any of our next upgrades, start selling hashes for money
 			const shouldBuyMoney = (maxHash() < nextBupgrCost || !hasBB) && (maxHash() < nextCupgrCost || (!shouldBuyFund && !shouldBuyResr) || !hasCorp) && nextGupgrCost >= hPerSec
@@ -337,7 +331,7 @@ export async function main(ns) {
 
 			if (hasBB) {
 				let bladeStr = "B>" + nextBupgr
-				if (nextBupgrCost <= maxHash()) {
+				if (nextBupgrCost <= maxHash() && (shouldBuyRank || shouldBuySP) ) {
 					ns.run('hud.js', 1, "upd", 'buyhashbladeON', bladeStr, `#${tb.StandardNotation(nextBupgrCost, 3)}`);
 					ns.run('hud.js', 1, "upd", 'buyhashbladeOFF');
 				}
