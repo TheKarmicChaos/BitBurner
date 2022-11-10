@@ -65,7 +65,7 @@ export async function main(ns) {
             let actName;
             let sleeveShock = nstb.PeekPort(ns, 6)["sleeveShock"]
             // Determine what our best action would be
-            if (sleeveShock > 0 && cityChaos > 1) {
+            if (sleeveShock > 0 && cityChaos > 4) {
                 actType = "General";
                 actName = "Diplomacy";
             } else if (sleeveShock > 0 && Math.max(trackHi - trackLo, bountyHi - bountyLo, raidHi - raidLo, assLo - assHi) > 0) {
@@ -130,9 +130,7 @@ export async function main(ns) {
                     bestSkillCost = skillCost;
                 }
             }
-            ns.print('sp: ', sp)
-            ns.print('bestSkill: ', bestSkill)
-            ns.print('bestSkillCost: ', bestSkillCost)
+            // ns.print(`sp: ${sp}\nbestSkill: ${bestSkill}\nbestSkillCost: ${bestSkillCost})`)
             // If we can afford the best skill, buy it.
             if (sp >= bestSkillCost) await nstb.RunCom(ns, 'ns.bladeburner.upgradeSkill()', [bestSkill]);
 
