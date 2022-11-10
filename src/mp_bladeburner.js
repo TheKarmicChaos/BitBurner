@@ -14,6 +14,7 @@ export async function main(ns) {
         const player = ns.getPlayer();
         const cities = ["Aevum", "Chongqing", "Sector-12", "New Tokyo", "Ishima", "Volhaven"];
         let [curSta, maxSta] = await nstb.RunCom(ns, 'ns.bladeburner.getStamina()')
+        let curCity = await nstb.RunCom(ns, 'ns.bladeburner.getCity()'); // get current city
         const curAct = () => ns.bladeburner.getCurrentAction();
 
         const shouldRecover = (/*player.hp.current / player.hp.max < 0.5 ||*/ curSta / maxSta < 0.80)
@@ -34,10 +35,10 @@ export async function main(ns) {
 
         async function updateCity() {
             let [bestCity, bestPop] = await getBestCity(); // city with highest population
-            let curCity = await nstb.RunCom(ns, 'ns.bladeburner.getCity()'); // current city
             let curCityPop = await nstb.RunCom(ns, 'ns.bladeburner.getCityEstimatedPopulation()', [curCity]); 
             // If current city's pop is < 1b or 20% less than best city pop, switch to best city
             if (curCityPop < 1e9 || curCityPop < bestPop * 0.8) await nstb.RunCom(ns, 'ns.bladeburner.switchCity()', [bestCity]);
+            curCity = await nstb.RunCom(ns, 'ns.bladeburner.getCity()'); // update current city
         }
 
         async function getBestCity() {
@@ -59,12 +60,17 @@ export async function main(ns) {
             let [bountyLo, bountyHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['Contracts', 'Bounty Hunter']);
             let [raidLo, raidHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['Operations', 'Raid']);
             let [assLo, assHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['Operations', 'Assassination']);
+            let cityChaos = await nstb.RunCom(ns, 'ns.bladeburner.getCityChaos()', [curCity]);
             let actType;
             let actName;
+            let sleeveShock = nstb.PeekPort(ns, 6)["sleeveShock"]
             // Determine what our best action would be
-            if (nstb.PeekPort(ns, 6)["sleeveShock"] > 0 && Math.max(trackHi - trackLo, bountyHi - bountyLo, raidHi - raidLo, assLo - assHi) >= 0.15) {
+            if (sleeveShock > 0 && cityChaos > 1) {
                 actType = "General";
-                actName = "Field Analysis";       
+                actName = "Diplomacy";
+            } else if (sleeveShock > 0 && Math.max(trackHi - trackLo, bountyHi - bountyLo, raidHi - raidLo, assLo - assHi) > 0) {
+                actType = "General";
+                actName = "Field Analysis";
             } else if (assLo >= 0.4 && await nstb.RunCom(ns, 'ns.bladeburner.getActionCountRemaining()', ['Operations', 'Assassination']) > 0) {
                 actType = "Operations";
                 actName = "Assasination";
@@ -83,7 +89,53 @@ export async function main(ns) {
         }
 
         async function levelSkills() {
-            return;
+            switch (curAct().name) {
+                case "Diplomacy":
+                    await levelUpSelection(["Blade's Intuition", "Overclock"]);
+                    break;
+                case "Field Analysis":
+                    await levelUpSelection(["Blade's Intuition", "Overclock"]);
+                    break;
+                case "Assasination":
+                    await levelUpSelection(["Blade's Intuition", "Overclock", "Digital Observer", "Short-Circuit", "Cloak"]);
+                    break;
+                case "Raid":
+                    await levelUpSelection(["Blade's Intuition", "Overclock", "Digital Observer", "Short-Circuit"]);
+                    break;
+                case "Bounty Hunter":
+                    await levelUpSelection(["Blade's Intuition", "Overclock", "Tracer", "Short-Circuit"]);
+                    break;
+                case "Tracking":
+                    await levelUpSelection(["Blade's Intuition", "Overclock", "Tracer", "Cloak"]);
+                    break;
+                default:
+                    await levelUpSelection(["Blade's Intuition", "Overclock"]);
+                    break;
+            }
+        }
+
+        async function levelUpSelection(skills) {
+            let sp = await nstb.RunCom(ns, 'ns.bladeburner.getSkillPoints()');
+            let bestSkill = null;
+            let bestSkillCost = null;
+            for (let skill of skills) {
+                // Stop certain skill upgrades at certain levels
+                let skillLv = await nstb.RunCom(ns, 'ns.bladeburner.getSkillLevel()', [skill]);
+                if (skill == "Overclock" && skillLv >= 90) continue;
+                if (["Short-Circuit", "Cloak"].includes(skill) && skillLv >= 30) continue;
+                // If this upgrade is the cheapest thus far, remember it.
+                let skillCost = await nstb.RunCom(ns, 'ns.bladeburner.getSkillUpgradeCost()', [skill]);
+                if (bestSkillCost == null || bestSkillCost > skillCost) {
+                    bestSkill = skill;
+                    bestSkillCost = skillCost;
+                }
+            }
+            ns.print('sp: ', sp)
+            ns.print('bestSkill: ', bestSkill)
+            ns.print('bestSkillCost: ', bestSkillCost)
+            // If we can afford the best skill, buy it.
+            if (sp >= bestSkillCost) await nstb.RunCom(ns, 'ns.bladeburner.upgradeSkill()', [bestSkill]);
+
         }
     }
     
