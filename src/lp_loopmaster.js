@@ -23,14 +23,10 @@ export async function main(ns) {
 
 		// Check 1: Sleeves
 		// -------------------------
-		let sleeveshocks = [];
-		let reqShock = Math.floor(75 ** bndata["StrengthLevelMultiplier"])
-		for (var n = 0; n < await nstb.RunCom(ns, 'ns.sleeve.getNumSleeves()'); ++n) {
-			let slstats = await nstb.RunCom(ns, 'ns.sleeve.getSleeveStats()', [n]);
-			sleeveshocks.push(slstats.shock);
-		}
+		const reqShock = Math.floor(75 ** bndata["StrengthLevelMultiplier"])
+		const sleeveShock = nstb.PeekPort(ns, 6)["sleeveShock"];
 		// - All sleeves at shock 0
-		const check1 = (tb.GetMinOfArray(sleeveshocks) < reqShock)
+		const check1 = (sleeveShock < reqShock)
 		let checkmark1 = "[ ]"; if (check1) checkmark1 = "[✓]";
 		ns.print(`\n${checkmark1} Check #1: Sleeves`)
 		if (!check1) ns.print(`• Need all sleeves below shock ${reqShock}`);
