@@ -10,10 +10,10 @@ export async function main(ns) {
 		1.1, 4.1, 4.2, 1.2, 2.1, 4.3,			// Maxing singularity & unlocking gangs
 		10.1, 3.1, 5.1, 8.1, 8.2, 8.3,			// Unlocking corps, sleeves, int, & maxing stock market (I'd highly reccomend doing 3.1 before 10.1)
 		3.2, 3.3, 9.1, 9.2, 9.3, 1.3,			// Maxing corps for API, unlocking & maxing hacknet
-		12.1, 10.2, 10.3, 2.2, 2.3,	12.2, 		// Recursion lv2, maxing sleeves & crime effectiveness			<< YOU ARE HERE <<
-		7.1, 6.1, 7.2, 6.2, 7.3, 6.3,			// Unlocking & maxing bladeburner
+		12.1, 10.2, 10.3, 2.2, 2.3,	12.2, 		// Recursion lv2, maxing sleeves & crime effectiveness
+		7.1, 6.1, 7.2, 7.3, 6.2, 6.3,			// Unlocking & maxing bladeburner							<< YOU ARE HERE <<
 		12.3, 12.4, 12.5, 11.1, 11.2, 11.3,		// Recursion lv5, unlocking & maxing job salaries/aug discounts
-		5.2, 5.3, 13.1, 13.2, 13.3,				// Maxing hacking mults, then unlocking & maxing stanek's gift	
+		5.2, 5.3, 13.1, 13.2, 13.3,				// Maxing hacking mults, then unlocking & maxing stanek's gift
 
 		// 1.0, 2.0, 3.0, 9.0,					// Placeholders for achievement hunting
 		12.0									// Infinite Recursion
@@ -33,7 +33,7 @@ export async function main(ns) {
 		}
 	}
 	
-	
+
 	function GetNextBitNode() {
 		for (var x = 0; x < ownedSF.length; ++x) { // for every owned SF
 			var sf = ownedSF[x];
