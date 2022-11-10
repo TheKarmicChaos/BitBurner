@@ -267,7 +267,18 @@ export async function main(ns) {
 
 			// Determine the next bb upgrade (if this is a bladeburner run & we have access)
 			let nextBupgr; let nextBupgrCost; let hasBB = nstb.PeekPort(ns, 9)["hasBB"];
-			// "Exchange for Bladeburner Rank", "Exchange for Bladeburner SP"
+			let BBrankCost = ns.hacknet.hashCost("Exchange for Bladeburner Rank");
+			let BBspCost = ns.hacknet.hashCost("Exchange for Bladeburner SP");
+			if (BBrankCost <= BBspCost){
+				nextBupgr = "BBrank";
+				nextBupgrCost = BBrankCost;
+				if (hashes() >= nextBupgrCost) { ns.hacknet.spendHashes("Exchange for Bladeburner Rank") }
+			} else {
+				nextBupgr = "BBsp";
+				nextBupgrCost = BBspCost;
+				if (hashes() >= nextBupgrCost) { ns.hacknet.spendHashes("Exchange for Bladeburner SP") }
+			}
+
 
 
 			// Determine the next generic upgrade
