@@ -97,6 +97,7 @@ export async function main(ns) {
 		const isFundNotNeeded = (nstb.PeekPort(ns, 8)["profit"] >= 500e6)
 		const isResrNotNeeded = (nstb.PeekPort(ns, 8)["hasTA.II"] && nstb.PeekPort(ns, 8)["research"] >= 10e6)
 		const hasBB = nstb.PeekPort(ns, 9)["hasBB"]
+		const wantBB = nstb.PeekPort(ns, 9)["wantBB"]
 		const BBrankCost = ns.hacknet.hashCost("Exchange for Bladeburner Rank");
 		const BBspCost = ns.hacknet.hashCost("Exchange for Bladeburner SP");
 		// - Has 4sData TIX API
@@ -108,9 +109,9 @@ export async function main(ns) {
 		// - buying research w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
 		const check4d = (!hasCorp || !("hackn" in strats) || isResrNotNeeded || (resrCost > 3000 * strats["hackn"] && resrCost > nstb.PeekPort(ns, 3)["income"] * 5))
 		// - buying BB rank is no longer extremely cheap
-		const check4e = (!hasBB || BBrankCost > 2000)
+		const check4e = (!wantBB && (!hasBB || BBrankCost > 2000))
 		// - buying BB sp is no longer extremely cheap
-		const check4f = (!hasBB || BBspCost > 1750)
+		const check4f = (!wantBB && (!hasBB || BBspCost > 1750))
 		const checksum4 = (check4a && check4b && check4c && check4d)
 		let checkmark4 = "[ ]"; if (checksum4) checkmark4 = "[✓]";
 		ns.print(`\n${checkmark4} Check #4: Upgrades`)
