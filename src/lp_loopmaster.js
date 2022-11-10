@@ -37,7 +37,10 @@ export async function main(ns) {
 		// -------------------------
 		const hasGang = nstb.PeekPort(ns, 7)["hasGang"]
 		const wantGang = nstb.PeekPort(ns, 7)["wantGang"]
-		let thugcount = 0; let thugmults = []; let territory = 0;
+		let thugcount = 0;
+		let thugmults = [];
+		const territory = nstb.PeekPort(ns, 7)["territory"]
+		const rep = nstb.PeekPort(ns, 7)["respect"]
 		if (hasGang) {
 			var members = await nstb.RunCom(ns, 'ns.gang.getMemberNames()');
 			thugcount = members.length // 12 thugs
@@ -46,24 +49,25 @@ export async function main(ns) {
 				var avgmulti = (memberInfo.str_asc_mult + memberInfo.def_asc_mult + memberInfo.dex_asc_mult + memberInfo.agi_asc_mult) / 4;
 				thugmults.push(avgmulti); // a is thug >=lv 4 at an avg >=(x8) asc multiplier
 			}
-			var ganginfo = await nstb.RunCom(ns, 'ns.gang.getGangInformation()');
-			territory = ganginfo.territory // 20% territory
 		}
 		// - In a gang (if we want one)
-		const check2a = (!wantGang || hasGang)
+		const check2a = (!wantGang)
 		// - Gang has 12 thugs
-		const check2b = (!wantGang || thugcount == 12)
+		const check2b = (!hasGang || thugcount == 12)
 		// - all thugs >=lv 4
-		const check2c = (!wantGang || tb.GetMinOfArray(thugmults) >= 8)
+		const check2c = (!hasGang || tb.GetMinOfArray(thugmults) >= 8)
 		// - >= 20% territory.
-		//const check2d = (!wantGang || territory >= 0.15)
-		const checksum2 = (check2a && check2b && check2c)
+		const check2d = (!hasGang || territory >= 0.20)
+		// - >= 1b resp.
+		const check2e = (!hasGang || rep >= 1e9)
+		const checksum2 = (check2a && check2b && check2c && check2d && check2e)
 		let checkmark2 = "[ ]"; if (checksum2) checkmark2 = "[✓]";
 		ns.print(`\n${checkmark2} Check #2: Gang`)
 		if (!check2a) ns.print("• Need a gang");
 		if (!check2b) ns.print("• Need 12 thugs");
 		if (!check2c) ns.print("• Need all thugs >= lv 4");
-		//if (!check2d) ns.print("- Need >= 15% territory");
+		if (!check2d) ns.print("• Need 20% territory");
+		if (!check2e) ns.print("• Need 1b resp");
 
 
 
@@ -82,7 +86,7 @@ export async function main(ns) {
 		ns.print(`\n${checkmark3} Check #3: Corporation`)
 		if (!check3a) ns.print("• Need Corp");
 		if (!check3b) ns.print("• Need Lab");
-		if (!check3c) ns.print("• Need >= 3 products");
+		if (!check3c) ns.print("• Need 3 products");
 
 
 
@@ -141,7 +145,7 @@ export async function main(ns) {
 		const check6 = (ns.getTimeSinceLastAug() > 180000)
 		let checkmark6 = "[ ]"; if (check6) checkmark6 = "[✓]";
 		ns.print(`\n${checkmark6} Check #6: Time`)
-		if (!check6) ns.print(`• Need to wait 1m after installing.`);
+		if (!check6) ns.print(`• Need to wait 3m after install.`);
 
 
 
