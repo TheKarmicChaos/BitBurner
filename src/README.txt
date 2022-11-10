@@ -12,7 +12,7 @@ Num | Topic of Contents     | Contents
 6   | Run Progress          | { "backdoors": ["home"], "sleeveShock": 100 }
 7   | Gang                  | { "wantGang": false, "hasGang": false, "territory": 0, "respect": 0 }
 8   | Corporation           | { "wantCorp": false, "hasCorp": false, "hasProd": false, "hasLab": false, "hasTA.II": false, "research": 0, "funds": 0, "profit": 0, "products": [] }
-9   | BladeBurner           | { "wantBB": false, "hasBB": false, "hasSimu": false, "city": "Sector-12" }
+9   | BladeBurner           | { "wantBB": false, "hasBB": false, "hasSimu": false, "city": "Sector-12", "blackOpsDone": ["failsafe"] }
 10  |                       | 
 
 ===========================
