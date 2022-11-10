@@ -3,7 +3,7 @@ import * as tb from "./lib/toolbox";
 
 /** @param {import("..").NS} ns */
 export async function main(ns) {
-	ns.tail('mp_bladeburner.js'); //ns.disableLog("ALL"); ns.clearLog();
+	//ns.tail('mp_bladeburner.js'); ns.disableLog("ALL"); ns.clearLog();
 
     while (!await nstb.RunCom(ns, 'ns.bladeburner.joinBladeburnerDivision()')) await ns.sleep(10000);
     nstb.UpdPort(ns, 9, "dict", ["hasBB", true, "wantBB", false]);
