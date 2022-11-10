@@ -49,7 +49,7 @@ export async function main(ns) {
 
 	// PORT 7: GANG PROGRESS TRACKER
 	ns.getPortHandle(7).clear()
-	ns.getPortHandle(7).write({ "wantGang": false, "hasGang": false, "territory": 0})
+	ns.getPortHandle(7).write({ "wantGang": false, "hasGang": false, "territory": 0, "respect": 0 })
 
 	// PORT 8: CORP PROGRESS TRACKER
 	ns.getPortHandle(8).clear()
