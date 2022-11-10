@@ -138,7 +138,7 @@ export async function main(ns) {
 		// Check 6: Timer
 		// -------------------------
 		// 1 minute has passed since the run started
-		const check6 = (ns.getTimeSinceLastAug() > 60000)
+		const check6 = (ns.getTimeSinceLastAug() > 180000)
 		let checkmark6 = "[ ]"; if (check6) checkmark6 = "[✓]";
 		ns.print(`\n${checkmark6} Check #6: Time`)
 		if (!check6) ns.print(`• Need to wait 1m after installing.`);

@@ -135,7 +135,7 @@ export async function main(ns) {
                 bestSkillCost = skillCost;
             }
         }
-        ns.print(`sp: ${sp}\nbestSkill: ${bestSkill}\nbestSkillCost: ${bestSkillCost})`)
+        ns.print(`sp: ${sp}\nbestSkill: ${bestSkill}\nbestSkillCost: ${bestSkillCost}`)
         // If we can afford the best skill, buy it.
         if (sp >= bestSkillCost) await nstb.RunCom(ns, 'ns.bladeburner.upgradeSkill()', [bestSkill]);
     }
