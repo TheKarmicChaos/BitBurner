@@ -13,6 +13,7 @@ export async function main(ns) {
     const cities = ["Aevum", "Chongqing", "Sector-12", "New Tokyo", "Ishima", "Volhaven"];
     let [curSta, maxSta] = await nstb.RunCom(ns, 'ns.bladeburner.getStamina()')
     let curCity = await nstb.RunCom(ns, 'ns.bladeburner.getCity()'); // get current city
+    let curRank = await nstb.RunCom(ns, 'ns.bladeburner.getRank()'); // get current rank
     const curAct = () => ns.bladeburner.getCurrentAction();
 
     const shouldRecover = (/*player.hp.current / player.hp.max < 0.5 ||*/ curSta / maxSta < 0.80)
@@ -67,6 +68,12 @@ export async function main(ns) {
         let [assLo, assHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['Operations', 'Assassination']);
         let assCount = await nstb.RunCom(ns, 'ns.bladeburner.getActionCountRemaining()', ['Operations', 'Assassination'])
 
+        let doneOps = nstb.PeekPort(ns, 9)["blackOpsDone"]
+        let blackOpList = tb.ArrSubtract(await nstb.RunCom(ns, 'ns.bladeburner.getBlackOpNames()'), doneOps)
+        let nextBlackOp = blackOpList[0]
+        let [blackLo, blackHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['BlackOps', nextBlackOp]);
+        let blackOpReq = await nstb.RunCom(ns, 'ns.bladeburner.getBlackOpRank()', [nextBlackOp]);
+
         let cityChaos = await nstb.RunCom(ns, 'ns.bladeburner.getCityChaos()', [curCity]);
         let actType;
         let actName;
@@ -78,6 +85,14 @@ export async function main(ns) {
         } else if (sleeveShock > 0 && Math.max(trackHi - trackLo, bountyHi - bountyLo, raidHi - raidLo, assLo - assHi) > 0) {
             actType = "General";
             actName = "Field Analysis";
+        } else if (assLo >= 1 && blackLo >= 0.33 && blackOpReq <= curRank) {
+            actType = "BlackOps";
+            if (curAct().name != nextBlackOp) {
+                if (!ns.bladeburner.startAction(actType, nextBlackOp)) {
+                    doneOps.push(nextBlackOp);
+                    nstb.UpdPort(ns, 9, "dict", [ "blackOpsDone", doneOps ])  // update port array
+                };
+            }
         } else if (assLo >= 0.4 && assCount > 0) {
             actType = "Operations";
             actName = "Assassination";
@@ -91,8 +106,8 @@ export async function main(ns) {
             actType = "Contracts";
             actName = "Tracking";
         }
-        // Start doing our best action if we aren't already.
-        if (curAct().name != actName) ns.bladeburner.startAction(actType, actName);
+        // Start doing our best action (excluding blackops) if we aren't already.
+        if (actType != "BlackOps" && curAct().name != actName) ns.bladeburner.startAction(actType, actName);
     }
 
     async function levelSkills() {
@@ -104,19 +119,19 @@ export async function main(ns) {
                 await levelUpSelection(["Blade's Intuition", "Overclock"]);
                 break;
             case "Assassination":
-                await levelUpSelection(["Blade's Intuition", "Overclock", "Digital Observer", "Short-Circuit", "Cloak"]);
+                await levelUpSelection(["Blade's Intuition", "Overclock", "Cyber's Edge", "Digital Observer", "Short-Circuit", "Cloak", "Evasive System", "Reaper"]);
                 break;
             case "Raid":
-                await levelUpSelection(["Blade's Intuition", "Overclock", "Digital Observer", "Short-Circuit"]);
+                await levelUpSelection(["Blade's Intuition", "Overclock", "Cyber's Edge", "Digital Observer", "Short-Circuit"]);
                 break;
             case "Bounty Hunter":
-                await levelUpSelection(["Blade's Intuition", "Overclock", "Tracer", "Short-Circuit"]);
+                await levelUpSelection(["Blade's Intuition", "Overclock", "Cyber's Edge", "Tracer", "Short-Circuit", "Datamancer", "Hands of Midas", "Hyperdrive"]);
                 break;
             case "Tracking":
-                await levelUpSelection(["Blade's Intuition", "Overclock", "Tracer", "Cloak"]);
+                await levelUpSelection(["Blade's Intuition", "Overclock", "Cyber's Edge", "Tracer", "Cloak", "Datamancer", "Hands of Midas", "Hyperdrive"]);
                 break;
             default:
-                await levelUpSelection(["Blade's Intuition", "Overclock"]);
+                await levelUpSelection(["Blade's Intuition", "Overclock", "Digital Observer", "Short-Circuit", "Cloak", "Evasive System", "Reaper"]);
                 break;
         }
     }
@@ -130,16 +145,20 @@ export async function main(ns) {
             let skillLv = await nstb.RunCom(ns, 'ns.bladeburner.getSkillLevel()', [skill]);
             if (skill == "Overclock" && skillLv >= 90) continue;
             if (["Short-Circuit", "Cloak"].includes(skill) && skillLv >= 30) continue;
-            if (skill == "Tracer" && skillLv >= 10) continue;
-            // If this upgrade is the cheapest thus far, remember it.
+            if (["Evasive System", "Reaper"].includes(skill) && skillLv >= 15) continue;
+            if (["Tracer", "Cyber's Edge", "Datamancer"].includes(skill) && skillLv >= 10) continue;
+            if (["Hands of Midas", "Hyperdrive", "Datamancer"].includes(skill) && skillLv >= 5) continue;
+            // Get skill cost, and multiply it by 0.5 if it's not a high priority.
             let skillCost = await nstb.RunCom(ns, 'ns.bladeburner.getSkillUpgradeCost()', [skill]);
+            if (["Evasive System", "Reaper", "Cyber's Edge", "Datamancer", "Hands of Midas", "Hyperdrive"].includes(skill)) skillCost *= 0.5;
+            // If this upgrade is the cheapest thus far, remember it.
             if (bestSkillCost == null || bestSkillCost > skillCost) {
                 bestSkill = skill;
                 bestSkillCost = skillCost;
             }
         }
         ns.print(`sp: ${sp}\nbestSkill: ${bestSkill}\nbestSkillCost: ${bestSkillCost}`)
-        // If we can afford the best skill, buy it.
+        // Otherwise, if we can afford the best skill, buy it.
         if (sp >= bestSkillCost) await nstb.RunCom(ns, 'ns.bladeburner.upgradeSkill()', [bestSkill]);
     }
 }
