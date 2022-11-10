@@ -130,6 +130,7 @@ export async function main(ns) {
             let skillLv = await nstb.RunCom(ns, 'ns.bladeburner.getSkillLevel()', [skill]);
             if (skill == "Overclock" && skillLv >= 90) continue;
             if (["Short-Circuit", "Cloak"].includes(skill) && skillLv >= 30) continue;
+            if (skill == "Tracer" && skillLv >= 10) continue;
             // If this upgrade is the cheapest thus far, remember it.
             let skillCost = await nstb.RunCom(ns, 'ns.bladeburner.getSkillUpgradeCost()', [skill]);
             if (bestSkillCost == null || bestSkillCost > skillCost) {
