@@ -57,6 +57,7 @@ itself. For text rows, you will need to add and update tooltips manually.
 		External Updates Cheat Sheet:
 	UPDATE/SHOW TEXT ROW		ns.run("hud.js", 1, "upd", hook, "Leftside Text", "Rightside Text")
 	HIDE TEXT ROW				ns.run("hud.js", 1, "upd", hook)
+	CHANGE TEXT ROW COLOR		ns.run("hud.js", 1, "updcol", hook, "new color name")
 	UPDATE PROGR BAR			ns.run("hud.js", 1, "progr", hook, currentValue, maximumValue)
 	HIDE PROGR BAR				ns.run("hud.js", 1, "hide", hook)
 	SHOW PROGR BAR				ns.run("hud.js", 1, "show", hook)
@@ -67,13 +68,10 @@ itself. For text rows, you will need to add and update tooltips manually.
 
 		TODO LIST:
 	- Overhaul all "Add" functions to try to update the element if they already exist (allowing for function changes to be made without killing all scripts)
-	- Construct custom hud text rows from scratch instead of copying existing ones, so they can be further customized.
-	- Use the above change to implement support for all colors in the player's "theme".
 	- Ingame progress bar tooltips still look a bit different from the ones this script generates.
 		- Update tooltip line spacing to match that of the ingame tooltips
 		- Figure out how to center tooltips, like the ones the game uses for progress bars
 		- Figure out how to add the growing/shrinking transition effect to tooltips that the game uses.
-	- Finish adding support for use of the 3rd column.
 	- Add new feature: Clickable dropdown buttons that allow the player to collapse categories of rows in the hud. (probably will use column 3 for this)
 	- Add new feature: Clickable button elements that run a customizable block of code when clicked.
 
@@ -122,6 +120,8 @@ z-index: 9999999;
 inset: 0px auto auto 0px;
 transform: translate3d(0px, 20px, 0px);
 transition: opacity 0.2s;`;
+let textStyleParams = // Extra css style parameters added to the text rows in your hud (applies to all columns)
+``;
 
 // Unused settings
 const maxHudHeight = 1000 // Maximum vertical space (in pixels) the hud can occupy before requiring the player to scroll.
@@ -168,18 +168,12 @@ export async function main(ns) {
 		AddTextRow("hash", "hack");
 		AddTextRow("hashincome", "hack");
 		AddLine(1);
-		AddTextRow("buyupgrON", "money"); // I use multiple elements of different colors for the same purpose so that I can color code these rows with ease
-		AddTextRow("buyupgrOFF", "hp");
-		AddTextRow("buynodeON", "money");
-		AddTextRow("buynodeOFF", "hp");
-		AddTextRow("buyservON", "money");
-		AddTextRow("buyservOFF", "hp");
-		AddTextRow("buyhashON", "hack");
-		AddTextRow("buyhashOFF", "hp");
-		AddTextRow("buyhashcorpON", "hack");
-		AddTextRow("buyhashcorpOFF", "hp");
-		AddTextRow("buyhashbladeON", "hack");
-		AddTextRow("buyhashbladeOFF", "hp");
+		AddTextRow("buyupgr", "money");
+		AddTextRow("buynode", "money");
+		AddTextRow("buyserv", "money");
+		AddTextRow("buyhash", "hack");
+		AddTextRow("buyhashcorp", "hack");
+		AddTextRow("buyhashblade", "hack");
 		AddLine(2);
 		AddDefault("hack", "line3");
 		AddDefault("str", "line3");
@@ -189,12 +183,12 @@ export async function main(ns) {
 		AddDefault("cha", "line3");
 		AddDefault("int", "line3");
 		AddLine(3);
-		AddTextRow("karma", "str");
+		AddTextRow("karma", "error");
 		AddProgrBar("karma", "str");
-		AddTextRow("kill", "str");
+		AddTextRow("kill", "error");
 		AddProgrBar("kill", "str");
-		AddTextRow("gangtimer", "hp");
-		AddTextRow("augtimer", "hp");
+		AddTextRow("gangtimer", "info");
+		AddTextRow("augtimer", "info");
 
 		// #################################################
 		// LIST YOUR LOCAL UPDATES HERE
@@ -239,6 +233,10 @@ export async function main(ns) {
 				if (updArg3 == null) updArg3 = "";
 				UpdateTextRow(updHook, updArg1, updArg2, updArg3);
 				break;
+			case "updcol":
+				if (updArg1 == null) updArg1 = "";
+				RecolorTextRow(updHook, updArg1);
+				break;
 			case "progr":
 				if (updArg1 == null) updArg1 = 0;
 				if (updArg2 == null) updArg2 = 100; // Failsafe
@@ -278,34 +276,50 @@ export async function main(ns) {
  * - Must be distinct from all other text row hooks.
  * - Does not need to be distinct from progr bar hooks.
  * @param {string} color - Color of this row.
- * - Currently supported colors are:
- * - "hp", "money", "hack", "str", "cha", "int"
+ * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
  * */
-function AddTextRow(hookName, color) {
+ function AddTextRow(hookName, color) {
 	// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
 	if (!(hooks_to_clear.includes(hookName))) hooks_to_clear.push(hookName);
-	// check if this hook already has an existing row element. If so, return that.
+	// Check if this hook already has an existing row element. If so, use that.
 	let rowElement = d.getElementById(`ovv-row-${hookName}`);
 	if (rowElement !== null) return rowElement;
+	// If color is from the Theme, replace it with the correct rgb/hex code
+	if (color in cols) color = cols[color];
 	// Get an existing display element from HUD.
-	let existingRow;
-	if (colors.includes(color)) { existingRow = d.getElementById(`ovv-row-${color}`) }
-	else { existingRow = d.getElementById(`ovv-row-${color}`) }
+	let existingRow = d.getElementById(`ovv-row-hp`);
 	// Make a clone of it for our new hud element
 	let newHudRow = existingRow.cloneNode(true);
-	// Remove any nested elements created by stats.js
-	newHudRow.querySelectorAll("p > p").forEach(el => el.parentElement.removeChild(el));
-	// Create hook id's for the subchildren where we will be modifying the innerText.
-	newHudRow.querySelectorAll("p").forEach((el, i) => el.id = `ovv-${hookName}-${i}`);
 	// give hook id to our new row-level element
 	newHudRow.id = `ovv-row-${hookName}`
-	// Set the innerText for this element to be empty on both sides (making it invisible)
+	// Remove any nested elements created by stats.js
+	newHudRow.querySelectorAll("p > p").forEach(el => el.parentElement.removeChild(el));
+	// Create hook id's for the children where we will be modifying the innerText.
+	newHudRow.querySelectorAll("p").forEach((el, i) => el.id = `ovv-${hookName}-${i}`);
+	// Replace the game's messy css settings with our own stuff that we can customize.
+	newHudRow.querySelectorAll("p").forEach((el) => el.className = `css-cxl1tz`);
+	newHudRow.querySelectorAll("p").forEach((el) => el.style = `text-align: right; color: ${color};${textStyleParams};`);
+	newHudRow.querySelectorAll("p")[0].style = `text-align: left; color: ${color};${textStyleParams};`;
+	// Set the innerText for all these children to be empty (making the row invisible)
 	newHudRow.querySelectorAll("p")[0].innerText = "";
 	newHudRow.querySelectorAll("p")[1].innerText = "";
-	if (showHiddenRows) newHudRow.querySelectorAll("p")[0].innerText = hookName;
+	newHudRow.querySelectorAll("p")[2].innerText = "";
 	// Insert our element at the bottom of the hud
 	existingRow.parentElement.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
+	if (showHiddenRows) d.getElementById(`ovv-${hookName}-0`).innerText = hookName;
 	return newHudRow;
+};
+
+/** Recolors an existing custom text row.
+ * @param {string} hookName - Hook name for the text row to recolor.
+ * @param {string} color - New color for this text row.
+ * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
+ * */
+function RecolorTextRow(hookToRecolor, color) {
+	// If color is from the Theme, replace it with the correct rgb/hex code
+	if (color in cols) color = cols[color];
+	d.getElementById(`ovv-row-${hookToRecolor}`).querySelectorAll("p").forEach((el) => el.style = `text-align: right; color: ${color};${textStyleParams};`);
+	d.getElementById(`ovv-row-${hookToRecolor}`).querySelectorAll("p")[0].style = `text-align: left; color: ${color};${textStyleParams};`;
 };
 
 /** Updates a custom text row with new text in each column.
