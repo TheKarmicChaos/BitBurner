@@ -23,6 +23,7 @@ export async function main(ns) {
 	const slnum = await nstb.RunCom(ns, 'ns.sleeve.getNumSleeves()')
 	let occupiedFacs = []; if (hasGang) occupiedFacs.push("Slum Snakes");
 	let occupiedJobs = [];
+	let sleeveshocks = [];
 
 	let neededAugs = await GetNeededAugs();
 	//ns.print("NeededAugs: ", neededAugs)
@@ -101,8 +102,12 @@ export async function main(ns) {
 			else { ns.print("Building Player Stats infinitely"); await BuildStats(id, plstats) }
 
 			ns.print(await nstb.RunCom(ns, 'ns.sleeve.getTask()', [id]));
+			sleeveshocks.push(stats.shock);
 		}
 	}
+	// push sleeve shock numbers to port
+	if (sleeveshocks.length == slnum) nstb.UpdPort(ns, 6, "dict", ["sleeveShock", tb.GetMinOfArray(sleeveshocks)])
+
 
 	// ==================================================================================================
 	// Functions
