@@ -161,6 +161,7 @@ export async function main(ns) {
 		runType = "redpill"
 	} else if (bndata.BladeburnerRank > 0) {
 		runType = "bladeburner"
+		nstb.UpdPort(ns, 9, "dict", ["wantBB", true]);
 	}
 
 	ns.getPortHandle(1).write({ "bitNode": bitNode, "mults": bndata, "runType": runType, "strats": strats, "sourceFiles": sourceFiles })
