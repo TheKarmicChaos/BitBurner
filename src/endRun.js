@@ -14,7 +14,7 @@ export async function main(ns) {
 	ns.toast(`RUN RESETS IN: 7`, "error", 900); await ns.sleep(1000)
 	let bestFaction = null;
 	for (let faction of ns.getPlayer().factions) {
-		if (faction != "Slum Snakes") {
+		if (faction != "Slum Snakes" && faction != "Bladeburners") {
 			if (bestFaction == null) { bestFaction = faction }
 			else if (ns.singularity.getFactionRep(faction) > ns.singularity.getFactionRep(bestFaction)) { bestFaction = faction }
 		}
