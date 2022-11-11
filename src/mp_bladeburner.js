@@ -119,7 +119,7 @@ export async function main(ns) {
                 await levelUpSelection(["Blade's Intuition", "Overclock"]);
                 break;
             case "Assassination":
-                await levelUpSelection(["Blade's Intuition", "Overclock", "Cyber's Edge", "Digital Observer", "Short-Circuit", "Cloak", "Evasive System", "Reaper"]);
+                await levelUpSelection(["Blade's Intuition", "Overclock", "Digital Observer", "Short-Circuit", "Cloak", "Evasive System", "Reaper", "Cyber's Edge", "Datamancer", "Hands of Midas", "Hyperdrive"]);
                 break;
             case "Raid":
                 await levelUpSelection(["Blade's Intuition", "Overclock", "Cyber's Edge", "Digital Observer", "Short-Circuit"]);
@@ -131,7 +131,7 @@ export async function main(ns) {
                 await levelUpSelection(["Blade's Intuition", "Overclock", "Cyber's Edge", "Tracer", "Cloak", "Datamancer", "Hands of Midas", "Hyperdrive"]);
                 break;
             default:
-                await levelUpSelection(["Blade's Intuition", "Overclock", "Digital Observer", "Short-Circuit", "Cloak", "Evasive System", "Reaper"]);
+                await levelUpSelection(["Blade's Intuition", "Overclock", "Digital Observer", "Short-Circuit", "Cloak", "Evasive System", "Reaper", "Cyber's Edge", "Datamancer", "Hands of Midas", "Hyperdrive"]);
                 break;
         }
     }
@@ -146,11 +146,11 @@ export async function main(ns) {
             if (skill == "Overclock" && skillLv >= 90) continue;
             if (["Short-Circuit", "Cloak"].includes(skill) && skillLv >= 30) continue;
             if (["Evasive System", "Reaper"].includes(skill) && skillLv >= 15) continue;
-            if (["Tracer", "Cyber's Edge", "Datamancer"].includes(skill) && skillLv >= 10) continue;
+            if (["Tracer", "Cyber's Edge"].includes(skill) && skillLv >= 10) continue;
             if (["Hands of Midas", "Hyperdrive", "Datamancer"].includes(skill) && skillLv >= 5) continue;
-            // Get skill cost, and multiply it by 0.5 if it's not a high priority.
+            // Get skill cost, and multiply it by 2 if it's not a high priority.
             let skillCost = await nstb.RunCom(ns, 'ns.bladeburner.getSkillUpgradeCost()', [skill]);
-            if (["Evasive System", "Reaper", "Cyber's Edge", "Datamancer", "Hands of Midas", "Hyperdrive"].includes(skill)) skillCost *= 0.5;
+            if (["Evasive System", "Reaper", "Cyber's Edge", "Datamancer", "Hands of Midas", "Hyperdrive"].includes(skill)) skillCost *= 2;
             // If this upgrade is the cheapest thus far, remember it.
             if (bestSkillCost == null || bestSkillCost > skillCost) {
                 bestSkill = skill;
@@ -159,6 +159,7 @@ export async function main(ns) {
         }
         ns.print(`sp: ${sp}\nbestSkill: ${bestSkill}\nbestSkillCost: ${bestSkillCost}`)
         // Otherwise, if we can afford the best skill, buy it.
+        if (["Evasive System", "Reaper", "Cyber's Edge", "Datamancer", "Hands of Midas", "Hyperdrive"].includes(bestSkill)) bestSkillCost /= 2;
         if (sp >= bestSkillCost) await nstb.RunCom(ns, 'ns.bladeburner.upgradeSkill()', [bestSkill]);
     }
 }
