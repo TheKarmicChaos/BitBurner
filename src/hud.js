@@ -55,15 +55,15 @@ itself. For text rows, you will need to add and update tooltips manually.
 -------------------------------------------
 
 		External Updates Cheat Sheet:
-	UPDATE/SHOW TEXT ROW		ns.run("hud.js", 1, "upd", hook, "Leftside Text", "Rightside Text")
-	HIDE TEXT ROW				ns.run("hud.js", 1, "upd", hook)
-	CHANGE TEXT ROW COLOR		ns.run("hud.js", 1, "color", hook, "new color")
-	UPDATE PROGR BAR			ns.run("hud.js", 1, "progr", hook, currentValue, maximumValue)
-	CHANGE PROGR BAR COLOR		ns.run("hud.js", 1, "progr color", hook, "new color", "new background color")
-	HIDE PROGR BAR				ns.run("hud.js", 1, "progr hide", hook)
-	SHOW PROGR BAR				ns.run("hud.js", 1, "progr show", hook)
-	TOGGLE PROGR BAR			ns.run("hud.js", 1, "progr toggle", hook)
-	UPDATE/ADD TOOLTIP			ns.run("hud.js", 1, "tooltip", hook, "Tooltip Content")
+	TEXT ROW: UPDATE/SHOW 		ns.run("hud.js", 1, "upd", hook, "Leftside Text", "Rightside Text")
+	TEXT ROW: HIDE				ns.run("hud.js", 1, "upd", hook)
+	TEXT ROW: CHANGE COLOR		ns.run("hud.js", 1, "color", hook, "new color")
+	PROGR BAR: UPDATE			ns.run("hud.js", 1, "progr", hook, currentValue, maximumValue)
+	PROGR BAR: CHANGE COLOR		ns.run("hud.js", 1, "progr color", hook, "new color", "new background color")
+	PROGR BAR: HIDE 			ns.run("hud.js", 1, "progr hide", hook)
+	PROGR BAR: SHOW				ns.run("hud.js", 1, "progr show", hook)
+	PROGR BAR: TOGGLE			ns.run("hud.js", 1, "progr toggle", hook)
+	TOOLTIP: UPDATE/ADD			ns.run("hud.js", 1, "tooltip", hook, "Tooltip Content")
 	HIDE EVERY CUSTOM ROW		ns.run("hud.js", 1, "clear")
 
 -------------------------------------------
@@ -316,7 +316,7 @@ export async function main(ns) {
 };
 
 /** Recolors an existing custom text row.
- * @param {string} hookName - Hook name for the text row to recolor.
+ * @param {string} hookToRecolor - Hook name for the text row to recolor.
  * @param {string} color - New color for this text row.
  * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
  * */
@@ -329,23 +329,23 @@ function RecolorTextRow(hookToRecolor, color) {
 
 /** Updates a custom text row with new text in each column.
  * - If textL, textR, and text3 are all set to the string "null", this row will be hidden.
- * @param {string} hookToUpdate - Name of the hook for text row
+ * @param {string} hookName - Name of the hook for text row
  * @param {string} textL - Text to display in column 1 of this row (left side)
  * @param {string} textR - Text to display in column 2 of this row (right side)
  * @param {string} text3 - (optional) Text to display in column 3 of this row
  * - Default value: null
  * */
- function UpdateTextRow(hookToUpdate, textL, textR, text3 = null) {
+ function UpdateTextRow(hookName, textL, textR, text3 = null) {
 	// Determine the text we want in each column
-	if (showHiddenRows) textL = hookToUpdate + ` `;
+	if (showHiddenRows) textL = hookName + ` `;
 	else if (textL == null) textL = "";
 	else textL += ` `;
 	if (textR == null) textR = "";
 	if (text3 == null) text3 = "";
 	// Update the relevant elements' innerText
-	d.getElementById(`ovv-${hookToUpdate}-0`).innerHTML = textL;
-	d.getElementById(`ovv-${hookToUpdate}-1`).innerHTML = textR;
-	d.getElementById(`ovv-${hookToUpdate}-2`).innerHTML = text3;
+	d.getElementById(`ovv-${hookName}-0`).innerHTML = textL;
+	d.getElementById(`ovv-${hookName}-1`).innerHTML = textR;
+	d.getElementById(`ovv-${hookName}-2`).innerHTML = text3;
 };
 
 /** Inserts a progress bar at the bottom of the hud.
@@ -358,8 +358,8 @@ function RecolorTextRow(hookToRecolor, color) {
  * - Default value: "rgb(17, 17, 17)"
  * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
  * */
-function AddProgrBar(hudHook, color, backgroundColor = "rgb(17, 17, 17)") {
-	let rowElement = d.getElementById(`ovv-row-${hudHook}-progr`);
+function AddProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
+	let rowElement = d.getElementById(`ovv-row-${hookName}-progr`);
 	if (rowElement !== null) return rowElement;
 	// If color or backgroundColor is from the Theme, replace them with the correct rgb/hex code
 	if (color in colors) color = colors[color];
@@ -370,6 +370,7 @@ function AddProgrBar(hudHook, color, backgroundColor = "rgb(17, 17, 17)") {
 	let newHudRow = existingRow.cloneNode(true);
 	// give hook id to our new row-level element
 	newHudRow.id = `ovv-row-${hudHook}-progr`;
+	newHudRow.id = `ovv-row-${hookName}-progr`;
 	// Remove the classes responsible for color.
 	let newBar = newHudRow.firstChild.firstChild.firstChild;
 	newBar.parentElement.className = "css-koo86v"
@@ -392,12 +393,12 @@ function AddProgrBar(hudHook, color, backgroundColor = "rgb(17, 17, 17)") {
  * - Default value: "rgb(17, 17, 17)"
  * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
  * */
-function RecolorProgrBar(hookToRecolor, color, backgroundColor = "rgb(17, 17, 17)") {
+function RecolorProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
 	// If color or backgroundColor is from the Theme, replace them with the correct rgb/hex code
 	if (color in colors) color = colors[color];
 	if (backgroundColor in colors) backgroundColor = colors[backgroundColor];
 	// Update the style of the second-depth child, setting "background-color" to the desired color for "empty" parts of bar
-	let backElement = d.getElementById(`ovv-row-${hookToRecolor}-progr`).firstChild.firstChild
+	let backElement = d.getElementById(`ovv-row-${hookName}-progr`).firstChild.firstChild
 	backElement.style = `background-color: ${backgroundColor};`;
 	// get existing HTML
 	let curHTML = backElement.parentElement.innerHTML;
@@ -410,18 +411,18 @@ function RecolorProgrBar(hookToRecolor, color, backgroundColor = "rgb(17, 17, 17
 
 /** Updates a progress bar and its tooltip with a new percentage.
  * - If textL, textR, and text3 are all set to the string "null", this row will be hidden.
- * @param {string} hookToUpdate - Name of the hook for text row
+ * @param {string} hookName - Name of the hook for text row
  * @param {number} curAmt - How much of the "thing" we currently have
  * @param {number} maxAmt - How much of the "thing" we need to have in order for progr bar to be 100% full.
  * */
- function UpdateProgrBar(hookToUpdate, curAmt, maxAmt) {
-	let elementToUpdate = d.getElementById(`ovv-row-${hookToUpdate}-progr`).firstChild.firstChild
+ function UpdateProgrBar(hookName, curAmt, maxAmt) {
+	let elementToUpdate = d.getElementById(`ovv-row-${hookName}-progr`).firstChild.firstChild
 	// calculate the percentage progress
 	let remaining =  Math.max(0, maxAmt - curAmt)
 	let percent = Math.min(curAmt, maxAmt) * 100 / maxAmt
 	// update the tooltip
 	let ttContent = `<strong>Progress:</strong> ${StandardNotation(Math.abs(curAmt), 3)} / ${StandardNotation(Math.abs(maxAmt), 3)}<br /><strong>Remaining:</strong> ${StandardNotation(remaining, 3)} (${percent.toFixed(2)}%)`
-	AddTooltip(`${hookToUpdate}-progr`, ttContent, {textAlign: "right"});
+	AddTooltip(`${hookName}-progr`, ttContent, {textAlign: "right"});
 	// get existing HTML
 	let curHTML = elementToUpdate.innerHTML;
 	// split the HTML so we get the sections we want to edit. We can't edit style directly since there are other style paramaters.
@@ -432,12 +433,12 @@ function RecolorProgrBar(hookToRecolor, color, backgroundColor = "rgb(17, 17, 17
 };
 
 /** Hides a visbile progress bar on the hud.
- * @param {string} hudHook - Name of the hook for the progress bar
+ * @param {string} hookName - Name of the hook for the progress bar
  * @param {string} visibilityChange - String telling the function what to do to the visibility of the progress bar.
  * - Valid inputs are "show", "hide", or "toggle"
  * */
- function ToggleProgrBar(hudHook, visibilityChange) {
-	let rowElement = d.getElementById(`ovv-row-${hudHook}-progr`);
+ function ToggleProgrBar(hookName, visibilityChange) {
+	let rowElement = d.getElementById(`ovv-row-${hookName}-progr`);
 	if (rowElement !== null) {
 		var barElement = rowElement.firstChild.firstChild.firstChild // deepest child
 		switch (visibilityChange) {
@@ -548,15 +549,15 @@ function AddLine(lineNum) {
 };
 
 /** Updates or creates a tooltip for a custom row element.
- * @param {string} elhook - Name of the hook to add the tooltip to
+ * @param {string} hookName - Name of the hook to add the tooltip to
  * @param {string} content - Text content of the tooltip.
  * @param {any} params - (optional) Dictionary of any additional params you want to use to further customizee this tooltip.
  * - Supported params:
  * - textAlign
  * */
-function AddTooltip(elhook, content, params = {}) {
+function AddTooltip(hookName, content, params = {}) {
 	params.tooltiptext = content
-	let el = d.getElementById(`ovv-row-${elhook}`)
+	let el = d.getElementById(`ovv-row-${hookName}`)
 	setElementTooltip(el, params)
 };
 
