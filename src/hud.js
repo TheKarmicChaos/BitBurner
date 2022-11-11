@@ -57,7 +57,7 @@ itself. For text rows, you will need to add and update tooltips manually.
 		External Updates Cheat Sheet:
 	UPDATE/SHOW TEXT ROW		ns.run("hud.js", 1, "upd", hook, "Leftside Text", "Rightside Text")
 	HIDE TEXT ROW				ns.run("hud.js", 1, "upd", hook)
-	CHANGE TEXT ROW COLOR		ns.run("hud.js", 1, "updcol", hook, "new color name")
+	CHANGE TEXT ROW COLOR		ns.run("hud.js", 1, "color", hook, "new color name")
 	UPDATE PROGR BAR			ns.run("hud.js", 1, "progr", hook, currentValue, maximumValue)
 	HIDE PROGR BAR				ns.run("hud.js", 1, "hide", hook)
 	SHOW PROGR BAR				ns.run("hud.js", 1, "show", hook)
@@ -89,9 +89,8 @@ const ovvHeader = ovv.childNodes[0].firstChild.firstChild.firstChild; // unused
 const ovvTableCont = ovv.childNodes[1].firstChild.firstChild.firstChild; // unused
 const hooks_to_clear = [];
 const symbols = ["", "k", "m", "b", "t", "q", "Q", "s", "S", "o", "n", "e33", "e36", "e39"];
-const colors = ["hp", "money", "hack", "str", "cha", "int"] // valid color names for text rows
 const barColors = ["hack", "str", "cha", "int"] // valid color names for progress bars
-let cols;
+let colors;
 let updType;
 let updHook;
 let updArg1;
@@ -142,10 +141,10 @@ export async function main(ns) {
 		updArg1 = ns.args[2] || null;
 		updArg2 = ns.args[3] || null;
 		updArg3 = ns.args[4] || null;
-		cols = ns.ui.getTheme();
+		colors = ns.ui.getTheme();
 		ToolTipStyleParams +=
-			`color: ${cols.primary};
-			background-color: ${cols.well};`
+			`color: ${colors.primary};
+			background-color: ${colors.well};`
 		// Run initialization functions
 		InitHud();
 		MakeToolTipStyle();
@@ -233,7 +232,7 @@ export async function main(ns) {
 				if (updArg3 == null) updArg3 = "";
 				UpdateTextRow(updHook, updArg1, updArg2, updArg3);
 				break;
-			case "updcol":
+			case "color":
 				if (updArg1 == null) updArg1 = "";
 				RecolorTextRow(updHook, updArg1);
 				break;
@@ -285,7 +284,7 @@ export async function main(ns) {
 	let rowElement = d.getElementById(`ovv-row-${hookName}`);
 	if (rowElement !== null) return rowElement;
 	// If color is from the Theme, replace it with the correct rgb/hex code
-	if (color in cols) color = cols[color];
+	if (color in colors) color = colors[color];
 	// Get an existing display element from HUD.
 	let existingRow = d.getElementById(`ovv-row-hp`);
 	// Make a clone of it for our new hud element
@@ -317,7 +316,7 @@ export async function main(ns) {
  * */
 function RecolorTextRow(hookToRecolor, color) {
 	// If color is from the Theme, replace it with the correct rgb/hex code
-	if (color in cols) color = cols[color];
+	if (color in colors) color = colors[color];
 	d.getElementById(`ovv-row-${hookToRecolor}`).querySelectorAll("p").forEach((el) => el.style = `text-align: right; color: ${color};${textStyleParams};`);
 	d.getElementById(`ovv-row-${hookToRecolor}`).querySelectorAll("p")[0].style = `text-align: left; color: ${color};${textStyleParams};`;
 };
