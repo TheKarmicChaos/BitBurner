@@ -91,7 +91,6 @@ const ovvHeader = ovv.childNodes[0].firstChild.firstChild.firstChild; // unused
 const ovvTableCont = ovv.childNodes[1].firstChild.firstChild.firstChild; // unused
 const hooks_to_clear = [];
 const symbols = ["", "k", "m", "b", "t", "q", "Q", "s", "S", "o", "n", "e33", "e36", "e39"];
-const barColors = ["hack", "str", "cha", "int"] // valid color names for progress bars
 let colors;
 let updType;
 let updHook;
