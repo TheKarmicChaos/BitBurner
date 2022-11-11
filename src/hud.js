@@ -59,9 +59,10 @@ itself. For text rows, you will need to add and update tooltips manually.
 	HIDE TEXT ROW				ns.run("hud.js", 1, "upd", hook)
 	CHANGE TEXT ROW COLOR		ns.run("hud.js", 1, "color", hook, "new color")
 	UPDATE PROGR BAR			ns.run("hud.js", 1, "progr", hook, currentValue, maximumValue)
-	CHANGE PROGR BAR COLOR		ns.run("hud.js", 1, "colorprogr", hook, "new color", "new background color")
-	HIDE PROGR BAR				ns.run("hud.js", 1, "hide", hook)
-	SHOW PROGR BAR				ns.run("hud.js", 1, "show", hook)
+	CHANGE PROGR BAR COLOR		ns.run("hud.js", 1, "progr color", hook, "new color", "new background color")
+	HIDE PROGR BAR				ns.run("hud.js", 1, "progr hide", hook)
+	SHOW PROGR BAR				ns.run("hud.js", 1, "progr show", hook)
+	TOGGLE PROGR BAR			ns.run("hud.js", 1, "progr toggle", hook)
 	UPDATE/ADD TOOLTIP			ns.run("hud.js", 1, "tooltip", hook, "Tooltip Content")
 	HIDE EVERY CUSTOM ROW		ns.run("hud.js", 1, "clear")
 
@@ -205,9 +206,9 @@ export async function main(ns) {
 
 		// Kill progress (toward the 30 required to access all factions)
 		if (kills / 30 < 1) {
-			ShowProgrBar("kill");
+			ToggleProgrBar("kill", "show");
 			UpdateProgrBar("kill", kills, 30);
-		} else { HideProgrBar("kill") };
+		} else ToggleProgrBar("kill", "hide");
 
 		// Karma
 		var karma = ns.heart.break();
@@ -215,9 +216,9 @@ export async function main(ns) {
 
 		// Karma progress (toward unlocking gang)
 		if (Math.abs(karma) / 54000 < 1 && nstb.PeekPort(ns, 7)["wantGang"]) {
-			ShowProgrBar("karma");
+			ToggleProgrBar("karma", "show");
 			UpdateProgrBar("karma", Math.abs(karma), 54000);
-		} else { HideProgrBar("karma") };
+		} else ToggleProgrBar("karma", "hide");
 
 		// Income
 		let totalCashPerSec = nstb.PeekPort(ns, 2, "sumdict")
@@ -242,16 +243,19 @@ export async function main(ns) {
 				if (updArg2 == null) updArg2 = 100; // Failsafe
 				UpdateProgrBar(updHook, updArg1, updArg2);
 				break;
-			case "colorprogr":
+			case "progr color":
 				if (updArg1 == null) updArg1 = "primary"; // Failsafe
 				if (updArg2 == null) updArg2 = "rgb(17, 17, 17)"; // Default
 				RecolorProgrBar(updHook, updArg1, updArg2);
 				break;
-			case "show":
-				ShowProgrBar(updHook);
+			case "progr show":
+				ToggleProgrBar(updHook, "show");
 				break;
-			case "hide":
-				HideProgrBar(updHook);
+			case "progr hide":
+				ToggleProgrBar(updHook, "hide");
+				break;
+			case "progr toggle":
+				ToggleProgrBar(updHook, "toggle");
 				break;
 			case "tooltip":
 				if (updArg1 == null) updArg1 = "ERROR: INCORRECT ARGS PASSED INTO ns.run()";
@@ -430,39 +434,64 @@ function RecolorProgrBar(hookToRecolor, color, backgroundColor = "rgb(17, 17, 17
 
 /** Hides a visbile progress bar on the hud.
  * @param {string} hudHook - Name of the hook for the progress bar
+ * @param {string} visibilityChange - String telling the function what to do to the visibility of the progress bar.
+ * - Valid inputs are "show", "hide", or "toggle"
  * */
- function HideProgrBar(hudHook) {
+ function ToggleProgrBar(hudHook, visibilityChange) {
 	let rowElement = d.getElementById(`ovv-row-${hudHook}-progr`);
 	if (rowElement !== null) {
-		let barElement = rowElement.firstChild.firstChild.firstChild
-		// Remove the className from the deepest child so the HTML doesn't break
-		barElement.className = "";
-		// get existing HTML
-		let curHTML = rowElement.innerHTML
-		// split the HTML so we get the sections we want to edit
-		let htmlL = curHTML.split(`-3px;"><span cl`)[0]
-		let htmlR = curHTML.split(`-3px;"><span cl`)[1]
-		// Rename "class" to "clss" in the HTML of the second-depth child so the information cannot be parsed.
-		if (htmlR[0] == "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cl${htmlR.substring(1)}`; }
-	}
-};
-
-/** Un-hides a hidden progress bar on the hud.
- * @param {string} hudHook - Name of the hook for the progress bar
- * */
-function ShowProgrBar(hudHook) {
-	let rowElement = d.getElementById(`ovv-row-${hudHook}-progr`);
-	if (rowElement !== null) {
-		let barElement = rowElement.firstChild.firstChild.firstChild
-		// Replace the missing className in the deepest child
-		barElement.className = "css-14usnx9";
-		// get existing HTML
-		let curHTML = rowElement.innerHTML
-		// split the HTML so we get the sections we want to edit
-		let htmlL = curHTML.split(`-3px;"><span cl`)[0]
-		let htmlR = curHTML.split(`-3px;"><span cl`)[1]
-		// Rename "class" back to "clss" in the HTML of the second-depth child so the information can be parsed once again.
-		if (htmlR[0] != "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cla${htmlR}`; }
+		var barElement = rowElement.firstChild.firstChild.firstChild // deepest child
+		switch (visibilityChange) {
+			case "show":
+				// Replace the missing className in the deepest child
+				barElement.className = "css-14usnx9";
+				// get existing HTML
+				var curHTML = rowElement.innerHTML
+				// split the HTML so we get the sections we want to edit
+				var htmlL = curHTML.split(`-3px;"><span cl`)[0]
+				var htmlR = curHTML.split(`-3px;"><span cl`)[1]
+				// Rename "class" back to "clss" in the HTML of the second-depth child so the information can be parsed once again.
+				if (htmlR[0] != "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cla${htmlR}`; }
+				break;
+			case "hide":
+				// Remove the className from the deepest child so the HTML doesn't break
+				barElement.className = "";
+				// get existing HTML
+				var curHTML = rowElement.innerHTML
+				// split the HTML so we get the sections we want to edit
+				var htmlL = curHTML.split(`-3px;"><span cl`)[0]
+				var htmlR = curHTML.split(`-3px;"><span cl`)[1]
+				// Rename "class" to "clss" in the HTML of the second-depth child so the information cannot be parsed.
+				if (htmlR[0] == "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cl${htmlR.substring(1)}`; }
+				break;
+			case "toggle":
+				// Determine whether the bar is currently hidden or not, and switch it to the other state
+				if (barElement.className == "") { // Currently hidden
+					// Replace the missing className in the deepest child
+					barElement.className = "css-14usnx9";
+					// get existing HTML
+					var curHTML = rowElement.innerHTML
+					// split the HTML so we get the sections we want to edit
+					var htmlL = curHTML.split(`-3px;"><span cl`)[0]
+					var htmlR = curHTML.split(`-3px;"><span cl`)[1]
+					// Rename "class" back to "clss" in the HTML of the second-depth child so the information can be parsed once again.
+					if (htmlR[0] != "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cla${htmlR}`; }
+				} else {  // Currently visible
+					// Remove the className from the deepest child so the HTML doesn't break
+					barElement.className = "";
+					// get existing HTML
+					var curHTML = rowElement.innerHTML
+					// split the HTML so we get the sections we want to edit
+					var htmlL = curHTML.split(`-3px;"><span cl`)[0]
+					var htmlR = curHTML.split(`-3px;"><span cl`)[1]
+					// Rename "class" to "clss" in the HTML of the second-depth child so the information cannot be parsed.
+					if (htmlR[0] == "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cl${htmlR.substring(1)}`; }
+				}
+				break;
+			default:
+				ns.toast(`ERROR: Invalid arg ${visibilityChange} @ ToggleProgrBar`, "error", 1000);
+				break;
+		}
 	}
 };
 
