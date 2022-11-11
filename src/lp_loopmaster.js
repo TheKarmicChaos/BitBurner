@@ -142,15 +142,19 @@ export async function main(ns) {
 
 		// Check 6: Timer
 		// -------------------------
-		// 1 minute has passed since the run started
-		const check6 = (ns.getTimeSinceLastAug() > 180000)
-		let checkmark6 = "[ ]"; if (check6) checkmark6 = "[✓]";
+		// 3 minutes have passed since the run started
+		const check6a = (ns.getTimeSinceLastAug() > 180000)
+		// Player has $20b
+		const check6b = (player.money > 20e9)
+		const checksum6 = (check6a && check6b)
+		let checkmark6 = "[ ]"; if (checksum6) checkmark6 = "[✓]";
 		ns.print(`\n${checkmark6} Check #6: Time`)
-		if (!check6) ns.print(`• Need to wait 3m after install.`);
+		if (!check6a) ns.print(`• Need to wait 3m after install.`);
+		if (!check6b) ns.print(`• Need $20b`);
 
 
 
-		if (check1 && checksum2 && checksum3 && checksum4 && checksum5 && check6) { await MainFunc(); }
+		if (check1 && checksum2 && checksum3 && checksum4 && checksum5 && checksum6) { await MainFunc(); }
 		await ns.sleep(1000); loopnum++;
 
 
