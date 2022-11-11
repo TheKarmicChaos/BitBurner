@@ -90,6 +90,7 @@ const ovv = d.getElementsByClassName('MuiPaper-root')[0];
 const ovvHeader = ovv.childNodes[0].firstChild.firstChild.firstChild; // unused
 const ovvTableCont = ovv.childNodes[1].firstChild.firstChild.firstChild; // unused
 const hooks_to_clear = [];
+const bars_to_clear = [];
 const symbols = ["", "k", "m", "b", "t", "q", "Q", "s", "S", "o", "n", "e33", "e36", "e39"];
 let colors;
 let updType;
@@ -262,6 +263,7 @@ export async function main(ns) {
 				break;
 			case "clear":
 				for (const hook of hooks_to_clear) { UpdateTextRow(hook, null, null, null) };
+				for (const hook of bars_to_clear) { ToggleProgrBar(hook, "hide") };
 				break;
 		}
 
@@ -359,6 +361,8 @@ function RecolorTextRow(hookToRecolor, color) {
  * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
  * */
 function AddProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
+	// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
+	if (!(bars_to_clear.includes(hookName))) bars_to_clear.push(hookName);
 	let rowElement = d.getElementById(`ovv-row-${hookName}-progr`);
 	if (rowElement !== null) return rowElement;
 	// If color or backgroundColor is from the Theme, replace them with the correct rgb/hex code
@@ -369,7 +373,6 @@ function AddProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
 	// Make a clone of it for our new hud element
 	let newHudRow = existingRow.cloneNode(true);
 	// give hook id to our new row-level element
-	newHudRow.id = `ovv-row-${hudHook}-progr`;
 	newHudRow.id = `ovv-row-${hookName}-progr`;
 	// Remove the classes responsible for color.
 	let newBar = newHudRow.firstChild.firstChild.firstChild;
