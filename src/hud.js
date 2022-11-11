@@ -120,7 +120,7 @@ z-index: 9999999;
 inset: 0px auto auto 0px;
 transform: translate3d(0px, 20px, 0px);
 transition: opacity 0.2s;`;
-let textStyleParams = // Extra css style parameters added to the text rows in your hud (applies to all columns)
+let textStyleParams = // Default css style parameters added to the text rows in your hud (applies to all columns)
 ``;
 
 // Unused settings
@@ -204,7 +204,7 @@ export async function main(ns) {
 		UpdateTextRow("kill", "Kills", kills);
 
 		// Kill progress (toward the 30 required to access all factions)
-		if ((kills / 30) < 1) {
+		if (kills / 30 < 1) {
 			ShowProgrBar("kill");
 			UpdateProgrBar("kill", kills, 30);
 		} else { HideProgrBar("kill") };
@@ -214,7 +214,7 @@ export async function main(ns) {
 		UpdateTextRow("karma", "Karma", StandardNotation(karma, 3));
 
 		// Karma progress (toward unlocking gang)
-		if ((Math.abs(karma) / 54000) < 1 && nstb.PeekPort(ns, 7)["wantGang"]) {
+		if (Math.abs(karma) / 54000 < 1 && nstb.PeekPort(ns, 7)["wantGang"]) {
 			ShowProgrBar("karma");
 			UpdateProgrBar("karma", Math.abs(karma), 54000);
 		} else { HideProgrBar("karma") };
@@ -298,11 +298,11 @@ export async function main(ns) {
 	newHudRow.querySelectorAll("p > p").forEach(el => el.parentElement.removeChild(el));
 	// Create hook id's for the children where we will be modifying the innerText.
 	newHudRow.querySelectorAll("p").forEach((el, i) => el.id = `ovv-${hookName}-${i}`);
-	// Replace the game's messy css settings with our own stuff that we can customize.
+	// Remove the class responsible for color.
 	newHudRow.querySelectorAll("p").forEach((el) => el.className = `css-cxl1tz`);
-	newHudRow.querySelectorAll("p").forEach((el) => el.style = `text-align: right; color: ${color};${textStyleParams};`);
-	newHudRow.querySelectorAll("p")[0].style = `text-align: left; color: ${color};${textStyleParams};`;
-	// Set the innerText for all these children to be empty (making the row invisible)
+	// Override the game's style parameters by inserting our own.
+	newHudRow.querySelectorAll("p").forEach((el) => el.style = `color: ${color};${textStyleParams};`);
+	// Set the innerText for all p children to be empty (making the row invisible)
 	newHudRow.querySelectorAll("p")[0].innerText = "";
 	newHudRow.querySelectorAll("p")[1].innerText = "";
 	newHudRow.querySelectorAll("p")[2].innerText = "";
@@ -321,8 +321,7 @@ function RecolorTextRow(hookToRecolor, color) {
 	// If color is from the Theme, replace it with the correct rgb/hex code
 	if (color in colors) color = colors[color];
 	// Replace the appropriate style colors to get the desired effect.
-	d.getElementById(`ovv-row-${hookToRecolor}`).querySelectorAll("p").forEach((el) => el.style = `text-align: right; color: ${color};${textStyleParams};`);
-	d.getElementById(`ovv-row-${hookToRecolor}`).querySelectorAll("p")[0].style = `text-align: left; color: ${color};${textStyleParams};`;
+	d.getElementById(`ovv-row-${hookToRecolor}`).querySelectorAll("p").forEach((el) => el.style = `color: ${color};${textStyleParams};`);
 };
 
 /** Updates a custom text row with new text in each column.
@@ -368,11 +367,12 @@ function AddProgrBar(hudHook, color, backgroundColor = "rgb(17, 17, 17)") {
 	let newHudRow = existingRow.cloneNode(true);
 	// give hook id to our new row-level element
 	newHudRow.id = `ovv-row-${hudHook}-progr`;
-	// Replace the game's messy css settings with our own stuff that we can customize.
-	let newBar = newHudRow.firstChild.firstChild.firstChild
+	// Remove the classes responsible for color.
+	let newBar = newHudRow.firstChild.firstChild.firstChild;
 	newBar.parentElement.className = "css-koo86v"
-	newBar.parentElement.style = `background-color: ${backgroundColor};`;  // set color of "empty" parts of bar
 	newBar.className = "css-14usnx9"
+	// Insert our custom style parameters
+	newBar.parentElement.style = `background-color: ${backgroundColor};`;  // set color of "empty" parts of bar
 	newBar.style = `transform: translateX(-100%); background-color: ${color};`; // set color of "full" parts of bar
 	// Insert our element at the bottom of the hud
 	existingRow.parentElement.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
@@ -500,7 +500,7 @@ function AddDefault(hookName, nextRowHook = "extra") {
  * */
 function AddLine(lineNum) {
 	let rowElement = d.getElementById(`ovv-row-line${lineNum}`);
-	let desiredHTML = `<th class="jss12 MuiTableCell-root MuiTableCell-body MuiTableCell-sizeMedium css-hadb7u" scope="row" colspan="${lineColSpan}"></th>`
+	let desiredHTML = `<th class="jss12 css-hadb7u" scope="row" colspan="${lineColSpan}"></th>`
 	// If this element already exists, update it if needed, then return it.
 	if (rowElement !== null) { 
 		if (rowElement.innerHTML != desiredHTML) rowElement.innerHTML = desiredHTML;
@@ -582,6 +582,12 @@ function InitHud() {
 	// Remove all separator lines from the default hud.
 	d.getElementById("ovv-row-agi").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
 	d.getElementById("ovv-row-int").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
+	// Tidy up the game's messy class names
+	d.getElementById("ovv-row-agi").parentElement.querySelectorAll("th").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-sizeMedium ", ""))
+	d.getElementById("ovv-row-agi").parentElement.querySelectorAll("td").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-alignRight MuiTableCell-sizeMedium ", ""))
+	d.getElementById("ovv-row-agi").parentElement.querySelectorAll("p").forEach((el) => el.className = el.className.replace("MuiTypography-root MuiTypography-body1 ", ""))
+	d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-root MuiLinearProgress-colorPrimary MuiLinearProgress-determinate ", ""))
+	d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-bar MuiLinearProgress-barColorPrimary ", ""))
 }
 
 /** Creates or updates a custom css style used for our custom-made tooltips */
