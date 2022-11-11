@@ -109,9 +109,9 @@ export async function main(ns) {
 		// - buying research w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
 		const check4d = (!hasCorp || !("hackn" in strats) || isResrNotNeeded || resrCost > Math.max(3000 * strats["hackn"], nstb.PeekPort(ns, 3)["income"] * 5))
 		// - buying BB rank is no longer cheap
-		const check4e = (!hasBB || BBrankCost > Math.max(5250 * strats["hackn"], nstb.PeekPort(ns, 3)["income"] * 60))
+		const check4e = (!hasBB || BBrankCost > Math.max(4250 * strats["hackn"], nstb.PeekPort(ns, 3)["income"] * 60))
 		// - buying BB sp is no longer cheap
-		const check4f = (!hasBB || BBspCost > Math.max(5000 * strats["hackn"], nstb.PeekPort(ns, 3)["income"] * 60))
+		const check4f = (!hasBB || BBspCost > Math.max(4000 * strats["hackn"], nstb.PeekPort(ns, 3)["income"] * 60))
 		const checksum4 = (check4a && check4b && check4c && check4d && check4e && check4f)
 		let checkmark4 = "[ ]"; if (checksum4) checkmark4 = "[✓]";
 		ns.print(`\n${checkmark4} Check #4: Upgrades`)
