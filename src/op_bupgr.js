@@ -120,13 +120,9 @@ export async function main(ns) {
 				costStr = `$${tb.StandardNotation(150e9, 3)}`;
 			}
 
-			if (buyCondsMet) {
-				ns.run('hud.js', 1, "upd", 'buyupgrOFF');
-				ns.run('hud.js', 1, "upd", 'buyupgrON', debugStr, costStr);
-			} else if (!buyCondsMet) {
-				ns.run('hud.js', 1, "upd", 'buyupgrOFF', debugStr, costStr);
-				ns.run('hud.js', 1, "upd", 'buyupgrON');
-			}
+			ns.run('hud.js', 1, "upd", 'buyupgr', debugStr, costStr);
+			if (buyCondsMet) ns.run('hud.js', 1, "updcol", 'buyupgr', 'money');
+			else if (!buyCondsMet) ns.run('hud.js', 1, "updcol", 'buyupgr', 'hp');
 			await ns.sleep(1);
 		}
 

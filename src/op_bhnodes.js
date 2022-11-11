@@ -59,18 +59,14 @@ export async function main(ns) {
 				if (hashes() < maxHash()) { hashStr = "Hashes" }
 				else { hashStr = "Hashes (MAX)" }
 				ns.run('hud.js', 1, "upd", 'hash', hashStr, `#${tb.StandardNotation(hashes(), 3)}`);
-		
-				if (buyCondsMet) {
-					ns.run('hud.js', 1, "upd", 'buynodeOFF');
-					ns.run('hud.js', 1, "upd", 'buynodeON', debugStr, `$${tb.StandardNotation(purCost, 3)}`);
-				} else if (!buyCondsMet) {
-					ns.run('hud.js', 1, "upd", 'buynodeOFF', debugStr, `$${tb.StandardNotation(purCost, 3)}`);
-					ns.run('hud.js', 1, "upd", 'buynodeON');
-				}
+
+				ns.run('hud.js', 1, "upd", 'buynode', debugStr, `$${tb.StandardNotation(purCost, 3)}`);
 
 				await ns.sleep(10);
 				buyCount++;
 			}
+			if (buyCondsMet) ns.run('hud.js', 1, "updcol", 'buynode', "money");
+			else if (!buyCondsMet) ns.run('hud.js', 1, "updcol", 'buynode', "hp");
 		}
 
 		if (newNodes > 0) { ns.toast(`Bought ${newNodes} new hNodes`, 'warning', 4000) }
@@ -229,8 +225,8 @@ export async function main(ns) {
 			while (hashes() >= ns.hacknet.hashCost("Sell for Money")) {
 				ns.hacknet.spendHashes("Sell for Money");
 			}
-			ns.run('hud.js', 1, "upd", 'buyhashON', "B>Money", `#${tb.StandardNotation(ns.hacknet.hashCost("Sell for Money"), 3)}`);
-			ns.run('hud.js', 1, "upd", 'buyhashOFF');
+			ns.run('hud.js', 1, "upd", 'buyhash', "B>Money", `#${tb.StandardNotation(ns.hacknet.hashCost("Sell for Money"), 3)}`);
+			ns.run('hud.js', 1, "updcol", 'buyhash', "hack");
 		}
 
 		// if we already have a decent income of hashes & cash, diversify hash upgrades
@@ -310,55 +306,31 @@ export async function main(ns) {
 				genericCostStr = `#${tb.StandardNotation(nextGupgrCost, 3)}`
 			}
 
-
-
 			// Update all relevant hud elements
-
 			if (hasCorp) {
-				let corpStr = "B>" + nextCupgr
-				if (nextCupgrCost <= maxHash() && (shouldBuyFund || shouldBuyResr)) {
-					ns.run('hud.js', 1, "upd", 'buyhashcorpON', corpStr, `#${tb.StandardNotation(nextCupgrCost, 3)}`);
-					ns.run('hud.js', 1, "upd", 'buyhashcorpOFF');
-				}
-				else {
-					ns.run('hud.js', 1, "upd", 'buyhashcorpON');
-					ns.run('hud.js', 1, "upd", 'buyhashcorpOFF', corpStr, `#${tb.StandardNotation(nextCupgrCost, 3)}`);
-				}
-			} else {
-				ns.run('hud.js', 1, "upd", 'buyhashcorpON');
-				ns.run('hud.js', 1, "upd", 'buyhashcorpOFF');
-			}
+				let corpStr = "B>" + nextCupgr;
+				ns.run('hud.js', 1, "upd", 'buyhashcorp', corpStr, `#${tb.StandardNotation(nextCupgrCost, 3)}`);
+				if (nextCupgrCost <= maxHash() && (shouldBuyFund || shouldBuyResr))
+					ns.run('hud.js', 1, "updcol", 'buyhashcorp', 'hack');
+				else ns.run('hud.js', 1, "updcol", 'buyhashcorp', 'hp');
+			} else ns.run('hud.js', 1, "upd", 'buyhashcorp');
 
 			if (hasBB) {
 				let bladeStr = "B>" + nextBupgr
-				if (nextBupgrCost <= maxHash() && (shouldBuyRank || shouldBuySP) ) {
-					ns.run('hud.js', 1, "upd", 'buyhashbladeON', bladeStr, `#${tb.StandardNotation(nextBupgrCost, 3)}`);
-					ns.run('hud.js', 1, "upd", 'buyhashbladeOFF');
-				}
-				else {
-					ns.run('hud.js', 1, "upd", 'buyhashbladeON');
-					ns.run('hud.js', 1, "upd", 'buyhashbladeOFF', bladeStr, `#${tb.StandardNotation(nextBupgrCost, 3)}`);
-				}
-			} else {
-				ns.run('hud.js', 1, "upd", 'buyhashbladeON');
-				ns.run('hud.js', 1, "upd", 'buyhashbladeOFF');
-			}
+				ns.run('hud.js', 1, "upd", 'buyhashblade', bladeStr, `#${tb.StandardNotation(nextBupgrCost, 3)}`);
+				if (nextBupgrCost <= maxHash() && (shouldBuyRank || shouldBuySP))
+					ns.run('hud.js', 1, "updcol", 'buyhashblade', 'hack');
+				else ns.run('hud.js', 1, "updcol", 'buyhashblade', 'hp');
+			} else ns.run('hud.js', 1, "upd", 'buyhashblade');
 
-			if (hashToCashPerSec > 0 || (nextGupgrCost <= maxHash() && (shouldBuyStudy || shouldBuyGym))) {
-				ns.run('hud.js', 1, "upd", 'buyhashON', genericUpgrStr, genericCostStr);
-				ns.run('hud.js', 1, "upd", 'buyhashOFF');
-			} else {
-				ns.run('hud.js', 1, "upd", 'buyhashON');
-				ns.run('hud.js', 1, "upd", 'buyhashOFF', genericUpgrStr, genericCostStr);
-			}
+			ns.run('hud.js', 1, "upd", 'buyhash', genericUpgrStr, genericCostStr);
+			if (hashToCashPerSec > 0 || (nextGupgrCost <= maxHash() && (shouldBuyStudy || shouldBuyGym)))
+				ns.run('hud.js', 1, "updcol", 'buyhash', "hack");
+			else ns.run('hud.js', 1, "updcol", 'buyhash', "hp");
+				ns.run('hud.js', 1, "updcol", 'buyhash', "hack");
 		}
-
-
-
 
 		// write income to port
 		nstb.UpdPort(ns, 2, "dict", ["hnodes", hashToCashPerSec]);
-
 	}
-
 }

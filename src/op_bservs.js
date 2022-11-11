@@ -82,13 +82,10 @@ export async function main(ns) {
 			await BuyServ(desiredRAM, servNum);
 		} else { debugStr = "B>Sv" }
 		// Update Hud
-		if (buyCondsMet) {
-			ns.run('hud.js', 1, "upd", 'buyservOFF');
-			ns.run('hud.js', 1, "upd", 'buyservON', debugStr, costStr);
-		} else if (!buyCondsMet) {
-			ns.run('hud.js', 1, "upd", 'buyservOFF', debugStr, costStr);
-			ns.run('hud.js', 1, "upd", 'buyservON');
-		}
+		ns.run('hud.js', 1, "upd", 'buyserv', debugStr, costStr);
+		if (buyCondsMet) ns.run('hud.js', 1, "updcol", 'buyserv', 'money');
+		else if (!buyCondsMet) ns.run('hud.js', 1, "updcol", 'buyserv', 'hp');
+
 		await ns.sleep(1);
 	}
 
