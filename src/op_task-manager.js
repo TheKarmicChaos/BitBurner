@@ -18,7 +18,7 @@ export async function main(ns) {
 	// Constantly apply to every company of interest and ask for promotions
 	for (let company of allComps) { await nstb.RunCom(ns, 'ns.singularity.applyToCompany()', [company, "Software"]) }
 
-    if (!nstb.PeekPort(ns, 9)["hasBB"] || nstb.PeekPort(ns, 9)["hasSimu"]) { // Bladeburner actions take player priority if we have them unlocked.
+    if (player().numPeopleKilled < 30 || !nstb.PeekPort(ns, 9)["hasBB"] || nstb.PeekPort(ns, 9)["hasSimu"]) { // Bladeburner actions take player priority if we have them unlocked.
         let [bestcrime, canDoWork] = await GetBestCrime();
         let bestCrimeinc = 0; if (bestcrime) bestCrimeinc = await nstb.GetCrimeGains(ns, bestcrime, "money");
 
