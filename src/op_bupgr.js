@@ -121,8 +121,8 @@ export async function main(ns) {
 			}
 
 			ns.run('hud.js', 1, "upd", 'buyupgr', debugStr, costStr);
-			if (buyCondsMet) ns.run('hud.js', 1, "updcol", 'buyupgr', 'money');
-			else if (!buyCondsMet) ns.run('hud.js', 1, "updcol", 'buyupgr', 'hp');
+			if (buyCondsMet) ns.run('hud.js', 1, "color", 'buyupgr', 'money');
+			else if (!buyCondsMet) ns.run('hud.js', 1, "color", 'buyupgr', 'hp');
 			await ns.sleep(1);
 		}
 
