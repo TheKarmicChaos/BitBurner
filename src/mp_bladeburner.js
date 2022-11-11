@@ -22,7 +22,7 @@ export async function main(ns) {
     // Main function calls ---------------------------------
     await updateCity();
     await levelSkills();
-    if (player.numPeopleKilled >= 30 && (hasSimu || !ns.singularity.isBusy() || ns.singularity.getCurrentWork().type != "GRAFTING")) {
+    if (player.numPeopleKilled >= 30 && !nstb.PeekPort(ns, 7)["wantGang"] && (hasSimu || !ns.singularity.isBusy() || ns.singularity.getCurrentWork().type != "GRAFTING")) {
         if (!hasSimu) await nstb.RunCom(ns, 'ns.singularity.stopAction()');
 
         // if we are not at max health or stamina, recover.
