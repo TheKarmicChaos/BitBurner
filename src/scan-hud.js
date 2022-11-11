@@ -14,26 +14,54 @@ export async function main(ns) {
 
 	function PrintHTML(parentnode) {
 		ns.print("Parent: ", parentnode.nodeName)
+		ns.print("HTML: ");
 		let fullHTML = parentnode.innerHTML;
+		let fullSplitL = fullHTML.split("<")
+		let remainingHTML = fullHTML
+		let elList = []
+		// break down HTML into array of <elements> and innerText.
+		for (let n = 1; n < fullSplitL.length; n++) {
+			let thisEl = `<${fullSplitL[n].split(">")[0]}>`;
+			let nextText = fullSplitL[n].split(">")[1];
+			elList.push(thisEl)
+			if (nextText != "") elList.push(nextText);
+		}
+		let nextTreeSeg = ``
+		let nextTextSeg = `INFO`
 		let curDepth = -1;
-		ns.print("HTML: ")
-		for (let n = 1; n < fullHTML.split("<").length; n++) {
-			let nextHTML = fullHTML.split("<")[n]
-			let nextNonHTML = nextHTML.split(">")[1]
-			if (nextNonHTML != "") nextHTML = nextHTML.split(">")[0] + ">"
-			if (nextHTML[0] == '/') {
-				ns.print("   ".repeat(curDepth), "<" + nextHTML)
-				curDepth -= 1;
-			} else if (nextHTML[nextHTML.length - 1] == '/' || nextHTML.substring(0,2) == "br") {
-				curDepth += 1;
-				ns.print("   ".repeat(curDepth), "<" + nextHTML)
-				curDepth -= 1;
+		for (let n = 0; n < elList.length; n++) {
+			let el = elList[n]
+			let elTag = elList[n].split(" ")[0]
+			let nextEl = elList[Math.min(n+1, elList.length - 1)]
+			if (["<strong>", "</strong>"].includes(el) || el[0] != "<") {
+				if (nextTextSeg == `INFO`) nextTextSeg += `${"   ".repeat(curDepth)}`;
+				nextTextSeg += `${el}`;
+			} else if (el.substring(0,3) == "<br") {
+				if (nextTextSeg == `INFO`) nextTextSeg += `${"   ".repeat(curDepth)}`;
+				nextTextSeg += `${el}\n`
 			} else {
-				curDepth += 1;
-				ns.print("   ".repeat(curDepth), "<" + nextHTML)
-				if (nextNonHTML != "") ns.print("INFO ", "   ".repeat(curDepth - 1), nextNonHTML);
+				if (nextTextSeg != `INFO`) {
+					ns.print(nextTreeSeg); nextTreeSeg = '';
+					ns.print(nextTextSeg); nextTextSeg = 'INFO';
+				}
+				if (el.substring(0,2) == '</') {
+					nextTreeSeg += `${"   ".repeat(curDepth)}${el}\n`
+					curDepth -= 1;
+				} else if (el.substring(el.length - 2) == '/>') {
+					curDepth += 1;
+					nextTreeSeg += `${"   ".repeat(curDepth)}${el}\n`;
+					curDepth -= 1;
+				} else {
+					curDepth += 1;
+					nextTreeSeg += `${"   ".repeat(curDepth)}${el}`;
+					if (nextEl == `</${elTag.substring(1)}>`) {
+						nextTreeSeg += `   ${nextEl}\n`;
+						curDepth -= 1;
+						n++;
+					} else nextTreeSeg += `\n`;
+				}
 			}
 		}
-		ns.print(fullTree);
+		ns.print(nextTreeSeg);
 	}
 }
