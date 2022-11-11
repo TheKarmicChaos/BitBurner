@@ -73,7 +73,6 @@ itself. For text rows, you will need to add and update tooltips manually.
 	- Ingame progress bar tooltips still look a bit different from the ones this script generates.
 		- Update tooltip line spacing to match that of the ingame tooltips
 		- Figure out how to center tooltips, like the ones the game uses for progress bars
-		- Figure out how to add the growing/shrinking transition effect to tooltips that the game uses.
 	- Add new feature: Clickable dropdown buttons that allow the player to collapse categories of rows in the hud. (probably will use column 3 for this)
 	- Add new feature: Clickable button elements that run a customizable block of code when clicked.
 
@@ -119,8 +118,8 @@ max-width: 100vh;
 position: absolute;
 z-index: 9999999;
 inset: 0px auto auto 0px;
-transform: translate3d(0px, 20px, 0px);
-transition: opacity 0.2s;`;
+transform-origin: top;
+transition: all 0.2s;`;
 let textStyleParams = // Default css style parameters added to the text rows in your hud (applies to all columns)
 ``;
 
@@ -418,7 +417,7 @@ function RecolorProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
  * @param {number} curAmt - How much of the "thing" we currently have
  * @param {number} maxAmt - How much of the "thing" we need to have in order for progr bar to be 100% full.
  * */
- function UpdateProgrBar(hookName, curAmt, maxAmt) {
+function UpdateProgrBar(hookName, curAmt, maxAmt) {
 	let elementToUpdate = d.getElementById(`ovv-row-${hookName}-progr`).firstChild.firstChild
 	// calculate the percentage progress
 	let remaining =  Math.max(0, maxAmt - curAmt)
@@ -440,7 +439,7 @@ function RecolorProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
  * @param {string} visibilityChange - String telling the function what to do to the visibility of the progress bar.
  * - Valid inputs are "show", "hide", or "toggle"
  * */
- function ToggleProgrBar(hookName, visibilityChange) {
+function ToggleProgrBar(hookName, visibilityChange) {
 	let rowElement = d.getElementById(`ovv-row-${hookName}-progr`);
 	if (rowElement !== null) {
 		var barElement = rowElement.firstChild.firstChild.firstChild // deepest child
@@ -565,7 +564,7 @@ function AddTooltip(hookName, content, params = {}) {
 };
 
 // Incomplete - this function works, but not as intended.
-export function MakeToolTipFromDict(dict, format = `%key%: %val%`, exclude0 = false) {
+function MakeToolTipFromDict(dict, format = `%key%: %val%`, exclude0 = false) {
 	let entries = [];
 	for (let key in dict) {
 		let seg1 = format.split("%key%")[0]
@@ -589,7 +588,7 @@ export function MakeToolTipFromDict(dict, format = `%key%: %val%`, exclude0 = fa
 
 /** Initializes the hud for editing */
 function InitHud() {
-	// Implement all hud settings
+	// Implement all hud settings -- NOTE: THESE CONFLICT WITH TOOLTIPS
 	//ovvTableCont.style.maxHeight = `${maxHudHeight}px`;
 	//ovvTableCont.style.transition = "all .2s";
 	//ovvTableCont.style.overflow = "scroll";
@@ -614,7 +613,7 @@ function InitHud() {
 	// Remove all separator lines from the default hud.
 	d.getElementById("ovv-row-agi").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
 	d.getElementById("ovv-row-int").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
-	// Tidy up the game's messy class names
+	// Tidy up the game's messy css class names
 	d.getElementById("ovv-row-agi").parentElement.querySelectorAll("th").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-sizeMedium ", ""))
 	d.getElementById("ovv-row-agi").parentElement.querySelectorAll("td").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-alignRight MuiTableCell-sizeMedium ", ""))
 	d.getElementById("ovv-row-agi").parentElement.querySelectorAll("p").forEach((el) => el.className = el.className.replace("MuiTypography-root MuiTypography-body1 ", ""))
@@ -683,14 +682,17 @@ function setElementTooltip(el, params) {
 			// Set the tooltip to start out as invisible
 			d.getElementById(`${el.id}-tooltip`).style.visibility = "hidden";
 			d.getElementById(`${el.id}-tooltip`).style.opacity = "0";
+			d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 20px, 0px) scale3d(0.95, 0.95, 0.95)";
 			// Add event listeners for mouseout/mouseover to hide/show the tooltip.
 			el.addEventListener('mouseover', (e) => {
 				d.getElementById(`${el.id}-tooltip`).style.visibility = "visible";
 				d.getElementById(`${el.id}-tooltip`).style.opacity = "1";
+				d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 20px, 0px) scale3d(1, 1, 1)";
 			});
 			el.addEventListener('mouseout', (e) => {
 				d.getElementById(`${el.id}-tooltip`).style.visibility = "hidden";
 				d.getElementById(`${el.id}-tooltip`).style.opacity = "0";
+				d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 20px, 0px) scale3d(0.95, 0.95, 0.95)";
 			});
 		}
 		// If the current tooltip exists but the text does not match what we want, replace it.
