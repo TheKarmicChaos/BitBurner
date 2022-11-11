@@ -70,6 +70,7 @@ export async function main(ns) {
 
         let doneOps = nstb.PeekPort(ns, 9)["blackOpsDone"]
         let blackOpList = tb.ArrSubtract(await nstb.RunCom(ns, 'ns.bladeburner.getBlackOpNames()'), doneOps)
+        if (blackOpList.length == 0) nstb.UpdPort(ns, 9, "dict", ["blackOpsCompleted", true]);
         let nextBlackOp = blackOpList[0]
         let [blackLo, blackHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['BlackOps', nextBlackOp]);
         let blackOpReq = await nstb.RunCom(ns, 'ns.bladeburner.getBlackOpRank()', [nextBlackOp]);

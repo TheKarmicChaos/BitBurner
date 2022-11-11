@@ -57,7 +57,7 @@ export async function main(ns) {
 
 	// PORT 9: BLADEBURNER PROGRESS TRACKER
 	ns.getPortHandle(9).clear()
-	ns.getPortHandle(9).write({ "wantBB": false, "hasBB": false, "hasSimu": false, "city": "Sector-12", "blackOpsDone": ["failsafe"] })
+	ns.getPortHandle(9).write({ "wantBB": false, "hasBB": false, "hasSimu": false, "city": "Sector-12", "blackOpsDone": ["failsafe"], "blackOpsCompleted": false })
 
 
 
@@ -212,9 +212,9 @@ export async function main(ns) {
 				if ("corp" in strats) { BankStrat('mp_corp.js') };
 				if ('hack_money' in strats) { BankStrat('lp_loopmaster.js') };
 
-				if (player.skills.hacking >= 3000 * bndata.WorldDaemonDifficulty) {
+				if (player.skills.hacking >= 3000 * bndata.WorldDaemonDifficulty || nstb.PeekPort(ns, 9)["blackOpsCompleted"]) {
 					let myAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
-					if (myAugs.includes("The Red Pill")) { BankStrat('endBitNode.js') }
+					if (myAugs.includes("The Red Pill") || nstb.PeekPort(ns, 9)["blackOpsCompleted"]) { BankStrat('endBitNode.js') }
 				};
 				break;
 
@@ -237,9 +237,9 @@ export async function main(ns) {
 				if ('corp' in strats) { BankStrat('mp_corp.js') };
 				if ('hack_money' in strats) { BankStrat('lp_loopmaster.js') };
 
-				if (player.skills.hacking >= 3000 * bndata.WorldDaemonDifficulty) {
+				if (player.skills.hacking >= 3000 * bndata.WorldDaemonDifficulty || nstb.PeekPort(ns, 9)["blackOpsCompleted"]) {
 					let myAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
-					if (myAugs.includes("The Red Pill")) { BankStrat('endBitNode.js') }
+					if (myAugs.includes("The Red Pill") || nstb.PeekPort(ns, 9)["blackOpsCompleted"]) { BankStrat('endBitNode.js') }
 				};
 				break;
 		}
