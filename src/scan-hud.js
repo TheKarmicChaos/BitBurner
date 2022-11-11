@@ -34,25 +34,6 @@ export async function main(ns) {
 				if (nextNonHTML != "") ns.print("INFO ", "   ".repeat(curDepth - 1), nextNonHTML);
 			}
 		}
-	}
-	// Depricated by PrintHTML
-	function PrintSubElements(parentnode, maxdepth) {
-		ns.print("Parent: ", parentnode.nodeName)
-		let nodes = parentnode.childNodes;
-		ns.print("Children: ")
-		for (let node of nodes) {
-			if (nodes[nodes.length - 1] === node) { PrintChildren(node, "|-o", "  ", 1, maxdepth); }
-			else { PrintChildren(node, "|-o", "| ", 1, maxdepth) }
-		}
-	}
-	// Depricated by PrintHTML
-	function PrintChildren(node, myAsciiStr, childAsciiStr, depth, maxdepth) {
-		ns.print(`${myAsciiStr}   ${node.nodeName} ${node.id} "${node.textContent}"`)
-		if (node.hasChildNodes() && depth + 1 <= maxdepth) {
-			for (let subNode of node.childNodes) {
-				if (node.childNodes[node.childNodes.length - 1] === subNode) { PrintChildren(subNode, childAsciiStr + "|-o", childAsciiStr + "  ", depth + 1, maxdepth); }
-				else { PrintChildren(subNode,  childAsciiStr + "|-o", childAsciiStr + "| ", depth + 1, maxdepth) }
-			}
-		}
+		ns.print(fullTree);
 	}
 }
