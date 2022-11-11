@@ -12,7 +12,7 @@ export async function main(ns) {
 		["SHOPLIFT", "ROBSTORE", "MUG", "LARCENY", "DRUGS",
 		"BONDFORGERY", "TRAFFICKARMS", "HOMICIDE", "GRANDTHEFTAUTO", "KIDNAP",
 		"ASSASSINATION", "HEIST"];
-	const pldata = () => ns.getPlayer()
+	const player = () => ns.getPlayer()
 	const augs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
 	const hasNMI = augs.includes('Neuroreceptor Management Implant');
 	// Constantly apply to every company of interest and ask for promotions
@@ -26,7 +26,7 @@ export async function main(ns) {
         let bestWorkinc = 0; if (bestwork) bestWorkinc = await nstb.GetJobGains(ns, bestwork, "money");
 
         // Do crime until we meet reqs to do work instead
-        if (!canDoWork || Object.keys(pldata().jobs).length == 0) { await DoCrime(bestcrime) }
+        if (!canDoWork || Object.keys(player().jobs).length == 0) { await DoCrime(bestcrime) }
         // Then do work until we meet reqs to do crime instead
         else if (!canDoCrime) { await DoWork(bestwork) }
         // Then do the more profitable of the two; work or crime.
@@ -47,7 +47,7 @@ export async function main(ns) {
 		// if homicide chance < 0.4, always commit mug.
 		if (await nstb.RunCom(ns, 'ns.singularity.getCrimeChance()', ["HOMICIDE"]) < 0.4) { bestcrime = "MUG" }
 		// else, if kills < 30, commit homicide. (30 kills needed for all faction invites)
-		else if (pldata().numPeopleKilled < 30) { bestcrime = "HOMICIDE" }
+		else if (player().numPeopleKilled < 30) { bestcrime = "HOMICIDE" }
 		// else, if we want a gang & don't yet have one, commit the crime with the best karma gains.
 		else if (nstb.PeekPort(ns, 7)["wantGang"]) {
 			if (await nstb.GetCrimeGains(ns, "HOMICIDE", "karma") >= await nstb.GetCrimeGains(ns, "MUG", "karma")) { bestcrime = "HOMICIDE" }
@@ -120,9 +120,9 @@ export async function main(ns) {
 		if (compFacsNeeded.length > 0) { bestcomp = compFacsNeeded.shift() }
 		// else, work the job with the best profit.
 		else {
-			bestcomp = Object.keys(pldata().jobs)[0]
+			bestcomp = Object.keys(player().jobs)[0]
 			for (const comp of allComps) {
-				if (comp in pldata().jobs) {
+				if (comp in player().jobs) {
                    if (await nstb.GetJobGains(ns, bestcomp, "money") < await nstb.GetJobGains(ns, comp, "money")) bestcomp = comp;
                 }
 			}
@@ -188,7 +188,7 @@ export async function main(ns) {
 			if (comp == "Fulcrum Technologies") { compfac = "Fulcrum Secret Technologies" }
 			else { compfac = comp }
 			// If the related faction has not yet been joined, add it to the list
-			if (!pldata().factions.includes(compfac) && comp in pldata().jobs) { companies.push(comp) }
+			if (!player().factions.includes(compfac) && comp in player().jobs) { companies.push(comp) }
 		}
 		return companies;
 	}
