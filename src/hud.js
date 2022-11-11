@@ -57,8 +57,9 @@ itself. For text rows, you will need to add and update tooltips manually.
 		External Updates Cheat Sheet:
 	UPDATE/SHOW TEXT ROW		ns.run("hud.js", 1, "upd", hook, "Leftside Text", "Rightside Text")
 	HIDE TEXT ROW				ns.run("hud.js", 1, "upd", hook)
-	CHANGE TEXT ROW COLOR		ns.run("hud.js", 1, "color", hook, "new color name")
+	CHANGE TEXT ROW COLOR		ns.run("hud.js", 1, "color", hook, "new color")
 	UPDATE PROGR BAR			ns.run("hud.js", 1, "progr", hook, currentValue, maximumValue)
+	CHANGE PROGR BAR COLOR		ns.run("hud.js", 1, "colorprogr", hook, "new color", "new background color")
 	HIDE PROGR BAR				ns.run("hud.js", 1, "hide", hook)
 	SHOW PROGR BAR				ns.run("hud.js", 1, "show", hook)
 	UPDATE/ADD TOOLTIP			ns.run("hud.js", 1, "tooltip", hook, "Tooltip Content")
@@ -183,9 +184,9 @@ export async function main(ns) {
 		AddDefault("int", "line3");
 		AddLine(3);
 		AddTextRow("karma", "error");
-		AddProgrBar("karma", "str");
+		AddProgrBar("karma", "error");
 		AddTextRow("kill", "error");
-		AddProgrBar("kill", "str");
+		AddProgrBar("kill", "error");
 		AddTextRow("gangtimer", "info");
 		AddTextRow("augtimer", "info");
 
@@ -237,15 +238,17 @@ export async function main(ns) {
 				RecolorTextRow(updHook, updArg1);
 				break;
 			case "progr":
-				if (updArg1 == null) updArg1 = 0;
+				if (updArg1 == null) updArg1 = 0; // Failsafe
 				if (updArg2 == null) updArg2 = 100; // Failsafe
 				UpdateProgrBar(updHook, updArg1, updArg2);
 				break;
+			case "colorprogr":
+				if (updArg1 == null) updArg1 = "primary"; // Failsafe
+				if (updArg2 == null) updArg2 = "rgb(17, 17, 17)"; // Default
+				RecolorProgrBar(updHook, updArg1, updArg2);
+				break;
 			case "show":
-				if (updArg1 == null) updArg1 = 0;
-				if (updArg2 == null) updArg2 = 100; // Failsafe
 				ShowProgrBar(updHook);
-				UpdateProgrBar(updHook, updArg1, updArg2);
 				break;
 			case "hide":
 				HideProgrBar(updHook);
@@ -317,6 +320,7 @@ export async function main(ns) {
 function RecolorTextRow(hookToRecolor, color) {
 	// If color is from the Theme, replace it with the correct rgb/hex code
 	if (color in colors) color = colors[color];
+	// Replace the appropriate style colors to get the desired effect.
 	d.getElementById(`ovv-row-${hookToRecolor}`).querySelectorAll("p").forEach((el) => el.style = `text-align: right; color: ${color};${textStyleParams};`);
 	d.getElementById(`ovv-row-${hookToRecolor}`).querySelectorAll("p")[0].style = `text-align: left; color: ${color};${textStyleParams};`;
 };
@@ -327,7 +331,7 @@ function RecolorTextRow(hookToRecolor, color) {
  * @param {string} textL - Text to display in column 1 of this row (left side)
  * @param {string} textR - Text to display in column 2 of this row (right side)
  * @param {string} text3 - (optional) Text to display in column 3 of this row
- * - Default value: "null"
+ * - Default value: null
  * */
  function UpdateTextRow(hookToUpdate, textL, textR, text3 = null) {
 	// Determine the text we want in each column
@@ -346,29 +350,59 @@ function RecolorTextRow(hookToRecolor, color) {
  * @param {string} hookName - Unique hook name for this progress bar.
  * - Must be distinct from all other progress bar hooks.
  * - Does not need to be distinct from text row hooks.
- * @param {string} color - Color of this row.
- * - Currently supported colors are:
- * - "hack", "str", "cha", "int"
+ * @param {string} color - Color of the progress bar.
+ * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
+ * @param {string} backgroundColor - (optional) Color of the background for progress bar.
+ * - Default value: "rgb(17, 17, 17)"
+ * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
  * */
-function AddProgrBar(hudHook, color) {
+function AddProgrBar(hudHook, color, backgroundColor = "rgb(17, 17, 17)") {
 	let rowElement = d.getElementById(`ovv-row-${hudHook}-progr`);
 	if (rowElement !== null) return rowElement;
+	// If color or backgroundColor is from the Theme, replace them with the correct rgb/hex code
+	if (color in colors) color = colors[color];
+	if (backgroundColor in colors) backgroundColor = colors[backgroundColor];
 	// Get an existing bar element from HUD.
-	let existingRow;
-	if (barColors.includes(color)) { existingRow = d.getElementById(`ovv-row-${color}-progr`) }
-	else { existingRow = d.getElementById(`ovv-row-str-progr`) }
+	let existingRow = d.getElementById(`ovv-row-str-progr`);
 	// Make a clone of it for our new hud element
 	let newHudRow = existingRow.cloneNode(true);
 	// give hook id to our new row-level element
 	newHudRow.id = `ovv-row-${hudHook}-progr`;
+	// Replace the game's messy css settings with our own stuff that we can customize.
+	let newBar = newHudRow.firstChild.firstChild.firstChild
+	newBar.parentElement.className = "css-koo86v"
+	newBar.parentElement.style = `background-color: ${backgroundColor};`;  // set color of "empty" parts of bar
+	newBar.className = "css-14usnx9"
+	newBar.style = `transform: translateX(-100%); background-color: ${color};`; // set color of "full" parts of bar
 	// Insert our element at the bottom of the hud
 	existingRow.parentElement.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
 	return newHudRow;
 };
 
-// Unused - this function does not work
-function RecolorProgrBar(hookToRecolor, r, g, b) {
-	d.getElementById(`ovv-row-${hookToRecolor}`).firstChild.firstChild.style.backgroundColor =	`rgb(${r},${g},${b})`
+/** Inserts a progress bar at the bottom of the hud.
+ * @param {string} hookName - Unique hook name for this progress bar.
+ * - Must be distinct from all other progress bar hooks.
+ * - Does not need to be distinct from text row hooks.
+ * @param {string} color - Color of the progress bar.
+ * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
+ * @param {string} backgroundColor - (optional) Color of the background for progress bar.
+ * - Default value: "rgb(17, 17, 17)"
+ * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
+ * */
+function RecolorProgrBar(hookToRecolor, color, backgroundColor = "rgb(17, 17, 17)") {
+	// If color or backgroundColor is from the Theme, replace them with the correct rgb/hex code
+	if (color in colors) color = colors[color];
+	if (backgroundColor in colors) backgroundColor = colors[backgroundColor];
+	// Update the style of the second-depth child, setting "background-color" to the desired color for "empty" parts of bar
+	let backElement = d.getElementById(`ovv-row-${hookToRecolor}-progr`).firstChild.firstChild
+	backElement.style = `background-color: ${backgroundColor};`;
+	// get existing HTML
+	let curHTML = backElement.parentElement.innerHTML;
+	// split the HTML so we get the sections we want to edit. We can't edit style directly since there are other style paramaters.
+	let htmlL = curHTML.split("; background-color: ")[0]
+	let htmlR = curHTML.split(`;">`)[1];
+	// Update the style of the deepest child, setting "background-color" to the desired color for "full" parts of bar
+	backElement.innerHTML = `${htmlL}; background-color: ${color};">${htmlR}`;
 };
 
 /** Updates a progress bar and its tooltip with a new percentage.
@@ -386,13 +420,12 @@ function RecolorProgrBar(hookToRecolor, r, g, b) {
 	let ttContent = `<strong>Progress:</strong> ${StandardNotation(Math.abs(curAmt), 3)} / ${StandardNotation(Math.abs(maxAmt), 3)}<br /><strong>Remaining:</strong> ${StandardNotation(remaining, 3)} (${percent.toFixed(2)}%)`
 	AddTooltip(`${hookToUpdate}-progr`, ttContent, {textAlign: "right"});
 	// get existing HTML
-	let existingHTML = elementToUpdate.innerHTML;
-	// split the HTML so we get the sections we want to edit
-	let leftHTML = String(existingHTML).split("translateX(")[0] + "translateX(";
-	let rightHTML = "%);" + String(existingHTML).split("%);")[1];
-	// update the HTML
-	let newHTML = `${leftHTML}-${(100 - percent).toFixed(2)}${rightHTML}`;
-	elementToUpdate.innerHTML = newHTML;
+	let curHTML = elementToUpdate.innerHTML;
+	// split the HTML so we get the sections we want to edit. We can't edit style directly since there are other style paramaters.
+	let htmlL = curHTML.split("transform: translateX(")[0]
+	let htmlR = curHTML.split("%);")[1];
+	// Update the style of the deepest child, setting "transform" to "translateX(-N%)" where N is the inverse percentage of the progress bar's completion. 
+	elementToUpdate.innerHTML = `${htmlL}transform: translateX(-${(100 - percent).toFixed(2)}%);${htmlR}`;
 };
 
 /** Hides a visbile progress bar on the hud.
@@ -401,15 +434,16 @@ function RecolorProgrBar(hookToRecolor, r, g, b) {
  function HideProgrBar(hudHook) {
 	let rowElement = d.getElementById(`ovv-row-${hudHook}-progr`);
 	if (rowElement !== null) {
-		// Remove all HTML from the deepest child so the HTML doesn't auto-update
-		rowElement.firstChild.firstChild.innerHTML = "";
-
-		// Rename "class" to "clss" in the HTML of the first-depth child so the information cannot be parsed.
+		let barElement = rowElement.firstChild.firstChild.firstChild
+		// Remove the className from the deepest child so the HTML doesn't break
+		barElement.className = "";
+		// get existing HTML
 		let curHTML = rowElement.innerHTML
-		let htmlL = curHTML.split(`-3px;"><span cl`)[0] + `-3px;"><span cl`
+		// split the HTML so we get the sections we want to edit
+		let htmlL = curHTML.split(`-3px;"><span cl`)[0]
 		let htmlR = curHTML.split(`-3px;"><span cl`)[1]
-		
-		if (htmlR[0] == "a") { rowElement.innerHTML = htmlL + curHTML.split(`-3px;"><span cla`)[1]; }
+		// Rename "class" to "clss" in the HTML of the second-depth child so the information cannot be parsed.
+		if (htmlR[0] == "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cl${htmlR.substring(1)}`; }
 	}
 };
 
@@ -419,15 +453,16 @@ function RecolorProgrBar(hookToRecolor, r, g, b) {
 function ShowProgrBar(hudHook) {
 	let rowElement = d.getElementById(`ovv-row-${hudHook}-progr`);
 	if (rowElement !== null) {
-		// Replace the missing HTML in the deepest child
-		let existingHTML = d.getElementById("ovv-row-str-progr").firstChild.firstChild.innerHTML;
-		rowElement.firstChild.firstChild.innerHTML = existingHTML.split(`></span>`)[0] + `></span>`
-
-		// Rename "class" back to "clss" in the HTML of the first-depth child so the information can be parsed once again.
+		let barElement = rowElement.firstChild.firstChild.firstChild
+		// Replace the missing className in the deepest child
+		barElement.className = "css-14usnx9";
+		// get existing HTML
 		let curHTML = rowElement.innerHTML
-		let htmlL = curHTML.split(`-3px;"><span cl`)[0] + `-3px;"><span cl`
+		// split the HTML so we get the sections we want to edit
+		let htmlL = curHTML.split(`-3px;"><span cl`)[0]
 		let htmlR = curHTML.split(`-3px;"><span cl`)[1]
-		if (htmlR[0] != "a") { rowElement.innerHTML = htmlL + "a" + htmlR; }
+		// Rename "class" back to "clss" in the HTML of the second-depth child so the information can be parsed once again.
+		if (htmlR[0] != "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cla${htmlR}`; }
 	}
 };
 
