@@ -168,75 +168,33 @@ export async function main(ns) {
 			// PREPARATION STEPS
 			// ==============================
 
-
-			let gangdata;
-			let [gangAugs, gangDict] = await UpdGang(); //ns.print(gangAugs); ns.print(gangDict);
-
 			// 2a. Check all avaialable factions for data. Parse data into an array of augment objects including name, price, repreq, etc.
 			// 2b. Then, trim the array so it excludes ones we already own or don't have prereqs for.
 			const favorReq = await nstb.RunCom(ns, 'ns.getFavorToDonate()')
-			let auglist = []; let augData = []; let augDict = {};
-			let factions = player.factions;
-			await UpdFacs(); //ns.print(auglist); ns.print(augDict);
-
+			let auglist = []; 
+			let augData = [];
+			let augDict = {};
+			await UpdAugs(); //ns.print(auglist); ns.print(augDict);
 
 			// EXECUTION STEPS
 			// ==============================
-			// 1b. If there are gang augments we have prereqs for that are unbought (excluding QLink):
-			if (hasGang && gangAugs.length > 0) { if (await BuyAugs(gangAugs, gangDict, 180000) == true) { ns.run("endRun.js") }; } // (3 minute wait timer)
-
-			// 2c. If we have <5 augs left in the array of augs (and have bought >=1) OR have bought >5 augs:
-			else if (auglist.length > 0) { if (await BuyAugs(auglist, augDict, 180000) == true) { ns.run("endRun.js") }; }	// (3 minute wait timer)
-
-			// 3. if there is nothing new to buy & we have no augs to install, try to get NFGs
-			else if (auglist.length == 0 && gangAugs.length == 0 && queuedAugs.length == 0) { if (await BuyAugs(auglist, augDict, 60000) == true) { ns.run("endRun.js") }; } // (1 minute wait timer)
-
-			// 4. FAILSAFE: reset the run if there is nothing new to buy, yet we have augs to install
-			else if (auglist.length == 0 && gangAugs.length == 0 && queuedAugs.length > 0) { ns.run("endRun.js") }
-
+			// 1. If we have <5 augs left in the array of augs (and have bought >=1) OR have bought >5 augs:
+			if (auglist.length > 0) { if (await BuyAugs(auglist, augDict, 180000) == true) { ns.run("endRun.js") }; } // (3 minute wait timer)
+			// 2. if there is nothing new to buy & we have no augs to install, try to get NFGs
+			else if (auglist.length == 0 && queuedAugs.length == 0) { if (await BuyAugs(auglist, augDict, 60000) == true) { ns.run("endRun.js") }; } // (1 minute wait timer)
+			// 3. FAILSAFE: reset the run if there is nothing new to buy, yet we have augs to install
+			else if (auglist.length == 0 && queuedAugs.length > 0) { ns.run("endRun.js") }
 
 			// FUNCTIONS
 			// ==============================
 
 			/** Returns an array with the following two elements:
-			* - An array of all gang augs (sorted by desc cost), excluding ones we already own or don't have prereqs for. Also excludes QLink if we don't have $200t.
-			* - A dict with keys: all augs offered by gang, and vals: object containing aug cost, repreq, and required faction. */
-			async function UpdGang() {
-				if (hasGang) {
-					gangdata = await nstb.RunCom(ns, 'ns.gang.getGangInformation()'); // Update gang data
-					let currentGangAugs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationsFromFaction()', [gangdata.faction]) // Arr of all augs available through gang
-					const gangAugData = []; // Temporary array of augment objects including name, price, repreq, etc. for sorting purposes.
-
-					for (let aug of currentGangAugs) {
-						if (!ownedAugs.includes(aug) && await HaveAugPreReqs(aug)) {
-							if ((aug == "QLink" && player.money >= 200e12) || aug != "QLink") { // exclude QLink as long as we don't have >$200t
-								let reqs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationCost()', [aug]);
-								let repreq = reqs[0]; let cost = reqs[1];
-								gangAugData.push({ "name": aug, "cost": cost, "repreq": repreq, "faction": gangdata.faction })
-							}
-						}
-					}; // sort gangAugData from most to least expensive
-					gangAugData.sort(function (x, y) {
-						if (x.cost > y.cost) { return -1; }
-						if (x.cost < y.cost) { return 1; }
-						return 0;
-					});
-
-					const gangAugs = []; // Array of 
-					const gangDict = {};
-					for (let gangAugObj of gangAugData) {
-						gangAugs.push(gangAugObj.name); // fill gangAugs
-						gangDict[gangAugObj.name] = gangAugObj; // fill gangDict with objects from gangAugData
-					};
-					return [gangAugs, gangDict];
-				} else { return [[], {}]; }
-			};
-
-			/** Returns an array with the following two elements:
-			* - An array of all augs from available non-gang factions (sorted by desc cost), excluding ones we already own or don't have prereqs for.
-			* - A dict with keys: all augs from non-gang factions, and vals: object containing aug cost, repreq, and required faction. */
-			async function UpdFacs() {
-				let factions = player.factions
+			* - An array of all augs from available factions + gang (sorted by desc cost), excluding ones we already own or don't have prereqs for.
+			* - A dict with keys: all augs from all factions + gang, and vals: object containing aug cost, repreq, and required faction. */
+			async function UpdAugs() {
+				let gangdata;
+				if (hasGang) gangdata = await nstb.RunCom(ns, 'ns.gang.getGangInformation()'); // Update gang data
+				let factions = player.factions;
 				for (let faction of factions) {
 					if (!hasGang || faction != gangdata.faction) {
 						let factionaugs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationsFromFaction()', [faction])
@@ -244,14 +202,24 @@ export async function main(ns) {
 						for (let aug of factionaugs) {
 							if (!ownedAugs.includes(aug) && await HaveAugPreReqs(aug)) {
 								let reqs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationCost()', [aug]);
-								let repreq = reqs[0]; let cost = reqs[1]
-								if (!ownedAugs.includes(aug)) {
-									augData.push({ "name": aug, "cost": cost, "repreq": repreq, "faction": faction })
-								}
+								let repreq = reqs[0]; let cost = reqs[1];
+								augData.push({ "name": aug, "cost": cost, "repreq": repreq, "faction": faction })
 							}
 						}
+					} else if (hasGang) {
+						let currentGangAugs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationsFromFaction()', [gangdata.faction]) // Arr of all augs available through gang
+						for (let aug of currentGangAugs) {
+							if (!ownedAugs.includes(aug) && await HaveAugPreReqs(aug)) {
+								if ((aug == "QLink" && player.money >= 200e12) || aug != "QLink") { // exclude QLink as long as we don't have >$200t
+									let reqs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationCost()', [aug]);
+									let repreq = reqs[0]; let cost = reqs[1];
+									augData.push({ "name": aug, "cost": cost, "repreq": repreq, "faction": gangdata.faction })
+								}
+							}
+						};
 					}
-				}; // sort augData from most to least expensive
+				};
+				// sort augData from most to least expensive
 				augData.sort(function (x, y) {
 					if (x.cost > y.cost) { return -1; }
 					if (x.cost < y.cost) { return 1; }
@@ -286,6 +254,20 @@ export async function main(ns) {
 							ns.toast("B> Augment " + augname, "info", 2000)
 							queuedAugs.push(augname)
 							tb.DelFromArray(augname, list)
+						} else { // If we can't, try to buy 1 NFG
+							ns.print("Trying to buy NFG...");
+							let bestFaction = null;
+								for (let faction of ns.getPlayer().factions) {
+								if (faction != "Slum Snakes") {
+									if (bestFaction == null) { bestFaction = faction }
+									else if (ns.singularity.getFactionRep(faction) > ns.singularity.getFactionRep(bestFaction)) { bestFaction = faction }
+								}
+							}
+							if (ns.getPlayer().money >= ns.singularity.getAugmentationPrice("NeuroFlux Governor")
+								&& ns.singularity.getFactionRep(bestFaction) >= ns.singularity.getAugmentationRepReq("NeuroFlux Governor")) {
+								ns.singularity.purchaseAugmentation(bestFaction, "NeuroFlux Governor");
+								queuedAugs.push("NeuroFlux Governer");
+							}
 						}
 					}
 					// if no more augs exist, try to buy 1 NFG
