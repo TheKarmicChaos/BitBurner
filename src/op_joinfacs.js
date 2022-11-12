@@ -4,6 +4,7 @@ import * as nstb from './lib/nstools';
 export async function main(ns) {
 	//ns.tail('op_joinfacs.js'); ns.disableLog("ALL"); ns.clearLog();
 
+	const hasBB = nstb.PeekPort(ns, 9)["hasBB"]
 	let reserve = 100e6
 	let pldata = await nstb.RunCom(ns, 'ns.getPlayer()')
 	let plskills = pldata.skills;
@@ -45,11 +46,11 @@ export async function main(ns) {
 		ns.print("Trying to join ", "Tetrads")
 		await nstb.RunCom(ns, 'ns.singularity.travelToCity()', ["Chongqing"])
 
-	} else if (!factions.includes("The Syndicate") && money >= 10.2e6 && hackLv >= 200 && combatLv >= 200 && karma <= -90) {
+	} else if (!factions.includes("The Syndicate") && money >= 10.2e6 && hackLv >= 200 && combatLv >= 200 && karma <= -90 && !hasBB) {
 		ns.print("Trying to join", "The Syndicate")
 		await nstb.RunCom(ns, 'ns.singularity.travelToCity()', ["Sector-12"])
 
-	} else if (!factions.includes("The Dark Army") && money >= 200e3 && hackLv >= 300 && combatLv >= 300 && karma <= -45 && kills >= 5) {
+	} else if (!factions.includes("The Dark Army") && money >= 200e3 && hackLv >= 300 && combatLv >= 300 && karma <= -45 && kills >= 5 && !hasBB) {
 		ns.print("Trying to join ", "The Dark Army")
 		await nstb.RunCom(ns, 'ns.singularity.travelToCity()', ["Chongqing"])
 
@@ -68,6 +69,7 @@ export async function main(ns) {
 		if (!factions.includes("Chongqing") && money >= 20.2e6) {
 			ns.print("Trying to join ", "Chongqing")
 			await nstb.RunCom(ns, 'ns.singularity.travelToCity()', ["Chongqing"])
+			await nstb.RunCom(ns, 'ns.singularity.joinFaction()', ["Chongqing"]);
 		} else if (!factions.includes("New Tokyo") && money >= 20.2e6) {
 			ns.print("Trying to join ", "New Tokyo")
 			await nstb.RunCom(ns, 'ns.singularity.travelToCity()', ["New Tokyo"])
