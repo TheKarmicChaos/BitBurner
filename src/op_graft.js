@@ -6,8 +6,9 @@ export async function main(ns) {
 	//ns.tail("op_graft.js"); ns.disableLog("ALL"); ns.clearLog();
 
 	const strats = nstb.PeekPort(ns, 1)["strats"]
-	let metastrat = "redpill";
-	if ("hack_money" in strats) metastrat = "all";
+	const bitNode = nstb.PeekPort(ns, 1)["bitNode"]
+	let metastrat = "all";
+	if (bitNode == 8) metastrat = "redpill";
 
 	let ownedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()', [true])
 	let installedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()')
