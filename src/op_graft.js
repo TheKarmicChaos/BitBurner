@@ -20,8 +20,6 @@ export async function main(ns) {
 	// Start with mandatory upgrades, in order of importance.
 	var graftlist = [];
 
-	
-
 	let entrLimit; // at this entropy we stop grafting until we can get nicofolas
 	let minMoneyToGraft; // we only graft when we have a least this much money
 
@@ -29,17 +27,17 @@ export async function main(ns) {
 	if (player.numPeopleKilled >= 30 && (!nstb.PeekPort(ns, 8)["wantCorp"] || player.money <= 8e9)) {
 		switch (metastrat) {
 			case "all":
-				await PrepRunAll(); // ns.print(graftlist);
+				await PrepRunAll(); //ns.print(graftlist);
 
 				var shouldGraft = (player.money >= 150e12 || (player.entropy < entrLimit && player.money >= minMoneyToGraft));
-				if (shouldGraft) { ns.print("GRAFTING..."); await GraftNext(await GetNextGraft(graftlist)); };
+				if (shouldGraft) await GraftNext(await GetNextGraft(graftlist));
 
 				break;
 			case "redpill":
 				await PrepRunRedpill(); //ns.print(graftlist);
 
 				var shouldGraft = (player.money >= 155e12 || (player.entropy < entrLimit && player.money >= minMoneyToGraft));
-				if (shouldGraft) { ns.print("GRAFTING..."); await GraftNext(await GetNextGraft(graftlist)); };
+				if (shouldGraft) await GraftNext(await GetNextGraft(graftlist));
 
 				break;
 		}
@@ -135,9 +133,15 @@ export async function main(ns) {
 	}
 
 	async function GraftNext(aug) {
-		if (!ns.singularity.isBusy() || ns.singularity.getCurrentWork().type != "GRAFTING" && aug != null) {
+		ns.print("Checking current work...");
+		if (aug != null && (!ns.singularity.isBusy() || ns.singularity.getCurrentWork().type == null || ns.singularity.getCurrentWork().type != "GRAFTING")) {
+			ns.print("GRAFTING...");
 			try { ns.grafting.graftAugmentation(aug) }
-			catch (err) { ns.singularity.travelToCity("New Tokyo") }
+			catch (err) {
+				ns.singularity.travelToCity("New Tokyo");
+				try { ns.grafting.graftAugmentation(aug) }
+				catch (err) { ns.print(err); }
+			}
 		}
 	}
 
