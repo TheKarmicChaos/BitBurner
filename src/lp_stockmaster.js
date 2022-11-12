@@ -4,6 +4,10 @@ import {
     formatMoney, formatNumberShort, formatDuration, getStockSymbols
 } from './lib/helpers';
 
+// This is a lightly modified script originally written by alianbryden. Most of the credit goes to them.
+// https://github.com/alainbryden/bitburner-scripts
+
+
 let disableShorts = false;
 let commission = 100000; // Buy/sell commission. Expected profit must exceed this to buy anything.
 let totalProfit = 0.0; // We can keep track of how much we've earned since start.

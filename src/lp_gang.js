@@ -1,6 +1,10 @@
 import * as nstb from "./lib/nstools";
 import * as tb from "./lib/toolbox";
 
+// This script was originally based off of a broken script written by Troff, but has since been heavily modified. Small credit goes to them.
+// https://steamcommunity.com/sharedfiles/filedetails/?id=2838180161
+
+
 /** @param {import("../").NS} ns */
 export async function main(ns) {
 	ns.closeTail(); await ns.sleep(1); ns.tail('lp_gang.js'); await ns.sleep(1); ns.resizeTail(340, 60); await ns.sleep(1); ns.moveTail(1500, 225);

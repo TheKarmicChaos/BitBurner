@@ -1,3 +1,7 @@
+// This is a lightly modified script originally written by alianbryden. Most of the credit goes to them.
+// https://github.com/alainbryden/bitburner-scripts
+
+
 /**
  * Return a formatted representation of the monetary amount using scale symbols (e.g. $6.50M)
  * @param {number} num - The number to format
