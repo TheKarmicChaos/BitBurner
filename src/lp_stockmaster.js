@@ -71,7 +71,7 @@ export function autocomplete(data, args) {
 }
 
 /** Requires access to the TIX API. Purchases access to the 4S Mkt Data API as soon as it can 
-/** @param {import("../").NS} ns */
+ * @param {import("../").NS} ns */
 export async function main(ns) {
     const runOptions = getConfiguration(ns, argsSchema);
     if (!runOptions) return; // Invalid options, or ran in --help mode.
@@ -231,6 +231,8 @@ export async function main(ns) {
                         cash -= await doBuy(ns, stk, numShares);
                 }
             }
+            // Every 30 minutes, if we have 4s API, liquidate to reduce lag and redistribute money.
+            if (!pre4s && ns.getTimeSinceLastAug() % 1800000 <= 2000) ns.run("lp_stockmaster.js", 1, "-l");
         } catch (err) {
             log(ns, `WARNING: lp_stockmaster.js Caught (and suppressed) an unexpected error in the main loop:\n` +
                 (typeof err === 'string' ? err : err.message || JSON.stringify(err)), false, 'warning');
