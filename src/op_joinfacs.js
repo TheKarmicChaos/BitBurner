@@ -2,7 +2,7 @@ import * as nstb from './lib/nstools';
 
 /** @param {import("../").NS} ns */
 export async function main(ns) {
-	//ns.tail('join-factions.js'); ns.disableLog("ALL"); ns.clearLog();
+	//ns.tail('op_joinfacs.js'); ns.disableLog("ALL"); ns.clearLog();
 
 	let reserve = 100e6
 	let pldata = await nstb.RunCom(ns, 'ns.getPlayer()')
