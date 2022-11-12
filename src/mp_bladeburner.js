@@ -147,8 +147,8 @@ export async function main(ns) {
             if (skill == "Overclock" && skillLv >= 90) continue;
             if (["Short-Circuit", "Cloak"].includes(skill) && skillLv >= 30) continue;
             if (["Evasive System", "Reaper"].includes(skill) && skillLv >= 15) continue;
-            if (["Tracer", "Cyber's Edge"].includes(skill) && skillLv >= 10) continue;
-            if (["Hands of Midas", "Hyperdrive", "Datamancer"].includes(skill) && skillLv >= 5) continue;
+            if (skill == "Tracer" && skillLv >= 10) continue;
+            if (["Hands of Midas", "Hyperdrive", "Datamancer", "Cyber's Edge"].includes(skill) && skillLv >= 5) continue;
             // Get skill cost, and multiply it by 2 if it's not a high priority.
             let skillCost = await nstb.RunCom(ns, 'ns.bladeburner.getSkillUpgradeCost()', [skill]);
             if (["Evasive System", "Reaper", "Cyber's Edge", "Datamancer", "Hands of Midas", "Hyperdrive"].includes(skill)) skillCost *= 2;
