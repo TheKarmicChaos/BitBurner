@@ -290,21 +290,39 @@ export async function GetJobGains(ns, company, stat, sleeveid = -1) {
 	return gainsPerSec;
 };
 
-/** WIP :: Retrieves a global variable from global-vars.txt
- * @param {import("../..").NS} ns
- * @param {string} key - Key name of the global var to retrieve.
- * */
-export async function getGlobalVar(ns, key) {
-	checkNsInstance(ns, 'GetGlobalVar');
 
+/** Retrieves the global variable dictionary from global-vars.txt
+ * @param {import("../..").NS} ns
+ * */
+export function getGlobals(ns) {
+	checkNsInstance(ns, 'getGlobals');
+	const fileData = ns.read('global-vars.txt');
+    return JSON.parse(fileData); // Deserialize it back into an object/array and return
 };
 
-/** WIP :: Updates/Creates a global variable and writes it to global-vars.txt
+/** Updates global variables and writes them to global-vars.txt
  * @param {import("../..").NS} ns
- * @param {string} key - Key name of the global var to update/create.
- * @param {any} value - Value to be stored with this key.
+ * @param {any[]} args - An array containing the update data.
+ * - The array contains a list of strings for each key to update in the dict,
+ * with each key immediately followed by the value for that key.
+ * - Example: ["key1", 10, "category1.key2", true, "key17", "redpill"]
  * */
- export async function UpdGlobalVar(ns, key, value) {
-	checkNsInstance(ns, 'UpdGlobalVar');
-	
+ export function updGlobals(ns, args) {
+	checkNsInstance(ns, 'updGlobals');
+	let curDict = getGlobals(ns);
+	try {
+		while (args.length > 0) {
+			let nextKey = args.shift();
+			let nextVal = args.shift();
+			let depth = nextKey.split(".").length
+			let reference = curDict;
+			while (depth > 1) {
+				reference = reference[nextKey.split(".")[0]];
+				nextKey = nextKey.replace(`${nextKey.split(".")[0]}.`, "");
+				depth = nextKey.split(".").length;
+			}
+			reference[nextKey] = nextVal;
+		};
+		ns.write('global-vars.txt', JSON.stringify(curDict), "w")
+	} catch (err) { ns.toast("ERROR: updGlobals was passed invalid args array for the specified dataStruct.") };
 };
