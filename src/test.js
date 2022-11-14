@@ -16,11 +16,11 @@ export async function main(ns) {
 	// Commonly used print statements
 
 	//ns.print(ns.singularity.getCurrentWork())
-	//ns.print(RecursivePrint(ns.getPlayer()))
-	//ns.print(RecursivePrint(ns.sleeve.getInformation(5)))
-	//ns.print(RecursivePrint(ns.getBitNodeMultipliers()))
-	//ns.print(RecursivePrint(ns.gang.getGangInformation()))
-	//ns.print(RecursivePrint(ns.corporation.getCorporation()))
+	//ns.print(tb.RecursivePrint(ns.getPlayer()))
+	//ns.print(tb.RecursivePrint(ns.sleeve.getInformation(5)))
+	//ns.print(tb.RecursivePrint(ns.getBitNodeMultipliers()))
+	//ns.print(tb.RecursivePrint(ns.gang.getGangInformation()))
+	//ns.print(tb.RecursivePrint(ns.corporation.getCorporation()))
 	
 
 }
