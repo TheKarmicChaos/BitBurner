@@ -10,6 +10,9 @@ export async function main(ns) {
 
 
     const player = ns.getPlayer();
+    const ownedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()', [true]);
+    const installedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
+
     const cities = ["Aevum", "Chongqing", "Sector-12", "New Tokyo", "Ishima", "Volhaven"];
     let [curSta, maxSta] = await nstb.RunCom(ns, 'ns.bladeburner.getStamina()')
     let curCity = await nstb.RunCom(ns, 'ns.bladeburner.getCity()'); // get current city
@@ -20,22 +23,34 @@ export async function main(ns) {
     const hasSimu = nstb.PeekPort(ns, 9)["hasSimu"]
 
     // Main function calls ---------------------------------
+    if (!hasSimu && installedAugs.includes("The Blade's Simulacrum")) // update Port 9 "hasSimu" if the aug is now fully installed.
+        nstb.UpdPort(ns, 9, "dict", ["hasSimu", true]);
+    if (player.factions.includes("Bladeburners") && !ownedAugs.includes("The Blade's Simulacrum")) // try to get Simu if it isn't yet owned
+        await TryToGetSimu();
     await updateCity();
     await levelSkills();
     if (player.numPeopleKilled >= 30 && !nstb.PeekPort(ns, 7)["wantGang"] && (hasSimu || !ns.singularity.isBusy() || ns.singularity.getCurrentWork().type != "GRAFTING")) {
+        // If we don't have simu, stop our non-bladeburner action
         if (!hasSimu) await nstb.RunCom(ns, 'ns.singularity.stopAction()');
-
         // if we are not at max health or stamina, recover.
-        if (shouldRecover && curAct().name != 'Hyperbolic Regeneration Chamber') {
-            ns.bladeburner.startAction('General', 'Hyperbolic Regeneration Chamber')
-        }
+        if (shouldRecover && curAct().name != 'Hyperbolic Regeneration Chamber')
+            ns.bladeburner.startAction('General', 'Hyperbolic Regeneration Chamber');
         // if we are not currently recovering back to full stamina, start automating actions.
-        else if (!(shouldRecover && curAct().name == 'Hyperbolic Regeneration Chamber')) {
+        else if (!(shouldRecover && curAct().name == 'Hyperbolic Regeneration Chamber'))
             await doNextAction();
-        }
     }
 
     // Function definitions --------------------------------
+    async function TryToGetSimu() {
+        const bbRep = await nstb.RunCom(ns, 'ns.singularity.getFactionRep()', ["Bladeburners"]);
+        const repReq = await nstb.RunCom(ns, 'ns.singularity.getAugmentationRepReq()', ["The Blade's Simulacrum"]);
+        const cost = await nstb.RunCom(ns, 'ns.singularity.getAugmentationPrice()', ["The Blade's Simulacrum"]);
+        if (bbRep >= repReq && player.money >= cost) {
+            if (await nstb.RunCom(ns, 'ns.singularity.purchaseAugmentation()', ["Bladeburners", "The Blade's Simulacrum"]))
+                ns.toast("B> Augment The Blade's Simulacrum", "info", 2000);
+        }
+    }
+
     async function updateCity() {
         let [bestCity, bestPop] = await getBestCity(); // city with highest population
         let curCityPop = await nstb.RunCom(ns, 'ns.bladeburner.getCityEstimatedPopulation()', [curCity]); 
