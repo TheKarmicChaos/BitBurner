@@ -81,53 +81,57 @@ export async function main(ns) {
 		// Check 3: Corporation
 		// -------------------------
 		const hasCorp = player.hasCorporation
-		const wantCorp = port8["wantCorp"]
+		const fundCost = ns.hacknet.hashCost("Sell for Corporation Funds");
+		const resrCost = ns.hacknet.hashCost("Exchange for Corporation Research");
+		const isFundNotNeeded = (port8["profit"] >= 500e6)
+		const isResrNotNeeded = (port8["hasTA.II"] && port8["research"] >= 10e6)
 		// - Has corp (if we want one)
-		const check3a = (!wantCorp)
+		const check3a = (!port8["wantCorp"])
 		// - Has Lab
 		const check3b = (!hasCorp || port8["hasLab"])
 		// - Has >= 3 products
 		const check3c = (!hasCorp || port8["products"].length >= 3)
-		const checksum3 = (check3a && check3b && check3c)
+		// - buying funds w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
+		const check3d = (!hasCorp || !("hackn" in strats) || isFundNotNeeded || fundCost > Math.max(2000 * strats["hackn"], port3["income"] * 2))
+		// - buying research w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
+		const check3e = (!hasCorp || !("hackn" in strats) || isResrNotNeeded || resrCost > Math.max(3000 * strats["hackn"], port3["income"] * 5))
+		const checksum3 = (check3a && check3b && check3c && check3d && check3e)
 		let checkmark3 = "[ ]"; if (checksum3) checkmark3 = "[✓]";
 		ns.print(`\n${checkmark3} Check #3: Corporation`)
 		if (!check3a) ns.print("• Need Corp");
 		if (!check3b) ns.print("• Need Lab");
 		if (!check3c) ns.print("• Need 3 products");
+		if (!check3d) ns.print("• B>CorpFund# too affordable!");
+		if (!check3e) ns.print("• B>CorpResr# too affordable!");
 
 
 
-		// Check 4: Upgrades
+		// Check 4: Bladeburner
 		// -------------------------
-		const fundCost = ns.hacknet.hashCost("Sell for Corporation Funds");
-		const resrCost = ns.hacknet.hashCost("Exchange for Corporation Research");
-		const isFundNotNeeded = (port8["profit"] >= 500e6)
-		const isResrNotNeeded = (port8["hasTA.II"] && port8["research"] >= 10e6)
 		const hasBB = port9["hasBB"]
-		const wantBB = port9["wantBB"]
 		const BBrankCost = ns.hacknet.hashCost("Exchange for Bladeburner Rank");
 		const BBspCost = ns.hacknet.hashCost("Exchange for Bladeburner SP");
-		// - Has 4sData TIX API
-		const check4a = (ns.stock.has4SDataTIXAPI())
-		// - Has decent homeRAM size
-		const check4b = (ns.getServerMaxRam("home") >= 4096)
-		// - buying funds w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
-		const check4c = (!hasCorp || !("hackn" in strats) || isFundNotNeeded || fundCost > Math.max(2000 * strats["hackn"], port3["income"] * 2))
-		// - buying research w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
-		const check4d = (!hasCorp || !("hackn" in strats) || isResrNotNeeded || resrCost > Math.max(3000 * strats["hackn"], port3["income"] * 5))
+		// - Joined BB (if we want to)
+		const check4a = (!port9["wantBB"])
+		// - Joined BB faction
+		const check4b = (!hasBB || player.factions.includes("Bladeburners"))
+		// - Has The Blade's Simulacrum
+		const check4c = (!hasBB || port9["hasSimu"] || ownedAugs.includes("The Blade's Simulacrum"))
 		// - buying BB rank is no longer cheap
-		const check4e = (!hasBB || BBrankCost > Math.max(4250 * strats["hackn"], port3["income"] * 60))
+		const check4d = (!hasBB || BBrankCost > Math.max(4250 * strats["hackn"], port3["income"] * 60))
 		// - buying BB sp is no longer cheap
-		const check4f = (!hasBB || BBspCost > Math.max(4000 * strats["hackn"], port3["income"] * 60))
-		const checksum4 = (check4a && check4b && check4c && check4d && check4e && check4f)
+		const check4e = (!hasBB || BBspCost > Math.max(4000 * strats["hackn"], port3["income"] * 60))
+		// - not currently performing a BlackOps mission
+		const check4f = (!hasBB || ns.bladeburner.getCurrentAction().type != "BlackOp")
+		const checksum4 = (check4a && check4b && check4c && check4d && check4e)
 		let checkmark4 = "[ ]"; if (checksum4) checkmark4 = "[✓]";
-		ns.print(`\n${checkmark4} Check #4: Upgrades`)
-		if (!check4a) ns.print("• Need 4s TIX API");
-		if (!check4b) ns.print("• Need homeRAM >= 4TB");
-		if (!check4c) ns.print("• B>CorpFund# too affordable!");
-		if (!check4d) ns.print("• B>CorpResr# too affordable!");
-		if (!check4e) ns.print("• B>BBrank# too affordable!");
-		if (!check4f) ns.print("• B>BBsp# too affordable!");
+		ns.print(`\n${checkmark4} Check #4: Bladeburner`)
+		if (!check4a) ns.print("• Need to join BB");
+		if (!check4b) ns.print("• Need to join BB faction");
+		if (!check4c) ns.print("• Need The Blade's Simulacrum");
+		if (!check4d) ns.print("• B>BBrank# too affordable!");
+		if (!check4e) ns.print("• B>BBsp# too affordable!");
+		if (!check4f) ns.print("• Need to NOT be doing BlackOp");
 
 
 
@@ -147,17 +151,23 @@ export async function main(ns) {
 
 
 
-		// Check 6: Timer
+		// Check 6: Progression
 		// -------------------------
 		// 3 minutes have passed since the run started
 		const check6a = (ns.getTimeSinceLastAug() > 180000)
 		// Player has $20b
 		const check6b = (player.money > 20e9)
-		const checksum6 = (check6a && check6b)
+		// - Has 4sData TIX API
+		const check6c = (ns.stock.has4SDataTIXAPI())
+		// - Has decent homeRAM size
+		const check6d = (ns.getServerMaxRam("home") >= 4096)
+		const checksum6 = (check6a && check6b && check6c && check6d)
 		let checkmark6 = "[ ]"; if (checksum6) checkmark6 = "[✓]";
-		ns.print(`\n${checkmark6} Check #6: Time`)
+		ns.print(`\n${checkmark6} Check #6: Progression`)
 		if (!check6a) ns.print(`• Need to wait 3m after install.`);
 		if (!check6b) ns.print(`• Need $20b`);
+		if (!check6c) ns.print("• Need 4s TIX API");
+		if (!check6d) ns.print("• Need homeRAM >= 4TB");
 
 
 
