@@ -6,9 +6,10 @@ export async function main(ns) {
 	ns.closeTail(); await ns.sleep(1); ns.tail('lp_loopmaster.js'); await ns.sleep(1); ns.resizeTail(340, 400); await ns.sleep(1); ns.moveTail(1520, 190);
 	ns.disableLog("ALL"); ns.clearLog();
 
-	const runType = nstb.PeekPort(ns, 1)["runType"]
-	const bndata = nstb.PeekPort(ns, 1)["mults"]
-	const strats = nstb.PeekPort(ns, 1)["strats"]
+	const port1 = nstb.PeekPort(ns, 1)
+	const runType = port1["runType"]
+	const bndata = port1["mults"]
+	const strats = port1["strats"]
 
 	let loopnum = 0;
 
@@ -18,13 +19,19 @@ export async function main(ns) {
 		const installedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
 		let queuedAugs = tb.ArrSubtract(ownedAugs, installedAugs, 1);
 
+		const port3 = nstb.PeekPort(ns, 3)
+		const port6 = nstb.PeekPort(ns, 6)
+		const port7 = nstb.PeekPort(ns, 7)
+		const port8 = nstb.PeekPort(ns, 8)
+		const port9 = nstb.PeekPort(ns, 9)
+
 		ns.clearLog();
 		ns.print("Loops: ", loopnum)
 
 		// Check 1: Sleeves
 		// -------------------------
 		const reqShock = Math.floor(75 ** bndata["StrengthLevelMultiplier"])
-		const sleeveShock = nstb.PeekPort(ns, 6)["sleeveShock"];
+		const sleeveShock = port6["sleeveShock"];
 		// - All sleeves at shock 0
 		const check1 = (sleeveShock < reqShock)
 		let checkmark1 = "[ ]"; if (check1) checkmark1 = "[✓]";
@@ -35,12 +42,12 @@ export async function main(ns) {
 
 		// Check 2: Gang
 		// -------------------------
-		const hasGang = nstb.PeekPort(ns, 7)["hasGang"]
-		const wantGang = nstb.PeekPort(ns, 7)["wantGang"]
+		const hasGang = port7["hasGang"]
+		const wantGang = port7["wantGang"]
 		let thugcount = 0;
 		let thugmults = [];
-		const territory = nstb.PeekPort(ns, 7)["territory"]
-		const rep = nstb.PeekPort(ns, 7)["respect"]
+		const territory = port7["territory"]
+		const rep = port7["respect"]
 		if (hasGang) {
 			var members = await nstb.RunCom(ns, 'ns.gang.getMemberNames()');
 			thugcount = members.length // 12 thugs
@@ -74,13 +81,13 @@ export async function main(ns) {
 		// Check 3: Corporation
 		// -------------------------
 		const hasCorp = player.hasCorporation
-		const wantCorp = nstb.PeekPort(ns, 8)["wantCorp"]
+		const wantCorp = port8["wantCorp"]
 		// - Has corp (if we want one)
 		const check3a = (!wantCorp)
 		// - Has Lab
-		const check3b = (!hasCorp || nstb.PeekPort(ns, 8)["hasLab"])
+		const check3b = (!hasCorp || port8["hasLab"])
 		// - Has >= 3 products
-		const check3c = (!hasCorp || nstb.PeekPort(ns, 8)["products"].length >= 3)
+		const check3c = (!hasCorp || port8["products"].length >= 3)
 		const checksum3 = (check3a && check3b && check3c)
 		let checkmark3 = "[ ]"; if (checksum3) checkmark3 = "[✓]";
 		ns.print(`\n${checkmark3} Check #3: Corporation`)
@@ -94,10 +101,10 @@ export async function main(ns) {
 		// -------------------------
 		const fundCost = ns.hacknet.hashCost("Sell for Corporation Funds");
 		const resrCost = ns.hacknet.hashCost("Exchange for Corporation Research");
-		const isFundNotNeeded = (nstb.PeekPort(ns, 8)["profit"] >= 500e6)
-		const isResrNotNeeded = (nstb.PeekPort(ns, 8)["hasTA.II"] && nstb.PeekPort(ns, 8)["research"] >= 10e6)
-		const hasBB = nstb.PeekPort(ns, 9)["hasBB"]
-		const wantBB = nstb.PeekPort(ns, 9)["wantBB"]
+		const isFundNotNeeded = (port8["profit"] >= 500e6)
+		const isResrNotNeeded = (port8["hasTA.II"] && port8["research"] >= 10e6)
+		const hasBB = port9["hasBB"]
+		const wantBB = port9["wantBB"]
 		const BBrankCost = ns.hacknet.hashCost("Exchange for Bladeburner Rank");
 		const BBspCost = ns.hacknet.hashCost("Exchange for Bladeburner SP");
 		// - Has 4sData TIX API
@@ -105,13 +112,13 @@ export async function main(ns) {
 		// - Has decent homeRAM size
 		const check4b = (ns.getServerMaxRam("home") >= 4096)
 		// - buying funds w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
-		const check4c = (!hasCorp || !("hackn" in strats) || isFundNotNeeded || fundCost > Math.max(2000 * strats["hackn"], nstb.PeekPort(ns, 3)["income"] * 2))
+		const check4c = (!hasCorp || !("hackn" in strats) || isFundNotNeeded || fundCost > Math.max(2000 * strats["hackn"], port3["income"] * 2))
 		// - buying research w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
-		const check4d = (!hasCorp || !("hackn" in strats) || isResrNotNeeded || resrCost > Math.max(3000 * strats["hackn"], nstb.PeekPort(ns, 3)["income"] * 5))
+		const check4d = (!hasCorp || !("hackn" in strats) || isResrNotNeeded || resrCost > Math.max(3000 * strats["hackn"], port3["income"] * 5))
 		// - buying BB rank is no longer cheap
-		const check4e = (!hasBB || BBrankCost > Math.max(4250 * strats["hackn"], nstb.PeekPort(ns, 3)["income"] * 60))
+		const check4e = (!hasBB || BBrankCost > Math.max(4250 * strats["hackn"], port3["income"] * 60))
 		// - buying BB sp is no longer cheap
-		const check4f = (!hasBB || BBspCost > Math.max(4000 * strats["hackn"], nstb.PeekPort(ns, 3)["income"] * 60))
+		const check4f = (!hasBB || BBspCost > Math.max(4000 * strats["hackn"], port3["income"] * 60))
 		const checksum4 = (check4a && check4b && check4c && check4d && check4e && check4f)
 		let checkmark4 = "[ ]"; if (checksum4) checkmark4 = "[✓]";
 		ns.print(`\n${checkmark4} Check #4: Upgrades`)
@@ -196,7 +203,8 @@ export async function main(ns) {
 				if (hasGang) gangdata = await nstb.RunCom(ns, 'ns.gang.getGangInformation()'); // Update gang data
 				let factions = player.factions;
 				for (let faction of factions) {
-					if (!hasGang || faction != gangdata.faction) {
+					// Iterate through all non-special and non-gang factions
+					if ((!hasGang || faction != gangdata.faction) && !["Bladeburners", "Shadows of Anarchy"].includes(faction)){
 						let factionaugs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationsFromFaction()', [faction])
 						//ns.print(`\n${faction}:\n${factionaugs}`)
 						for (let aug of factionaugs) {
@@ -206,7 +214,8 @@ export async function main(ns) {
 								augData.push({ "name": aug, "cost": cost, "repreq": repreq, "faction": faction })
 							}
 						}
-					} else if (hasGang) {
+					}
+					else if (hasGang && faction == gangdata.faction) {
 						let currentGangAugs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationsFromFaction()', [gangdata.faction]) // Arr of all augs available through gang
 						for (let aug of currentGangAugs) {
 							if (!ownedAugs.includes(aug) && await HaveAugPreReqs(aug)) {
