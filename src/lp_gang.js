@@ -12,22 +12,9 @@ export async function main(ns) {
 
 	let player = await nstb.RunCom(ns, 'ns.getPlayer()');
 
-	// Prep phase (getting a gang)
-	// ==============================================================================================
-	await TrackKarma();
-	while (!(await nstb.RunCom(ns, 'ns.gang.inGang()'))) {
-		await TrackKarma();
-		await nstb.RunCom(ns, 'ns.gang.createGang()', ['Slum Snakes']);
-		ns.clearLog(); ns.print("Generating Karma...");
-		await ns.sleep(1000);
-	}
-
-	nstb.UpdPort(ns, 7, "dict", ["wantGang", false, "hasGang", true]); // Update port, since we now have a gang.
-	ns.run("hud.js", 1, "upd", "gangtimer"); // Clear HUD gang timer
-	ns.resizeTail(385, 675); await ns.sleep(1); ns.moveTail(1455, 225); // Resize tail window to fit the increased info we will print.
 
 
-	// Sets DEFAULT VARIABLES (DONT CHANGE ANYTHING)
+	// Default variables
 	// ==============================================================================================
 	let loops = 0;	// keeps track of loops
 	let rnkmem = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; 	// Set default ascension ranks of members. Members are named Thug-0, Thug-1, etc
@@ -41,7 +28,6 @@ export async function main(ns) {
 	const hackingEquipment = // array of equipment for hacking gangs (we ignore these)
 		["NUKE Rootkit", "Soulstealer Rootkit", "Demon Rootkit", "Hmap Node",
 		"Jack the Ripper", "DataJack", "Neuralstimulator",  "BitWire"];
-
 
 	// Settings for tinkering (these will not change unless done by hand)
 	// ==============================================================================================
@@ -73,6 +59,21 @@ export async function main(ns) {
 	const minVPen = 10;	// If Penalty above this then do vigi work
 	const minVWant = 5;	// If Wanted level above this then do vigi
 	const minVRank = 2;	// Minimum member ascension rank to vigi
+
+
+	// Prep phase (getting a gang)
+	// ==============================================================================================
+	await TrackKarma();
+	while (!(await nstb.RunCom(ns, 'ns.gang.inGang()'))) {
+		await TrackKarma();
+		await nstb.RunCom(ns, 'ns.gang.createGang()', ['Slum Snakes']);
+		ns.clearLog(); ns.print("Generating Karma...");
+		await ns.sleep(1000);
+	}
+
+	nstb.UpdPort(ns, 7, "dict", ["wantGang", false, "hasGang", true]); // Update port, since we now have a gang.
+	ns.run("hud.js", 1, "upd", "gangtimer"); // Clear HUD gang timer
+	ns.resizeTail(385, 675); await ns.sleep(1); ns.moveTail(1455, 225); // Resize tail window to fit the increased info we will print.
 
 
 	// Variable declarations (stats to update and keep track of as we loop)
@@ -389,7 +390,7 @@ export async function main(ns) {
 		var curPenaRatio = getGang.wantedLevel / getGang.respect * 100;//Penalty ratio
 		var curPenaRatio2 = ns.nFormat(curPenaRatio, "0.00a"); //Nicer format
 
-		gangt2 = gangt1; gangt1 = gangt0; gangt0 = gangtx;//Add territory history
+		gangt2 = gangt1; gangt1 = gangt0; gangt0 = gangtx; //Add territory history
 		gangtx = getGang.territory;	// Get current territory history
 		let gangt2p = ns.nFormat(gangt2, "0.00%"); // Convert to percentage
 		let gangtxp = ns.nFormat(gangtx, "0.00%"); // Convert to percentage
