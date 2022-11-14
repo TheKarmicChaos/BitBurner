@@ -59,6 +59,20 @@ export async function main(ns) {
 	ns.getPortHandle(9).clear()
 	ns.getPortHandle(9).write({ "wantBB": false, "hasBB": false, "hasSimu": false, "city": "Sector-12", "blackOpsDone": ["failsafe"], "blackOpsCompleted": false })
 
+	let globalDict = {
+		bitNode: null,
+		bnMults: null,
+		sourceFiles: null,
+		runType: null,
+		backdoors: ["home"],
+		income: { base: 0, hacknet: 0, gang: 0, corp: 0, plCrime: 0, slCrime: 0, Plwork: 0, Slwork: 0, hacking: 0 },
+		hash: { count: 0, income: 0, max: 1 },
+		sleeve: { shock: 100 },
+		gang: { want: false, has: false, territory: 0, respect: 0},
+		corp: { want: false, has: false, hasProd: false, hasLab: false, hasTAII: false, research: 0, funds: 0, profit: 0, products: [] },
+		bb: { want: false, has: false, hasSimu: false, city: "Sector-12", doneOps: ["failsafe"], allOpsDone: false }
+	}
+
 
 
 
@@ -166,6 +180,13 @@ export async function main(ns) {
 
 	ns.getPortHandle(1).write({ "bitNode": bitNode, "mults": bndata, "runType": runType, "strats": strats, "sourceFiles": sourceFiles })
 
+	globalDict.bitNode = bitNode
+	globalDict.bnMults = bndata
+	globalDict.runType = runType
+	globalDict.strats = runType
+	globalDict.sourceFiles = sourceFiles
+
+	ns.write("global-vars.txt", JSON.stringify(globalDict), "w")
 
 	// ===========================================================================================================
 	// MAIN WHILE LOOP
