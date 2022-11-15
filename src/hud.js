@@ -11,7 +11,8 @@ Step 0: Setup -----------------------------
 
 	WIP
 
-- Delete imports and all calls of thse imported functions (Ctrl + F: "REMOVE BEFORE RUNNING")
+- Delete both imports.
+- Ctrl + F "REMOVE THIS LINE BEFORE RUNNING" and delete all 6 lines with that comment.
 - (Optional) Tweak the constants under the section labelled "Settings" (before the main function) to fit to your liking.
 
 
@@ -196,10 +197,10 @@ export async function main(ns) {
 		// #################################################
 		// (By default, this section will contain the hud elements that I personally update locally.)
 
-		// Local Tooltip Updates - REMOVE BEFORE RUNNING
-		const GLOBAL_VARS = nstb.getGlobals(ns);
-		AddTooltip("bitnode", MakeToolTipFromDict(GLOBAL_VARS["bnMults"]));
-		AddTooltip("income",  MakeToolTipFromDict(GLOBAL_VARS["income"], `%key%: $%val%`, true));
+		// Local Tooltip Updates
+		const GLOBAL_VARS = nstb.getGlobals(ns); // REMOVE THIS LINE BEFORE RUNNING
+		AddTooltip("bitnode", MakeToolTipFromDict(GLOBAL_VARS["bnMults"])); // REMOVE THIS LINE BEFORE RUNNING
+		AddTooltip("income",  MakeToolTipFromDict(GLOBAL_VARS["income"], `%key%: $%val%`, true)); // REMOVE THIS LINE BEFORE RUNNING
 
 		// Kills
 		let kills = ns.getPlayer().numPeopleKilled;
@@ -215,15 +216,17 @@ export async function main(ns) {
 		var karma = ns.heart.break();
 		UpdateTextRow("karma", "Karma", StandardNotation(karma, 3));
 
-		// Karma progress (toward unlocking gang) - REMOVE BEFORE RUNNING
-		if (Math.abs(karma) / 54000 < 1 && GLOBAL_VARS["gang"]["want"]) {
+		// Karma progress (toward unlocking gang)
+		if (Math.abs(karma) / 54000 < 1
+			&& GLOBAL_VARS["gang"]["want"] // REMOVE THIS LINE BEFORE RUNNING
+			) {
 			ToggleProgrBar("karma", "show");
 			UpdateProgrBar("karma", Math.abs(karma), 54000);
 		} else ToggleProgrBar("karma", "hide");
 
-		// Income - REMOVE BEFORE RUNNING
-		let totalCashPerSec = tb.SumDict(GLOBAL_VARS["income"])
-		UpdateTextRow("income", "$/sec", `$${StandardNotation(totalCashPerSec, 3)}`);
+		// Income
+		let totalCashPerSec = tb.SumDict(GLOBAL_VARS["income"]) // REMOVE THIS LINE BEFORE RUNNING
+		UpdateTextRow("income", "$/sec", `$${StandardNotation(totalCashPerSec, 3)}`); // REMOVE THIS LINE BEFORE RUNNING
 
 		// ##################################################################################################
 
