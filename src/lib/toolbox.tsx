@@ -57,6 +57,16 @@ export function StandardNotation(num: number, decimalplaces: number = 1): string
 	} else { return formattedNum; }
 };
 
+// Dictionary functions
+
+/** Sums all number values in a string-number pair dictionary.
+ * @param dict - Dictionary of string-number pairs
+ * */
+ export function SumDict(dict: any) {
+	let total = 0;
+	for (let entry in dict) { total += dict[entry]; };
+	return total;
+};
 
 // Array functions
 
@@ -193,7 +203,7 @@ export function MakeLoadingBar(length: number, percent: number): string {
 };
 
 /** Returns a string that, when printed, prints every element of an object, as well as each element of those elements, etc. recursively.
- * @param {object | any[]} obj - The object or array containing the information to recursively print.
+ * @param obj - The object or array containing the information to recursively print.
  * @param maxDepth - Maximum layers of depth to print.
  * - Default value: 3
  * @param curDepth - ALWAYS LEAVE THIS ARG BLANK. Used to track recursive depth.
