@@ -86,7 +86,7 @@ export async function main(ns) {
 
         let doneOps = GLOBAL_VARS["bb"]["doneOps"]
         let blackOpList = tb.ArrSubtract(await nstb.RunCom(ns, 'ns.bladeburner.getBlackOpNames()'), doneOps)
-        if (blackOpList.length == 0) nstb.updGlobals(ns, ["allOpsDone", true]);
+        if (blackOpList.length == 0) nstb.updGlobals(ns, ["isComplete", true]);
         let nextBlackOp = blackOpList[0]
         let [blackLo, blackHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['BlackOps', nextBlackOp]);
         let blackOpReq = await nstb.RunCom(ns, 'ns.bladeburner.getBlackOpRank()', [nextBlackOp]);

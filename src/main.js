@@ -45,7 +45,7 @@ export async function main(ns) {
 		sleeve: { shock: 100 },
 		gang: { want: false, has: false, territory: 0, respect: 0},
 		corp: { want: false, has: false, hasProd: false, hasLab: false, hasTAII: false, research: 0, funds: 0, profit: 0, products: [] },
-		bb: { want: false, has: false, hasSimu: false, city: "Sector-12", doneOps: ["failsafe"], allOpsDone: false }
+		bb: { want: false, has: false, hasSimu: false, city: "Sector-12", doneOps: ["failsafe"], isComplete: false }
 	}
 	globalDict.bnMults = bndata;
 	globalDict.sourceFiles = sourceFiles;
@@ -204,9 +204,9 @@ export async function main(ns) {
 				if ("corp" in strats) { BankStrat('mp_corp.js') };
 				if ('hack_money' in strats) { BankStrat('lp_loopmaster.js') };
 
-				if (player.skills.hacking >= 3000 * bndata.WorldDaemonDifficulty || GLOBAL_VARS["bb"]["allOpsDone"]) {
+				if (player.skills.hacking >= 3000 * bndata.WorldDaemonDifficulty || GLOBAL_VARS["bb"]["isComplete"]) {
 					let myAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
-					if (myAugs.includes("The Red Pill") || GLOBAL_VARS["bb"]["allOpsDone"]) { BankStrat('endBitNode.js') }
+					if (myAugs.includes("The Red Pill") || GLOBAL_VARS["bb"]["isComplete"]) { BankStrat('endBitNode.js') }
 				};
 				break;
 
@@ -229,9 +229,9 @@ export async function main(ns) {
 				if ('corp' in strats) { BankStrat('mp_corp.js') };
 				if ('hack_money' in strats) { BankStrat('lp_loopmaster.js') };
 
-				if (player.skills.hacking >= 3000 * bndata.WorldDaemonDifficulty || GLOBAL_VARS["bb"]["allOpsDone"]) {
+				if (player.skills.hacking >= 3000 * bndata.WorldDaemonDifficulty || GLOBAL_VARS["bb"]["isComplete"]) {
 					let myAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
-					if (myAugs.includes("The Red Pill") || GLOBAL_VARS["bb"]["allOpsDone"]) { BankStrat('endBitNode.js') }
+					if (myAugs.includes("The Red Pill") || GLOBAL_VARS["bb"]["isComplete"]) { BankStrat('endBitNode.js') }
 				};
 				break;
 		}
