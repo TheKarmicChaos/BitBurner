@@ -280,7 +280,7 @@ export async function main(ns) {
 
 
 // -------------------------------------------------------------------------------------
-// Functions - DO NOT DELETE OR MODIFY
+// Functions - DELETE/MODIFY AT YOUR OWN RISK
 // -------------------------------------------------------------------------------------
 
 /** Inserts a new text row at the bottom of the hud.
@@ -290,7 +290,7 @@ export async function main(ns) {
  * @param {string} color - Color of this row.
  * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
  * */
- function AddTextRow(hookName, color) {
+function AddTextRow(hookName, color) {
 	// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
 	if (!(hooks_to_clear.includes(hookName))) hooks_to_clear.push(hookName);
 	// Check if this hook already has an existing row element. If so, use that.
@@ -569,6 +569,18 @@ function AddTooltip(hookName, content, params = {}) {
 	setElementTooltip(el, params)
 };
 
+/** Puts any large number into a standard notation "000.000a" string 
+ * @param {number} num - Number to convert to standard notation
+ * @param {number} decimalplaces - Number of decimal places to round to.
+ * */
+ function StandardNotation(num, decimalplaces = 1) {
+	let formattedNum = formatNumberShort(num, 6, decimalplaces);
+	
+	if (String(num).length <= formattedNum.length && (num % 1) == 0) {
+		return String(num);
+	} else { return formattedNum; }
+};
+
 // Incomplete - this function works, but not as intended.
 function MakeToolTipFromDict(dict, format = `%key%: %val%`, exclude0 = false) {
 	let entries = [];
@@ -587,9 +599,8 @@ function MakeToolTipFromDict(dict, format = `%key%: %val%`, exclude0 = false) {
 	return entries.join(`\n`);
 }
 
-
 // -------------------------------------------------------------------------------------
-// Helper & Setup Functions - DO NOT USE, DELETE, OR MODIFY
+// Helper & Setup Functions - DO NOT USE - DELETE/MODIFY AT YOUR OWN RISK
 // -------------------------------------------------------------------------------------
 
 /** Initializes the hud for editing */
@@ -708,19 +719,9 @@ function setElementTooltip(el, params) {
 	}
 }
 
-/** Puts any large number into a standard notation "000.000a" string 
- * @param {number} num - Number to convert to standard notation
- * @param {number} decimalplaces - Number of decimal places to round to.
- * */
-function StandardNotation(num, decimalplaces = 1) {
-	let formattedNum = formatNumberShort(num, 6, decimalplaces);
-	
-	if (String(num).length <= formattedNum.length && (num % 1) == 0) {
-		return String(num);
-	} else { return formattedNum; }
-};
-
-/** Helper function from helpers.js: Return a formatted representation of the monetary amount using scale sympols (e.g. 6.50M) 
+/** Return a formatted representation of the monetary amount using scale sympols (e.g. 6.50M)
+ * - NOTE: This function was originally written by alianbryden, and can be found in the repo below, under "helpers.js".
+ * - https://github.com/alainbryden/bitburner-scripts
  * @param {number} num - The number to format
  * @param {number=} maxSignificantFigures - (default: 6) The maximum significant figures you wish to see (e.g. 123, 12.3 and 1.23 all have 3 significant figures)
  * @param {number=} maxDecimalPlaces - (default: 3) The maximum decimal places you wish to see, regardless of significant figures. (e.g. 12.3, 1.2, 0.1 all have 1 decimal)
