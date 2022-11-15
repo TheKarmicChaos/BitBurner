@@ -222,10 +222,10 @@ export function RecursivePrint(obj: unknown, maxDepth: number = 3, curDepth: num
 
 	let printMsg = ``
 	if (Array.isArray(obj)) { // If obj is an array, iterate through array...
-		if (curDepth > 0) printMsg += ` []`;
+		if (curDepth > 0) printMsg += `[]`;
 		for (let n = 0; n < obj.length; n++) printMsg += `\n${"   ".repeat(curDepth)}${RecursivePrint(obj[n], maxDepth, curDepth + 1)}`;
 	} else { // If obj is not an array, it is an object with key/vals, so iterate though [k,v] map...
-		if (curDepth > 0) printMsg += ` {}`;
+		if (curDepth > 0) printMsg += `{}`;
 		printMsg += Object.entries(obj).map(([k,v]) => `\n${"   ".repeat(curDepth)}"${k}": ${RecursivePrint(v, maxDepth, curDepth + 1)}`).join("");
 	}
 	return printMsg; // if recursion completes, return print msg.
