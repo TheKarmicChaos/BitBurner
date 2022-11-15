@@ -14,7 +14,8 @@ export async function main(ns) {
 
 	const getCorp = () => ns.corporation.getCorporation();
 
-	const bndata = nstb.PeekPort(ns, 1)["mults"];
+	const GLOBAL_VARS = nstb.getGlobals(ns)
+	const bndata = GLOBAL_VARS["bnMults"];
 	const SOFTCAP_MULT = bndata.CorporationSoftcap || 1;
 	const VALUATION_MULT = bndata.CorporationValuation || 1;
 
@@ -224,9 +225,9 @@ export async function main(ns) {
 		let adjustedDividend = Math.min(0.5, desiredDividend / SOFTCAP_MULT);
 
 
-		// write income to port
-		if (getCorp().dividendEarnings > 0) nstb.UpdPort(ns, 2, "dict", ["corp", getCorp().dividendEarnings]);
-		nstb.UpdPort(ns, 8, "dict", ["wantCorp", false, "hasCorp", true, "funds", getCorp().funds]);
+		// write income to globals
+		if (getCorp().dividendEarnings > 0) nstb.updGlobals(ns, ["income.corp", getCorp().dividendEarnings]);
+		nstb.updGlobals(ns, ["corp.want", false, "corp.has", true, "corp.funds", getCorp().funds]);
 
 
 		// ==================================================================================================
@@ -531,16 +532,16 @@ export async function main(ns) {
 		// ==================================================================================================
 		// ==================================================================================================
 
-		// write progress to port
-		let progrArr = ["profit", getCorp().revenue - getCorp().expenses]
-		if (ns.corporation.getDivision("Toba") && ns.corporation.getDivision("Toba").products.length >= 2) { progrArr = progrArr.concat(["hasProd", true]) }
-		if (ns.corporation.getDivision("Toba") && ns.corporation.hasResearched("Toba", "Hi-Tech R&D Laboratory")) { progrArr = progrArr.concat(["hasLab", true]) }
-		if (ns.corporation.getDivision("Toba") && ns.corporation.hasResearched("Toba", "Market-TA.II")) { progrArr = progrArr.concat(["hasTA.II", true]) }
-		if (ns.corporation.getDivision("Toba") && ns.corporation.getDivision("Toba").research > 0) { progrArr = progrArr.concat(["research", ns.corporation.getDivision("Toba").research]) }
-		if (ns.corporation.getDivision("Toba")) { progrArr = progrArr.concat(["products", ns.corporation.getDivision("Toba").products]) }
+		// write progress to globals
+		let progrArr = ["corp.profit", getCorp().revenue - getCorp().expenses]
+		if (ns.corporation.getDivision("Toba") && ns.corporation.getDivision("Toba").products.length >= 2) { progrArr = progrArr.concat(["corp.hasProd", true]) }
+		if (ns.corporation.getDivision("Toba") && ns.corporation.hasResearched("Toba", "Hi-Tech R&D Laboratory")) { progrArr = progrArr.concat(["corp.hasLab", true]) }
+		if (ns.corporation.getDivision("Toba") && ns.corporation.hasResearched("Toba", "Market-TA.II")) { progrArr = progrArr.concat(["corp.hasTAII", true]) }
+		if (ns.corporation.getDivision("Toba") && ns.corporation.getDivision("Toba").research > 0) { progrArr = progrArr.concat(["corp.research", ns.corporation.getDivision("Toba").research]) }
+		if (ns.corporation.getDivision("Toba")) { progrArr = progrArr.concat(["corp.products", ns.corporation.getDivision("Toba").products]) }
 		ns.print(ns.corporation.getDivision("Toba").products)
 		ns.print(progrArr)
-		nstb.UpdPort(ns, 8, "dict", progrArr)
+		nstb.updGlobals(ns, progrArr)
 	};
 
 
@@ -727,10 +728,10 @@ export async function main(ns) {
 					await ns.sleep(30 * 1000);
 				}
 				CorpApi.createCorporation(corp, true);
-				nstb.UpdPort(ns, 8, "dict", ["wantCorp", false, "hasCorp", true]);
+				nstb.updGlobals(ns, ["corp.want", false, "corp.has", true]);
 
 			}
-		} else { nstb.UpdPort(ns, 8, "dict", ["wantCorp", false, "hasCorp", true]); }
+		} else { nstb.updGlobals(ns, ["corp.want", false, "corp.has", true]); }
 	}
 
 	async function waitState(state, times = 1, onpoint = false) {

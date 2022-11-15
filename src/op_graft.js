@@ -5,15 +5,16 @@ import * as tb from "./lib/toolbox";
 export async function main(ns) {
 	//ns.tail("op_graft.js"); ns.disableLog("ALL"); ns.clearLog();
 
-	const strats = nstb.PeekPort(ns, 1)["strats"]
-	const bitNode = nstb.PeekPort(ns, 1)["bitNode"]
+	let GLOBAL_VARS = nstb.getGlobals(ns);
+	const strats = GLOBAL_VARS["strats"]
+	const bitNode = GLOBAL_VARS["bitNode"]
 	let metastrat = "all";
 	if (bitNode == 8) metastrat = "redpill";
 
 	let ownedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()', [true])
 	let installedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()')
 	let player = await nstb.RunCom(ns, 'ns.getPlayer()')
-	const bndata = nstb.PeekPort(ns, 1)["mults"]
+	const bndata = GLOBAL_VARS["bnMults"]
 	let maxSpend = player.money
 	if (metastrat == "redpill") { maxSpend /= 200 }
 
@@ -25,7 +26,7 @@ export async function main(ns) {
 	let minMoneyToGraft; // we only graft when we have a least this much money
 
 	// If we have >=30 kills (for faction invites) AND grafting is our next priority
-	if (player.numPeopleKilled >= 30 && (!nstb.PeekPort(ns, 8)["wantCorp"] || player.money <= 8e9)) {
+	if (player.numPeopleKilled >= 30 && (!GLOBAL_VARS["corp"]["want"] || player.money <= 8e9)) {
 		switch (metastrat) {
 			case "all":
 				await PrepRunAll(); //ns.print(graftlist);

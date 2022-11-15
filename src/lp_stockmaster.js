@@ -160,7 +160,7 @@ export async function main(ns) {
             const holdings = await refresh(ns, !pre4s, allStocks, myStocks); // Returns total stock value
             const corpus = holdings + playerStats.money; // Corpus means total stocks + cash
             const maxHoldings = (1 - fracH) * corpus; // The largest value of stock we could hold without violiating fracH (Fraction to keep as cash)
-            if ((pre4s || nstb.PeekPort(ns, 8)["wantCorp"]) && !mock && await tryGet4SApi(ns, playerStats, bitnodeMults, corpus * (options['buy-4s-budget'] - fracH) - reserve))
+            if ((pre4s || nstb.getGlobals(ns)["corp"]["want"]) && !mock && await tryGet4SApi(ns, playerStats, bitnodeMults, corpus * (options['buy-4s-budget'] - fracH) - reserve))
                 continue; // Start the loop over if we just bought 4S API access or Corp
 
             // Be more conservative with our decisions if we don't have 4S data
@@ -571,7 +571,7 @@ async function tryGet4SApi(ns, playerStats, bitnodeMults, budget) {
     const cost4sApi = 25E9 * bitnodeMults.FourSigmaMarketDataApiCost;
     const has4S = await checkAccess(ns, 'has4SData');
     const totalCost = (has4S ? 0 : cost4sData) + cost4sApi;
-    const needToGetCorp = nstb.PeekPort(ns, 8)["wantCorp"]
+    const needToGetCorp = nstb.getGlobals(ns)["corp"]["want"]
 
     // Liquidate shares if it would allow us to afford 4S API data
     if (totalCost > budget + playerStats.money) /* Need to reserve some money to invest */
@@ -604,7 +604,7 @@ async function tryGet4SApi(ns, playerStats, bitnodeMults, budget) {
             return false;
         if (playerStats.money < 150e9) {
             await liquidate(ns);
-            if (nstb.PeekPort(ns, 8)["wantCorp"] && playerStats.money >= 150e9) {
+            if (nstb.getGlobals(ns)["corp"]["want"] && playerStats.money >= 150e9) {
                 log(ns, `SUCCESS: Purchased Corp for ${formatMoney(150e9)} ` +
                 `(At ${formatDuration((await getPlayerInfo(ns)).playtimeSinceLastBitnode)} into BitNode)`, true, 'success');
             }

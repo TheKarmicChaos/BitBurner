@@ -4,7 +4,8 @@ import * as nstb from './lib/nstools';
 export async function main(ns) {
 	//ns.tail('op_joinfacs.js'); ns.disableLog("ALL"); ns.clearLog();
 
-	const hasBB = nstb.PeekPort(ns, 9)["hasBB"]
+	let GLOBAL_VARS = nstb.getGlobals(ns);
+	const hasBB = GLOBAL_VARS["bb"]["has"]
 	let reserve = 100e6
 	let pldata = await nstb.RunCom(ns, 'ns.getPlayer()')
 	let plskills = pldata.skills;

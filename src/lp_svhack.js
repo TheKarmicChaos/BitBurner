@@ -195,11 +195,7 @@ export async function main(ns) {
 			beingHacked[key][0] -= 1;
 		}
 
-
 		let forcehack = false;
-		//if (PeekPort(ns, 1) == 9 && PeekPort(ns, 2, "sumdict") <= 1) { forcehack = true }
-
-
 
 		// Iterate through every targetServ (starting with best target), descending the array from best to worst
 		for (var i = (allTargetServs.length - 1); i >= 0; --i) {
@@ -366,9 +362,9 @@ export async function main(ns) {
 		}
 		for (var x = 0; x < printLines.length; ++x) { ns.print(printLines[x]) }
 
-		// Update income in port
+		// Update income in globals
 		let hackincome = ns.getScriptIncome('lp_svhack.js', 'home');
-		nstb.UpdPort(ns, 2, "dict", ["hacking", hackincome]);
+		nstb.updGlobals(ns, ["income.hacking", hackincome]);
 		await ns.sleep(1000);
 	}
 

@@ -18,6 +18,7 @@ export async function main(ns) {
 	let sourceFiles = await nstb.RunCom(ns, 'ns.singularity.getOwnedSourceFiles()')
 	let bndata = await nstb.RunCom(ns, 'ns.getBitNodeMultipliers()')
 	let runType = "redpill";
+	let GLOBAL_VARS;
 
 	let numnodes = await nstb.RunCom(ns, 'ns.hacknet.numNodes()')
 	let inGang = await nstb.RunCom(ns, "ns.gang.inGang()")
@@ -60,12 +61,13 @@ export async function main(ns) {
 	ns.getPortHandle(9).write({ "wantBB": false, "hasBB": false, "hasSimu": false, "city": "Sector-12", "blackOpsDone": ["failsafe"], "blackOpsCompleted": false })
 
 	let globalDict = {
-		bitNode: null,
 		bnMults: null,
 		sourceFiles: null,
-		runType: null,
+		strats: null,
 		backdoors: ["home"],
-		income: { base: 0, hacknet: 0, gang: 0, corp: 0, plCrime: 0, slCrime: 0, Plwork: 0, Slwork: 0, hacking: 0 },
+		bitNode: null,
+		runType: null,
+		income: { base: 0, hacknet: 0, gang: 0, corp: 0, playerCrime: 0, sleeveCrime: 0, playerWork: 0, sleeveWork: 0, hacking: 0, bladeburner: 0 },
 		hash: { count: 0, income: 0, max: 1 },
 		sleeve: { shock: 100 },
 		gang: { want: false, has: false, territory: 0, respect: 0},
@@ -125,8 +127,8 @@ export async function main(ns) {
 	if (bndata.CorporationValuation > 0
 		&& bndata.CorporationSoftcap > 0) {
 		strats["corp"] = bndata.CorporationSoftcap;
-		if (player.hasCorporation) nstb.UpdPort(ns, 8, "dict", ["hasCorp", true]);
-		else if (bndata.CorporationValuation >= 0.35) nstb.UpdPort(ns, 8, "dict", ["wantCorp", true]);
+		if (player.hasCorporation) globalDict.corp.has = true;
+		else if (bndata.CorporationValuation >= 0.35) globalDict.corp.want = true;
 	}
 	if (bndata.CrimeMoney > 0) {
 		strats["crime_money"] = bndata.CrimeMoney
@@ -134,8 +136,8 @@ export async function main(ns) {
 	if (bndata.GangSoftcap > 0
 		&& bndata.GangUniqueAugs > 0) {
 		strats["gang"] = bndata.GangSoftcap
-		if (inGang) nstb.UpdPort(ns, 7, "dict", ["hasGang", true]);
-		else nstb.UpdPort(ns, 7, "dict", ["wantGang", true]);
+		if (inGang) globalDict.gang.has = true;
+		else globalDict.gang.want = true;
 	}
 	if (bndata.HacknetNodeMoney > 0) {
 		strats["hackn"] = bndata.HacknetNodeMoney
@@ -175,17 +177,14 @@ export async function main(ns) {
 		runType = "redpill"
 	} else if (bndata.BladeburnerRank > 0) {
 		runType = "bladeburner"
-		nstb.UpdPort(ns, 9, "dict", ["wantBB", true]);
+		globalDict.bb.want = true;
 	}
-
-	ns.getPortHandle(1).write({ "bitNode": bitNode, "mults": bndata, "runType": runType, "strats": strats, "sourceFiles": sourceFiles })
 
 	globalDict.bitNode = bitNode
 	globalDict.bnMults = bndata
 	globalDict.runType = runType
-	globalDict.strats = runType
+	globalDict.strats = strats
 	globalDict.sourceFiles = sourceFiles
-
 	ns.write("global-vars.txt", JSON.stringify(globalDict), "w")
 
 	// ===========================================================================================================
@@ -196,6 +195,7 @@ export async function main(ns) {
 		// update player
 		player = await nstb.RunCom(ns, 'ns.getPlayer()')
 		numnodes = await nstb.RunCom(ns, 'ns.hacknet.numNodes()')
+		GLOBAL_VARS = nstb.getGlobals(ns);
 		// clear any leftover banked strats
 		scriptsToRun = [];
 		scriptsRunning = [];
@@ -233,9 +233,9 @@ export async function main(ns) {
 				if ("corp" in strats) { BankStrat('mp_corp.js') };
 				if ('hack_money' in strats) { BankStrat('lp_loopmaster.js') };
 
-				if (player.skills.hacking >= 3000 * bndata.WorldDaemonDifficulty || nstb.PeekPort(ns, 9)["blackOpsCompleted"]) {
+				if (player.skills.hacking >= 3000 * bndata.WorldDaemonDifficulty || GLOBAL_VARS["bb"]["allOpsDone"]) {
 					let myAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
-					if (myAugs.includes("The Red Pill") || nstb.PeekPort(ns, 9)["blackOpsCompleted"]) { BankStrat('endBitNode.js') }
+					if (myAugs.includes("The Red Pill") || GLOBAL_VARS["bb"]["allOpsDone"]) { BankStrat('endBitNode.js') }
 				};
 				break;
 
@@ -258,9 +258,9 @@ export async function main(ns) {
 				if ('corp' in strats) { BankStrat('mp_corp.js') };
 				if ('hack_money' in strats) { BankStrat('lp_loopmaster.js') };
 
-				if (player.skills.hacking >= 3000 * bndata.WorldDaemonDifficulty || nstb.PeekPort(ns, 9)["blackOpsCompleted"]) {
+				if (player.skills.hacking >= 3000 * bndata.WorldDaemonDifficulty || GLOBAL_VARS["bb"]["allOpsDone"]) {
 					let myAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
-					if (myAugs.includes("The Red Pill") || nstb.PeekPort(ns, 9)["blackOpsCompleted"]) { BankStrat('endBitNode.js') }
+					if (myAugs.includes("The Red Pill") || GLOBAL_VARS["bb"]["allOpsDone"]) { BankStrat('endBitNode.js') }
 				};
 				break;
 		}
@@ -303,7 +303,7 @@ export async function main(ns) {
 			return true;
 		}
 		// else, if not in BN-9 and other income >= hnserv income, do the same checks to see if we can run it on hacknet-node-0
-		else if (numnodes > 0 && bitNode != 9 && nstb.PeekPort(ns, 2, "sumdict") - (2 * nstb.PeekPort(ns, 2)["hnodes"]) > 0) {
+		else if (numnodes > 0 && bitNode != 9 && tb.SumDict(GLOBAL_VARS["income"]) - (2 * GLOBAL_VARS["income"]["hacknet"]) > 0) {
 			// if already running (will be the case for loops / lp_ files)
 			if (ns.isRunning(filename, 'hacknet-node-0')) {
 				hnscriptsSize += ns.getScriptRam(filename); // Account for the RAM usage
@@ -377,6 +377,6 @@ export async function main(ns) {
 		let installedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()')
 		ns.run("hud.js", 1, "upd", "ram", "RAM", `${tb.StandardNotation(ns.getServerMaxRam('home'), 2)} GB`)
 		ns.run("hud.js", 1, "upd", "aug", "Augs", `${installedAugs.length} / ${bndata.DaedalusAugsRequirement}`)
-		ns.run("hud.js", 1, "upd", "bitnode", `BitNode-${nstb.PeekPort(ns, 1)["bitNode"]}:`, bName.substring(0, 14))
+		ns.run("hud.js", 1, "upd", "bitnode", `BitNode-${GLOBAL_VARS["bitNode"]}:`, bName.substring(0, 14))
 	}
 }

@@ -6,9 +6,11 @@ export async function main(ns) {
 	//ns.tail('op_bhnodes.js'); ns.disableLog("ALL"); ns.clearLog();
 
 	// get total income
-	let totalCashPerSec = nstb.PeekPort(ns, 2, "sumdict")
-	let strats = nstb.PeekPort(ns, 1)["strats"];
-	let bitNode = nstb.PeekPort(ns, 1)["bitNode"];
+
+	let GLOBAL_VARS = nstb.getGlobals(ns);
+	let totalCashPerSec = tb.SumDict(GLOBAL_VARS["income"])
+	let strats = GLOBAL_VARS["strats"];
+	let bitNode = GLOBAL_VARS["bitNode"];
 	const BITNODE_MULT = strats["hackn"];
 	let defaultnum = 0.8; if (bitNode == 9) { defaultnum = 1};
 
@@ -24,7 +26,7 @@ export async function main(ns) {
 	await BuyNext();
 	if (ns.hacknet.numNodes()) { await SpendHash(hacknetProduction); }
 
-	nstb.UpdPort(ns, 3, "dict", ["income", hacknetProduction, "hashes", hashes(), "maxhashes", maxHash()])
+	nstb.updGlobals(ns, ["hash.income", hacknetProduction, "hash.count", hashes(), "hashmaxhashes", maxHash()])
 	ns.run('hud.js', 1, "upd", 'hashincome', "#/sec", `#${tb.StandardNotation(hacknetProduction, 3)}`);
 
 	// Functions
@@ -51,6 +53,7 @@ export async function main(ns) {
 		} else {
 			let ratios = await GenerateRatios();
 			while (didBuy && buyCount < 101) {
+				GLOBAL_VARS = nstb.getGlobals(ns);
 				didBuy = false;
 				ratios = await UpdateNextPurchase(ratios);
 				await AttemptPurchase();
@@ -166,8 +169,8 @@ export async function main(ns) {
 				debugStr = "B>" + purName
 				if (purCost <= maxSpend || purName == "1stNode") {
 					// once cost is above 500m (9b for newnodes), save up for a corp if we want one (& TIX API)
-					if ((purCost < 500e6 * BITNODE_MULT && purName != "NewNode") || (purCost < 9e9 * BITNODE_MULT && purName == "NewNode") // || nstb.PeekPort(ns, 2, "sumdict") < 50e6
-					|| (!nstb.PeekPort(ns,8)["wantCorp"] && ns.stock.has4SDataTIXAPI())){
+					if ((purCost < 500e6 * BITNODE_MULT && purName != "NewNode") || (purCost < 9e9 * BITNODE_MULT && purName == "NewNode")
+					|| (!GLOBAL_VARS["corp"]["want"] && ns.stock.has4SDataTIXAPI())){
 						buyCondsMet = true;
 						if (getMoney() >= purCost) { 
 							let nodeIndex;
@@ -216,12 +219,12 @@ export async function main(ns) {
 		let tUntilCash = ns.hacknet.hashCost("Sell for Money") / hPerSec
 		hashToCashPerSec = 1e6 / tUntilCash;
 
-		let incomeDict = nstb.PeekPort(ns, 2);
-		let hIncome = incomeDict["hnodes"];
-		let otherIncome = nstb.PeekPort(ns, 2, "sumdict") - hIncome
+		let incomeDict = GLOBAL_VARS["income"]
+		let hIncome = incomeDict["hacknet"];
+		let otherIncome = tb.SumDict(incomeDict) - hIncome
 
 		// unil we have a decent income of hashes, AND have other reliable sources of cash, only use hashes to buy money
-		if (hPerSec < 6.000 * BITNODE_MULT && (nstb.PeekPort(ns, 1)["bitnode"] != 9 || hIncome * 2 >= otherIncome)) {
+		if (hPerSec < 6.000 * BITNODE_MULT && (GLOBAL_VARS["bitnode"] != 9 || hIncome * 2 >= otherIncome)) {
 			while (hashes() >= ns.hacknet.hashCost("Sell for Money")) {
 				ns.hacknet.spendHashes("Sell for Money");
 			}
@@ -235,14 +238,14 @@ export async function main(ns) {
 
 			// Determine the next corp upgrade (if we have corp)
 			let nextCupgr; let nextCupgrCost;
-			const portC = nstb.PeekPort(ns, 8);
-			const hasCorp = portC["hasCorp"];
+			const corpdata = GLOBAL_VARS["corp"]
+			const hasCorp = corpdata["has"];
 			const fundCost = ns.hacknet.hashCost("Sell for Corporation Funds");
 			const fundCostLim = Math.max(hPerSec * 60, 2000 * BITNODE_MULT);
-			const shouldBuyFund = portC["profit"] < 500e6 && fundCost <= fundCostLim
+			const shouldBuyFund = corpdata["profit"] < 500e6 && fundCost <= fundCostLim
 			const resrCost = ns.hacknet.hashCost("Exchange for Corporation Research");
 			const resrCostLim = Math.max(hPerSec * 120, 3000 * BITNODE_MULT);
-			const shouldBuyResr = (portC["hasTA.II"] == false || portC["research"] <= 10e6) && resrCost <= resrCostLim
+			const shouldBuyResr = (corpdata["hasTAII"] == false || corpdata["research"] <= 10e6) && resrCost <= resrCostLim
 
 			if (shouldBuyFund || (!shouldBuyResr && resrCostLim - resrCost < fundCostLim - fundCost)) {
 				nextCupgr = "CorpFunds";
@@ -256,7 +259,7 @@ export async function main(ns) {
 
 			// Determine the next bb upgrade (if this is a bladeburner run & we have access)
 			let nextBupgr; let nextBupgrCost;
-			const hasBB = nstb.PeekPort(ns, 9)["hasBB"];
+			const hasBB = GLOBAL_VARS["bb"]["has"];
 			const BBrankCost = ns.hacknet.hashCost("Exchange for Bladeburner Rank");
 			const BBrankCostLim = Math.max(hPerSec * 120, 5250 * BITNODE_MULT)
 			const shouldBuyRank = hasBB && BBrankCost <= BBrankCostLim
@@ -330,7 +333,7 @@ export async function main(ns) {
 				ns.run('hud.js', 1, "color", 'buyhash', "hack");
 		}
 
-		// write income to port
-		nstb.UpdPort(ns, 2, "dict", ["hnodes", hashToCashPerSec]);
+		// write income to globals
+		nstb.updGlobals(ns, ["income.hacknet", hashToCashPerSec]);
 	}
 }

@@ -4,6 +4,7 @@ import * as nstb from "./lib/nstools";
 export async function main(ns) {
 	//ns.tail('op_task-manager.js'); ns.disableLog("ALL"); ns.clearLog();
 	
+	
 	const allComps =
 		["Fulcrum Technologies", "ECorp", "MegaCorp", "KuaiGong International", "Four Sigma", "NWO",
 		"Blade Industries", "OmniTek Incorporated", "Bachman & Associates",
@@ -13,12 +14,13 @@ export async function main(ns) {
 		"BONDFORGERY", "TRAFFICKARMS", "HOMICIDE", "GRANDTHEFTAUTO", "KIDNAP",
 		"ASSASSINATION", "HEIST"];
 	const player = () => ns.getPlayer()
+	let GLOBAL_VARS = nstb.getGlobals(ns);
 	const augs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
 	const hasNMI = augs.includes('Neuroreceptor Management Implant');
 	// Constantly apply to every company of interest and ask for promotions
 	for (let company of allComps) { await nstb.RunCom(ns, 'ns.singularity.applyToCompany()', [company, "Software"]) }
 
-    if (player().numPeopleKilled < 30 || nstb.PeekPort(ns, 7)["wantGang"] || !nstb.PeekPort(ns, 9)["hasBB"] || nstb.PeekPort(ns, 9)["hasSimu"]) { // Once we have 30 kills & gang, bladeburner actions take player priority.
+    if (player().numPeopleKilled < 30 || GLOBAL_VARS["gang"]["want"] || !GLOBAL_VARS["bb"]["has"] || GLOBAL_VARS["bb"]["hasSimu"]) { // Once we have 30 kills & gang, bladeburner actions take player priority.
         let [bestcrime, canDoWork] = await GetBestCrime();
         let bestCrimeinc = 0; if (bestcrime) bestCrimeinc = await nstb.GetCrimeGains(ns, bestcrime, "money");
 
@@ -49,7 +51,7 @@ export async function main(ns) {
 		// else, if kills < 30, commit homicide. (30 kills needed for all faction invites)
 		else if (player().numPeopleKilled < 30) { bestcrime = "HOMICIDE" }
 		// else, if we want a gang & don't yet have one, commit the crime with the best karma gains.
-		else if (nstb.PeekPort(ns, 7)["wantGang"]) {
+		else if (GLOBAL_VARS["gang"]["want"]) {
 			if (await nstb.GetCrimeGains(ns, "HOMICIDE", "karma") >= await nstb.GetCrimeGains(ns, "MUG", "karma")) { bestcrime = "HOMICIDE" }
 			else { bestcrime = "MUG" }
 		}
@@ -76,9 +78,8 @@ export async function main(ns) {
 		if (curWork != null && curWork.type == 'CRIME') { playerinc = await nstb.GetCrimeGains(ns, bestcrime, "money") };
 		if (!(await nstb.RunCom(ns, 'ns.singularity.isFocused()')) && !hasNMI) { playerinc *= 0.8 }
 
-		// write income to port
-		nstb.UpdPort(ns, 2, "dict", ["plcrime", playerinc])
-		nstb.UpdPort(ns, 2, "dict", ["slcrime", sleeveinc])
+		// write income to globals
+		nstb.updGlobals(ns, ["income.playerCrime", playerinc, "income.sleeveCrime", sleeveinc])
 
 		return [bestcrime, canDoWorkInstead];
 	}
@@ -104,9 +105,8 @@ export async function main(ns) {
 		let playerinc = 0; if (curWork != null && curWork.type == 'CRIME') { playerinc = await nstb.GetCrimeGains(ns, bestcrime, "money") };
 		if (!(await nstb.RunCom(ns, 'ns.singularity.isFocused()')) && !hasNMI) { playerinc *= 0.8 }
 
-		// write income to port
-		nstb.UpdPort(ns, 2, "dict", ["plcrime", playerinc])
-		nstb.UpdPort(ns, 2, "dict", ["slcrime", sleeveinc])
+		// write income to globals
+		nstb.updGlobals(ns, ["income.playerCrime", playerinc, "income.sleeveCrime", sleeveinc])
 	}
 
 	// Get the name of the best company for us to work for at this stage of the game. returns [compname, canDoCrimeInstead (bool)]
@@ -142,11 +142,11 @@ export async function main(ns) {
 		if (curWork != null && curWork.type == 'COMPANY') { playerinc = await nstb.GetJobGains(ns, bestcomp, "money") };
 		if (!(await nstb.RunCom(ns, 'ns.singularity.isFocused()')) && !hasNMI) { playerinc *= 0.8 }
 
-		// write income to port
-		if (!isNaN(playerinc)) {nstb.UpdPort(ns, 2, "dict", ["plwork", playerinc])}
-        else { nstb.UpdPort(ns, 2, "dict", ["plwork", 0]) }
-        if (!isNaN(sleeveinc)) { nstb.UpdPort(ns, 2, "dict", ["slwork", sleeveinc]) }
-        else { nstb.UpdPort(ns, 2, "dict", ["slwork", 0]) }
+		// write income to globals
+		if (!isNaN(playerinc)) { nstb.updGlobals(ns, ["income.playerWork", playerinc])}
+        else { nstb.updGlobals(ns, ["income.playerWork", 0]) }
+        if (!isNaN(sleeveinc)) { nstb.updGlobals(ns, ["income.sleeveWork", sleeveinc]) }
+        else { nstb.updGlobals(ns, ["income.sleeveWork", 0]) }
 
 		return [bestcomp, canDoCrimeInstead];
 	}
@@ -172,11 +172,11 @@ export async function main(ns) {
 		if (curWork != null && curWork.type == 'COMPANY') { playerinc = await nstb.GetJobGains(ns, bestwork, "money") };
 		if (!(await nstb.RunCom(ns, 'ns.singularity.isFocused()')) && !hasNMI) { playerinc *= 0.8 }
 
-		// write income to port
-		if (!isNaN(playerinc)) {nstb.UpdPort(ns, 2, "dict", ["plwork", playerinc])}
-        else { nstb.UpdPort(ns, 2, "dict", ["plwork", 0]) }
-        if (!isNaN(sleeveinc)) { nstb.UpdPort(ns, 2, "dict", ["slwork", sleeveinc]) }
-        else { nstb.UpdPort(ns, 2, "dict", ["slwork", 0]) }
+		// write income to globals
+		if (!isNaN(playerinc)) {nstb.updGlobals(ns, ["income.playerWork", playerinc])}
+        else { nstb.updGlobals(ns, ["income.playerWork", 0]) }
+        if (!isNaN(sleeveinc)) { nstb.updGlobals(ns, ["income.sleeveWork", sleeveinc]) }
+        else { nstb.updGlobals(ns, ["income.sleeveWork", 0]) }
 
 	}
 

@@ -1,19 +1,20 @@
 ===========================
-        Port Data:
+        Global Vars:
 ===========================
-Port
-Num | Topic of Contents     | Contents
-----+----------------------------------------------------------
-1   | Bitnode & Run Info    | { "bitNode": bitNode, "mults": bndata, "runType": "redpill", "strats": strats, "sourceFiles": sourceFiles }
-2   | Income ($/sec)        | { "baseIncome": 0, "hnodes": 0, "gang": 0, "corp": 0, "plcrime": 0, "slcrime": 0, "plwork": 0, "slwork": 0, "hacking": 0, ... }
-3   | Hashes                | { "hashes": 0, "income": 0, "maxhashes": 1 }
-4   |                       | 
-5   |                       | 
-6   | Run Progress          | { "backdoors": ["home"], "sleeveShock": 100 }
-7   | Gang                  | { "wantGang": false, "hasGang": false, "territory": 0, "respect": 0 }
-8   | Corporation           | { "wantCorp": false, "hasCorp": false, "hasProd": false, "hasLab": false, "hasTA.II": false, "research": 0, "funds": 0, "profit": 0, "products": [] }
-9   | BladeBurner           | { "wantBB": false, "hasBB": false, "hasSimu": false, "city": "Sector-12", "blackOpsDone": ["failsafe"], "blackOpsCompleted": false }
-10  |                       | 
+{
+	bnMults: {},
+	sourceFiles: [ {"n": 1, "lvl": 3}, {"n": 2, "lvl" 2}, ... ],
+	strats: {},
+	backdoors: ["home"],
+	bitNode: 0,
+	runType: "",
+	income: { base: 0, hacknet: 0, gang: 0, corp: 0, playerCrime: 0, sleeveCrime: 0, playerWork: 0, sleeveWork: 0, hacking: 0, bladeburner: 0 },
+	hash: { count: 0, income: 0, max: 1 },
+	sleeve: { shock: 100 },
+	gang: { want: false, has: false, territory: 0, respect: 0},
+	corp: { want: false, has: false, hasProd: false, hasLab: false, hasTAII: false, research: 0, funds: 0, profit: 0, products: [] },
+	bb: { want: false, has: false, hasSimu: false, city: "Sector-12", doneOps: ["failsafe"], allOpsDone: false }
+}
 
 ===========================
     File Name Prefixes:

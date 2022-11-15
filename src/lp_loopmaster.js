@@ -6,24 +6,24 @@ export async function main(ns) {
 	ns.closeTail(); await ns.sleep(1); ns.tail('lp_loopmaster.js'); await ns.sleep(1); ns.resizeTail(340, 400); await ns.sleep(1); ns.moveTail(1520, 190);
 	ns.disableLog("ALL"); ns.clearLog();
 
-	const port1 = nstb.PeekPort(ns, 1)
-	const runType = port1["runType"]
-	const bndata = port1["mults"]
-	const strats = port1["strats"]
+	let GLOBAL_VARS = nstb.getGlobals(ns);
+	const runType = GLOBAL_VARS["runType"]
+	const bndata = GLOBAL_VARS["bnMults"]
+	const strats = GLOBAL_VARS["strats"]
 
 	let loopnum = 0;
 
 	while (true) {
+		GLOBAL_VARS = nstb.getGlobals(ns);
 		let player = await nstb.RunCom(ns, 'ns.getPlayer()');
-		let ownedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()', [true])
+		const ownedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()', [true])
 		const installedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
 		let queuedAugs = tb.ArrSubtract(ownedAugs, installedAugs, 1);
 
-		const port3 = nstb.PeekPort(ns, 3)
-		const port6 = nstb.PeekPort(ns, 6)
-		const port7 = nstb.PeekPort(ns, 7)
-		const port8 = nstb.PeekPort(ns, 8)
-		const port9 = nstb.PeekPort(ns, 9)
+		const hashdata = GLOBAL_VARS["hash"]
+		const gangdata = GLOBAL_VARS["gang"]
+		const corpdata = GLOBAL_VARS["corp"]
+		const bbdata = GLOBAL_VARS["bb"]
 
 		ns.clearLog();
 		ns.print("Loops: ", loopnum)
@@ -31,7 +31,7 @@ export async function main(ns) {
 		// Check 1: Sleeves
 		// -------------------------
 		const reqShock = Math.floor(75 ** bndata["StrengthLevelMultiplier"])
-		const sleeveShock = port6["sleeveShock"];
+		const sleeveShock = GLOBAL_VARS["sleeve"]["shock"];
 		// - All sleeves at shock 0
 		const check1 = (sleeveShock < reqShock)
 		let checkmark1 = "[ ]"; if (check1) checkmark1 = "[✓]";
@@ -42,12 +42,12 @@ export async function main(ns) {
 
 		// Check 2: Gang
 		// -------------------------
-		const hasGang = port7["hasGang"]
-		const wantGang = port7["wantGang"]
+		const hasGang = gangdata["has"]
+		const wantGang = gangdata["want"]
 		let thugcount = 0;
 		let thugmults = [];
-		const territory = port7["territory"]
-		const rep = port7["respect"]
+		const territory = gangdata["territory"]
+		const rep = gangdata["respect"]
 		if (hasGang) {
 			var members = await nstb.RunCom(ns, 'ns.gang.getMemberNames()');
 			thugcount = members.length // 12 thugs
@@ -83,18 +83,18 @@ export async function main(ns) {
 		const hasCorp = player.hasCorporation
 		const fundCost = ns.hacknet.hashCost("Sell for Corporation Funds");
 		const resrCost = ns.hacknet.hashCost("Exchange for Corporation Research");
-		const isFundNotNeeded = (port8["profit"] >= 500e6)
-		const isResrNotNeeded = (port8["hasTA.II"] && port8["research"] >= 10e6)
+		const isFundNotNeeded = (corpdata["profit"] >= 500e6)
+		const isResrNotNeeded = (corpdata["hasTAII"] && corpdata["research"] >= 10e6)
 		// - Has corp (if we want one)
-		const check3a = (!port8["wantCorp"])
+		const check3a = (!corpdata["want"])
 		// - Has Lab
-		const check3b = (!hasCorp || port8["hasLab"])
+		const check3b = (!hasCorp || corpdata["hasLab"])
 		// - Has >= 3 products
-		const check3c = (!hasCorp || port8["products"].length >= 3)
+		const check3c = (!hasCorp || corpdata["products"].length >= 3)
 		// - buying funds w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
-		const check3d = (!hasCorp || !("hackn" in strats) || isFundNotNeeded || fundCost > Math.max(2000 * strats["hackn"], port3["income"] * 2))
+		const check3d = (!hasCorp || !("hackn" in strats) || isFundNotNeeded || fundCost > Math.max(2000 * strats["hackn"], hashdata["income"] * 2))
 		// - buying research w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
-		const check3e = (!hasCorp || !("hackn" in strats) || isResrNotNeeded || resrCost > Math.max(3000 * strats["hackn"], port3["income"] * 5))
+		const check3e = (!hasCorp || !("hackn" in strats) || isResrNotNeeded || resrCost > Math.max(3000 * strats["hackn"], hashdata["income"] * 5))
 		const checksum3 = (check3a && check3b && check3c && check3d && check3e)
 		let checkmark3 = "[ ]"; if (checksum3) checkmark3 = "[✓]";
 		ns.print(`\n${checkmark3} Check #3: Corporation`)
@@ -108,19 +108,19 @@ export async function main(ns) {
 
 		// Check 4: Bladeburner
 		// -------------------------
-		const hasBB = port9["hasBB"]
+		const hasBB = bbdata["has"]
 		const BBrankCost = ns.hacknet.hashCost("Exchange for Bladeburner Rank");
 		const BBspCost = ns.hacknet.hashCost("Exchange for Bladeburner SP");
 		// - Joined BB (if we want to)
-		const check4a = (!port9["wantBB"])
+		const check4a = (!bbdata["want"])
 		// - Joined BB faction
 		const check4b = (!hasBB || player.factions.includes("Bladeburners"))
 		// - Has The Blade's Simulacrum
-		const check4c = (!hasBB || port9["hasSimu"] || ownedAugs.includes("The Blade's Simulacrum"))
+		const check4c = (!hasBB || bbdata["hasSimu"] || ownedAugs.includes("The Blade's Simulacrum"))
 		// - buying BB rank is no longer cheap
-		const check4d = (!hasBB || BBrankCost > Math.max(4250 * strats["hackn"], port3["income"] * 60))
+		const check4d = (!hasBB || BBrankCost > Math.max(4250 * strats["hackn"], hashdata["income"] * 60))
 		// - buying BB sp is no longer cheap
-		const check4e = (!hasBB || BBspCost > Math.max(4000 * strats["hackn"], port3["income"] * 60))
+		const check4e = (!hasBB || BBspCost > Math.max(4000 * strats["hackn"], hashdata["income"] * 60))
 		// - not currently performing a BlackOps mission
 		const check4f = (!hasBB || ns.bladeburner.getCurrentAction().type != "BlackOp")
 		const checksum4 = (check4a && check4b && check4c && check4d && check4e)

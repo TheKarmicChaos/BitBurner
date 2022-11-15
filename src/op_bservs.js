@@ -5,10 +5,10 @@ import * as tb from "./lib/toolbox";
 export async function main(ns) {
 	//ns.tail('op_bservs.js'); ns.disableLog("ALL"); ns.clearLog();
 
-
-	let totalCashPerSec = nstb.PeekPort(ns, 2, "sumdict"); // get total income
+	let GLOBAL_VARS = nstb.getGlobals(ns);
+	let totalCashPerSec = tb.SumDict(GLOBAL_VARS["income"]); // get total income
 	let player = await nstb.RunCom(ns, 'ns.getPlayer()');
-	let strats = nstb.PeekPort(ns, 1)["strats"];
+	let strats = GLOBAL_VARS["strats"];
 	let softCap = 0.001; if ("hack_money" in strats) { softCap = Math.max(strats['hack_money'], 0.8) };
 	const hardCap = 100e12;
 	let maxSpend = Math.max(hardCap, totalCashPerSec / 10) // cap out at hardCap, but if we are making money fast enough we can keep buying
@@ -34,6 +34,7 @@ export async function main(ns) {
 
 	// Determines what we want to purchase as our next server and attempts to buy it,
 	async function BuyNext() {
+		GLOBAL_VARS = nstb.getGlobals(ns);
 		didBuy = false; buyCondsMet = false; servNum = 1;
 		pServs = await nstb.RunCom(ns, 'ns.getPurchasedServers()');
 		desiredRAM = hardRamCap;
@@ -95,7 +96,7 @@ export async function main(ns) {
 		didBuy = false;
 		let servCost = ns.getPurchasedServerCost(desiredRAM);
 		// once cost is above 1b, save up for a corp if we want one (& TIX API)
-		if (servCost < 1e9 || (!nstb.PeekPort(ns,8)["wantCorp"] && ns.stock.has4SDataTIXAPI())) {
+		if (servCost < 1e9 || (!GLOBAL_VARS["corp"]["want"] && ns.stock.has4SDataTIXAPI())) {
 			buyCondsMet = true;
 			// if we can afford it, buy it
 			if (servCost <= maxSpend && player.money * softCap > servCost) {

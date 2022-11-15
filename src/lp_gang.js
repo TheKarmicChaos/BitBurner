@@ -11,8 +11,7 @@ export async function main(ns) {
 	ns.disableLog("ALL"); ns.clearLog();
 
 	let player = await nstb.RunCom(ns, 'ns.getPlayer()');
-
-
+	let GLOBAL_VARS = nstb.getGlobals(ns);
 
 	// Default variables
 	// ==============================================================================================
@@ -65,13 +64,14 @@ export async function main(ns) {
 	// ==============================================================================================
 	await TrackKarma();
 	while (!(await nstb.RunCom(ns, 'ns.gang.inGang()'))) {
+		GLOBAL_VARS = nstb.getGlobals(ns);
 		await TrackKarma();
 		await nstb.RunCom(ns, 'ns.gang.createGang()', ['Slum Snakes']);
 		ns.clearLog(); ns.print("Generating Karma...");
 		await ns.sleep(1000);
 	}
 
-	nstb.UpdPort(ns, 7, "dict", ["wantGang", false, "hasGang", true]); // Update port, since we now have a gang.
+	nstb.updGlobals(ns, ["gang.want", false, "gang.has", true]); // Update globals, since we now have a gang.
 	ns.run("hud.js", 1, "upd", "gangtimer"); // Clear HUD gang timer
 	ns.resizeTail(385, 675); await ns.sleep(1); ns.moveTail(1455, 225); // Resize tail window to fit the increased info we will print.
 
@@ -136,13 +136,14 @@ export async function main(ns) {
 		let totalkps = playerkps + sleevekps
 		var tUntilGang = Math.ceil((54000 - Math.abs(karma)) / totalkps)
 
-		if (tUntilGang > 0 && totalkps > 0 && !nstb.PeekPort(ns, 7)["hasGang"]) {
+		if (tUntilGang > 0 && totalkps > 0 && !GLOBAL_VARS["gang"]["has"]) {
 			ns.run("hud.js", 1, "upd", "gangtimer", "Gang in", tb.StandardTime(tUntilGang));
 		} else { ns.run("hud.js", 1, "upd", "gangtimer"); }
 	}
 
 	/** Updates all variable stats that need updating each loop. */
 	async function UpdateStats() {
+		GLOBAL_VARS = nstb.getGlobals(ns);
 		myGang = await nstb.RunCom(ns, 'ns.gang.getGangInformation()');
 		player = await nstb.RunCom(ns, 'ns.getPlayer()');
 		allEquipment = await nstb.RunCom(ns, 'ns.gang.getEquipmentNames()');
@@ -379,7 +380,7 @@ export async function main(ns) {
 
 	}
 
-	/** Prints general gang info to log (stats that are not thug-specific) and updates port data. */
+	/** Prints general gang info to log (stats that are not thug-specific) and updates globals. */
 	async function ShowStats() {
 		var getGang = await nstb.RunCom(ns, 'ns.gang.getGangInformation()');
 		var curResp = ns.nFormat(getGang.respect, "0,0.0a"); // Respect: 🩸Res
@@ -400,7 +401,6 @@ export async function main(ns) {
 		if (gangt2 == 1) { ns.print("🗡:" + warfare + "  ✊:" + ganginwar + "/" + warguys + "  🥥Tr: " + gangt2p); }
 		else { ns.print("🗡:" + warfare + "  ✊:" + ganginwar + "/" + warguys + "  🥥Tr: " + gangt2p + "> " + gangtxp); }
 
-		nstb.UpdPort(ns, 2, "dict", ["gang", 5 * ns.gang.getGangInformation().moneyGainRate])
-		nstb.UpdPort(ns, 7, "dict", ["territory", gangtx, "respect", getGang.respect])
+		nstb.updGlobals(ns, ["income.gang", 5 * ns.gang.getGangInformation().moneyGainRate, "gang.territory", gangtx, "gang.respect", getGang.respect])
 	}
 }

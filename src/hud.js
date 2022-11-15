@@ -1,5 +1,6 @@
-// I store lots of data in my ports. Remove this import and all calls of nstb.PeekPort before you run this script.
+// I store lots of data in my "global vars". Remove these imports and all calls of imported functions before you run this script.
 import * as nstb from "./lib/nstools";
+import * as tb from "./lib/toolbox";
 
 /*
 ----------------------------------------------------------------------------------------
@@ -10,7 +11,7 @@ Step 0: Setup -----------------------------
 
 	WIP
 
-- Delete import and all calls of the function nstb.PeekPort
+- Delete imports and all calls of thse imported functions (Ctrl + F: "REMOVE BEFORE RUNNING")
 - (Optional) Tweak the constants under the section labelled "Settings" (before the main function) to fit to your liking.
 
 
@@ -195,9 +196,10 @@ export async function main(ns) {
 		// #################################################
 		// (By default, this section will contain the hud elements that I personally update locally.)
 
-		// Local Tooltip Updates
-		AddTooltip("bitnode", MakeToolTipFromDict(nstb.PeekPort(ns, 1)["mults"]));
-		AddTooltip("income",  MakeToolTipFromDict(nstb.PeekPort(ns, 2), `%key%: $%val%`, true));
+		// Local Tooltip Updates - REMOVE BEFORE RUNNING
+		const GLOBAL_VARS = nstb.getGlobals(ns);
+		AddTooltip("bitnode", MakeToolTipFromDict(GLOBAL_VARS["bnMults"]));
+		AddTooltip("income",  MakeToolTipFromDict(GLOBAL_VARS["income"], `%key%: $%val%`, true));
 
 		// Kills
 		let kills = ns.getPlayer().numPeopleKilled;
@@ -213,14 +215,14 @@ export async function main(ns) {
 		var karma = ns.heart.break();
 		UpdateTextRow("karma", "Karma", StandardNotation(karma, 3));
 
-		// Karma progress (toward unlocking gang)
-		if (Math.abs(karma) / 54000 < 1 && nstb.PeekPort(ns, 7)["wantGang"]) {
+		// Karma progress (toward unlocking gang) - REMOVE BEFORE RUNNING
+		if (Math.abs(karma) / 54000 < 1 && GLOBAL_VARS["gang"]["want"]) {
 			ToggleProgrBar("karma", "show");
 			UpdateProgrBar("karma", Math.abs(karma), 54000);
 		} else ToggleProgrBar("karma", "hide");
 
-		// Income
-		let totalCashPerSec = nstb.PeekPort(ns, 2, "sumdict")
+		// Income - REMOVE BEFORE RUNNING
+		let totalCashPerSec = tb.SumDict(GLOBAL_VARS["income"])
 		UpdateTextRow("income", "$/sec", `$${StandardNotation(totalCashPerSec, 3)}`);
 
 		// ##################################################################################################
@@ -701,7 +703,6 @@ function setElementTooltip(el, params) {
 		}
 	}
 }
-
 
 /** Puts any large number into a standard notation "000.000a" string 
  * @param {number} num - Number to convert to standard notation

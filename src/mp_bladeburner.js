@@ -6,12 +6,13 @@ export async function main(ns) {
 	//ns.tail('mp_bladeburner.js'); ns.disableLog("ALL"); ns.clearLog();
 
     while (!await nstb.RunCom(ns, 'ns.bladeburner.joinBladeburnerDivision()')) await ns.sleep(10000);
-    nstb.UpdPort(ns, 9, "dict", ["hasBB", true, "wantBB", false]);
+    nstb.updGlobals(ns, ["bb.has", true, "bb.want", false]);
 
 
     const player = ns.getPlayer();
     const ownedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()', [true]);
     const installedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
+    const GLOBAL_VARS = nstb.getGlobals(ns);
 
     const cities = ["Aevum", "Chongqing", "Sector-12", "New Tokyo", "Ishima", "Volhaven"];
     let [curSta, maxSta] = await nstb.RunCom(ns, 'ns.bladeburner.getStamina()')
@@ -20,16 +21,16 @@ export async function main(ns) {
     const curAct = () => ns.bladeburner.getCurrentAction();
 
     const shouldRecover = (/*player.hp.current / player.hp.max < 0.5 ||*/ curSta / maxSta < 0.80)
-    const hasSimu = nstb.PeekPort(ns, 9)["hasSimu"]
+    const hasSimu = GLOBAL_VARS["bb"]["hasSimu"]
 
     // Main function calls ---------------------------------
-    if (!hasSimu && installedAugs.includes("The Blade's Simulacrum")) // update Port 9 "hasSimu" if the aug is now fully installed.
-        nstb.UpdPort(ns, 9, "dict", ["hasSimu", true]);
+    if (!hasSimu && installedAugs.includes("The Blade's Simulacrum")) // update global "hasSimu" if the aug is now fully installed.
+        nstb.updGlobals(ns, ["bb.hasSimu", true]);
     if (player.factions.includes("Bladeburners") && !ownedAugs.includes("The Blade's Simulacrum")) // try to get Simu if it isn't yet owned
         await TryToGetSimu();
     await updateCity();
     await levelSkills();
-    if (player.numPeopleKilled >= 30 && !nstb.PeekPort(ns, 7)["wantGang"] && (hasSimu || !ns.singularity.isBusy() || ns.singularity.getCurrentWork().type != "GRAFTING")) {
+    if (player.numPeopleKilled >= 30 && !GLOBAL_VARS["gang"]["want"] && (hasSimu || !ns.singularity.isBusy() || ns.singularity.getCurrentWork().type != "GRAFTING")) {
         // If we don't have simu, stop our non-bladeburner action
         if (!hasSimu) await nstb.RunCom(ns, 'ns.singularity.stopAction()');
         // if we are not at max health or stamina, recover.
@@ -57,7 +58,7 @@ export async function main(ns) {
         // If current city's pop is < 1b or 20% less than best city pop, switch to best city
         if (curCityPop < 1e9 || curCityPop < bestPop * 0.8) await nstb.RunCom(ns, 'ns.bladeburner.switchCity()', [bestCity]);
         curCity = await nstb.RunCom(ns, 'ns.bladeburner.getCity()'); // update current city
-        nstb.UpdPort(ns, 9, "dict", ["city", curCity])
+        nstb.updGlobals(ns, ["bb.city", curCity])
     }
 
     async function getBestCity() {
@@ -83,9 +84,9 @@ export async function main(ns) {
         let [assLo, assHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['Operations', 'Assassination']);
         let assCount = await nstb.RunCom(ns, 'ns.bladeburner.getActionCountRemaining()', ['Operations', 'Assassination'])
 
-        let doneOps = nstb.PeekPort(ns, 9)["blackOpsDone"]
+        let doneOps = GLOBAL_VARS["bb"]["doneOps"]
         let blackOpList = tb.ArrSubtract(await nstb.RunCom(ns, 'ns.bladeburner.getBlackOpNames()'), doneOps)
-        if (blackOpList.length == 0) nstb.UpdPort(ns, 9, "dict", ["blackOpsCompleted", true]);
+        if (blackOpList.length == 0) nstb.updGlobals(ns, ["allOpsDone", true]);
         let nextBlackOp = blackOpList[0]
         let [blackLo, blackHi] = await nstb.RunCom(ns, 'ns.bladeburner.getActionEstimatedSuccessChance()', ['BlackOps', nextBlackOp]);
         let blackOpReq = await nstb.RunCom(ns, 'ns.bladeburner.getBlackOpRank()', [nextBlackOp]);
@@ -93,7 +94,7 @@ export async function main(ns) {
         let cityChaos = await nstb.RunCom(ns, 'ns.bladeburner.getCityChaos()', [curCity]);
         let actType;
         let actName;
-        let sleeveShock = nstb.PeekPort(ns, 6)["sleeveShock"]
+        let sleeveShock = GLOBAL_VARS["sleeve"]["shock"]
         // Determine what our best action would be
         if (sleeveShock > 0 && cityChaos > 4) {
             actType = "General";
@@ -106,7 +107,7 @@ export async function main(ns) {
             if (curAct().name != nextBlackOp) {
                 if (!ns.bladeburner.startAction(actType, nextBlackOp)) {
                     doneOps.push(nextBlackOp);
-                    nstb.UpdPort(ns, 9, "dict", [ "blackOpsDone", doneOps ])  // update port array
+                    nstb.updGlobals(ns, ["doneOps", doneOps])  // update global
                 };
             }
         } else if (assLo >= 0.4 && assCount > 0) {

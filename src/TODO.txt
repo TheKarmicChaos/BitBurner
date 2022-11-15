@@ -4,6 +4,4 @@ TO DO LIST
 
 Update the combined toast message for op_bhnodes to be much shorter and accpet much larger purchases (like multiple cores at once).
 
-Swap out all port reading/writing in favor of .txt file reading/writing.
-
 Add new features to hud.js

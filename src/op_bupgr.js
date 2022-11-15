@@ -6,10 +6,11 @@ export async function main(ns) {
 	//ns.tail('op_bupgr.js'); ns.disableLog("ALL"); ns.clearLog();
 
 	// get total income
-	let totalCashPerSec = nstb.PeekPort(ns, 2, "sumdict");
+	let GLOBAL_VARS = nstb.getGlobals(ns);
+	let totalCashPerSec = tb.SumDict(GLOBAL_VARS["income"]);
 
 	const player = () => ns.getPlayer();
-	let strats = nstb.PeekPort(ns, 1)["strats"];
+	let strats = GLOBAL_VARS["strats"];
 	let softCap = 1; if (!("hack_money" in strats)) { softCap = 0.002 };
 	let hardCap = 100e12;
 
@@ -28,6 +29,7 @@ export async function main(ns) {
 		let boughtRAM = 0;
 
 		while (didBuy) {
+			GLOBAL_VARS = nstb.getGlobals(ns);
 			didBuy = false;
 
 			var homeRamCost = Math.floor(await nstb.RunCom(ns, 'ns.singularity.getUpgradeHomeRamCost()'));
@@ -65,7 +67,7 @@ export async function main(ns) {
 			//ns.print(darkStr)
 			var upgrName = "NULL"; var upgrType;
 			let upgrCost = Math.min(homeRamCost, darkCost)
-			if (nstb.PeekPort(ns, 1)["strats"]["hack_money"] >= 0.8) { upgrCost = Math.min(upgrCost, homeCoreCost) }
+			if (GLOBAL_VARS["strats"]["hack_money"] >= 0.8) { upgrCost = Math.min(upgrCost, homeCoreCost) }
 
 			if (upgrCost == homeRamCost) { upgrType = "HomeRAM"; upgrName = "HomeRAM" }
 			else if (upgrCost == homeCoreCost) { upgrType = "HomeCore"; upgrName = "HomeCore" }
@@ -73,13 +75,13 @@ export async function main(ns) {
 
 			if (upgrCost > 200000 && player().tor == false) { upgrCost = 200000; upgrType = "Tor"; upgrName = "TorBrowser" }
 
-			const cost4sData = 1E9 * nstb.PeekPort(ns, 1)["mults"].FourSigmaMarketDataCost;
-			const cost4sApi = 25E9 * nstb.PeekPort(ns, 1)["mults"].FourSigmaMarketDataApiCost;
+			const cost4sData = 1E9 * GLOBAL_VARS["bnMults"].FourSigmaMarketDataCost;
+			const cost4sApi = 25E9 * GLOBAL_VARS["bnMults"].FourSigmaMarketDataApiCost;
 			const cost4s = cost4sData + cost4sApi;
 
 			let buyCondsMet = false;
 			if (!(upgrCost > cost4s && !ns.stock.has4SDataTIXAPI())
-				&& !(upgrCost > 150e9 && nstb.PeekPort(ns, 8)["wantCorp"])) {
+				&& !(upgrCost > 150e9 && GLOBAL_VARS["corp"]["want"])) {
 				if (upgrCost <= maxSpend) {
 					buyCondsMet = true;
 					if (player().money * softCap >= upgrCost) {
@@ -114,7 +116,7 @@ export async function main(ns) {
 				debugStr = "B>4sAPI";
 				costStr = `$${tb.StandardNotation(cost4s, 3)}`;
 			}
-			if (upgrCost > 150e9 && nstb.PeekPort(ns, 8)["wantCorp"]) {
+			if (upgrCost > 150e9 && GLOBAL_VARS["corp"]["want"]) {
 				buyCondsMet = true;
 				debugStr = "B>Corp";
 				costStr = `$${tb.StandardNotation(150e9, 3)}`;

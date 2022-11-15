@@ -32,7 +32,8 @@ export async function main(ns) {
 
 	async function BackdoorAll(servs) {
 		for (let node of servs) {
-			let backdooredServs = nstb.PeekPort(ns, 6)["backdoors"]
+			let GLOBAL_VARS = nstb.getGlobals(ns);
+			let backdooredServs = GLOBAL_VARS["backdoors"]
 			// if we have root access but no backdoor
 			if (ns.hasRootAccess(node) && !backdooredServs.includes(node)) {
 				 // get at least 2 connections away from node, to test backdoor
@@ -40,14 +41,14 @@ export async function main(ns) {
 				else if (node == 'darkweb') { ns.singularity.connect('home'); ns.singularity.connect('n00dles'); }
 
 				// If we can already backdoor connect to this node, add it to the port 6 array and move on
-				if (ns.singularity.connect(node)) { backdooredServs.push(node); nstb.UpdPort(ns, 6, "dict", [ "backdoors", backdooredServs ]) }
+				if (ns.singularity.connect(node)) { backdooredServs.push(node); nstb.updGlobals(ns, ["backdoors", backdooredServs]) }
 				// otherwise, this node still needs a backdoor, so install one
 				else {
 					ConnectTo(node);
 					await ns.singularity.installBackdoor(); // install a backdoor
 					ns.toast("Installed Backdoor on " + node, "info", 2000);
 					backdooredServs.push(node);
-					nstb.UpdPort(ns, 6, "dict", [ "backdoors", backdooredServs ]); // update port array
+					nstb.updGlobals(ns, ["backdoors", backdooredServs]); // update port array
 				}
 				ns.singularity.connect('home');
 			}

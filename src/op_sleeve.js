@@ -6,9 +6,10 @@ export async function main(ns) {
 	//ns.tail('op_sleeve.js'); ns.disableLog("ALL"); ns.clearLog();
 
 	var player = await nstb.RunCom(ns, 'ns.getPlayer()')
-	const bndata = nstb.PeekPort(ns, 1)["mults"]
-	const strats = nstb.PeekPort(ns, 1)["strats"]
-	const runType = nstb.PeekPort(ns, 1)["runType"]
+	let GLOBAL_VARS = nstb.getGlobals(ns);
+	const bndata = GLOBAL_VARS["bnMults"]
+	const strats = GLOBAL_VARS["strats"]
+	const runType = GLOBAL_VARS["runType"]
 
 	let metaPlan = "nogang";
 	if (ns.args[0]) metaPlan = ns.args[0];
@@ -21,7 +22,7 @@ export async function main(ns) {
 
 
 	const hasGang = await nstb.RunCom(ns, 'ns.gang.inGang()')
-	const hasBB = nstb.PeekPort(ns, 9)["hasBB"]
+	const hasBB = GLOBAL_VARS["bb"]["has"]
 	const slnum = await nstb.RunCom(ns, 'ns.sleeve.getNumSleeves()')
 	let occupiedFacs = []; if (hasGang) occupiedFacs.push("Slum Snakes");
 	let occupiedJobs = [];
@@ -153,8 +154,8 @@ export async function main(ns) {
 			sleeveshocks.push(stats.shock);
 		}
 	}
-	// push sleeve shock numbers to port
-	if (sleeveshocks.length == slnum) nstb.UpdPort(ns, 6, "dict", ["sleeveShock", tb.GetMinOfArray(sleeveshocks)])
+	// push sleeve shock numbers to globals
+	if (sleeveshocks.length == slnum) nstb.updGlobals(ns, ["sleeve.shock", tb.GetMinOfArray(sleeveshocks)])
 
 
 	// ==================================================================================================
@@ -170,7 +171,7 @@ export async function main(ns) {
 	}
 
 	async function TrainStats(id, stats, level) {
-		if (nstb.PeekPort(ns, 2, "sumdict") >= 10000) {
+		if (tb.SumDict(GLOBAL_VARS["income"]) >= 10000) {
 			if (stats.strength < level) { await nstb.RunCom(ns, 'ns.sleeve.setToGymWorkout()', [id, "Powerhouse Gym", "strength"]); return false; }
 			else if (stats.defense < level) { await nstb.RunCom(ns, 'ns.sleeve.setToGymWorkout()', [id, "Powerhouse Gym", "defense"]); return false; }
 			else if (stats.dexterity < level) { await nstb.RunCom(ns, 'ns.sleeve.setToGymWorkout()', [id, "Powerhouse Gym", "dexterity"]); return false; }
@@ -204,7 +205,7 @@ export async function main(ns) {
 			await WorkForFac(id, nextfac)
 		} else if (await TrainStats(id, stats, 10)) {
 			if (lowStat == "combat" || metaPlan == "pillonly") { await nstb.RunCom(ns, 'ns.sleeve.setToCommitCrime()', [id, 'MUG']) }
-			else if (lowStat == "hacking" && nstb.PeekPort(ns, 2, "sumdict") >= 10000) { await nstb.RunCom(ns, 'ns.sleeve.setToUniversityCourse()', [id, "Rothman University", "Algorithms"]) }
+			else if (lowStat == "hacking" && tb.SumDict(GLOBAL_VARS["income"]) >= 10000) { await nstb.RunCom(ns, 'ns.sleeve.setToUniversityCourse()', [id, "Rothman University", "Algorithms"]) }
 			return false;
 		}
 	}
