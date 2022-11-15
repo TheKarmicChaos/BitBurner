@@ -9,12 +9,13 @@ import * as tb from "./lib/toolbox";
 
 Step 0: Setup -----------------------------
 
-	WIP
+	WIP :: After you have customized your hud via Steps 1-3, you may be tempted to run the script to test if it works.
+Before you do, make sure you have already done the following.
 
 - Delete both imports.
 - Ctrl + F "REMOVE THIS LINE BEFORE RUNNING" and delete all 6 lines with that comment.
 - (Optional) Tweak the constants under the section labelled "Settings" (before the main function) to fit to your liking.
-
+- WIP
 
 Step 1: Creating Your Hud -----------------
 
