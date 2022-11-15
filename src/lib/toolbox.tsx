@@ -1,6 +1,8 @@
 import { formatNumberShort } from "/lib/helpers";
 
+// -------------------------------------------------------------------------------------
 // Formatting Functions
+// -------------------------------------------------------------------------------------
 
 /** Puts a duration of time into a standard "00:00:00" format
  * @param seconds - Duration of time (in seconds)
@@ -57,10 +59,12 @@ export function StandardNotation(num: number, decimalplaces: number = 1): string
 	} else { return formattedNum; }
 };
 
+// -------------------------------------------------------------------------------------
 // Dictionary functions
+// -------------------------------------------------------------------------------------
 
-/** Sums all number values in a string-number pair dictionary.
- * @param dict - Dictionary of string-number pairs
+/** Sums all number values in a string:number pair dictionary.
+ * @param dict - Dictionary of string:number pairs
  * */
  export function SumDict(dict: any) {
 	let total = 0;
@@ -68,7 +72,9 @@ export function StandardNotation(num: number, decimalplaces: number = 1): string
 	return total;
 };
 
+// -------------------------------------------------------------------------------------
 // Array functions
+// -------------------------------------------------------------------------------------
 
 /** Returns a mathematical "intersection" of two arrays.
  * @param array1
@@ -139,8 +145,9 @@ export function GetMinOfArray(numArray: number[]): number {
 	return Math.min.apply(null, numArray);
 };
 
-
+// -------------------------------------------------------------------------------------
 // Decorative Functions
+// -------------------------------------------------------------------------------------
 
 /** Creates a string of specified length w/ text floating to the left & right.
  * @param spaces - Length (character count) of the space for the floating-text-string to occupy.
@@ -203,7 +210,7 @@ export function MakeLoadingBar(length: number, percent: number): string {
 };
 
 /** Returns a string that, when printed, prints every element of an object, as well as each element of those elements, etc. recursively.
- * @param obj - The object or array containing the information to recursively print.
+ * @param obj - The object/array or primitive containing the information to recursively print.
  * @param maxDepth - Maximum layers of depth to print.
  * - Default value: 3
  * @param curDepth - ALWAYS LEAVE THIS ARG BLANK. Used to track recursive depth.
@@ -238,7 +245,9 @@ export function RecursivePrint(obj: any, maxDepth: number = 3, curDepth: number 
 	return printMsg;
 };
 
+// -------------------------------------------------------------------------------------
 // Get Constants Functions
+// -------------------------------------------------------------------------------------
 
 /** Returns an object detailing the base values for a given job position
  * @param position - Title of the job position.
