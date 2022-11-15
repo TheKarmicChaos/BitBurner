@@ -30,43 +30,16 @@ export async function main(ns) {
 	let hnscriptsSize = 0;
 
 
-	// Initialize all port data structures
+	// Initialize all global vars
 	// ============================================================
 
-	// PORT 1: BITNODE INFO - BN NUMBER, runType, CURRENT SOURCE FILES, & BN MULTIPLIERS
-	ns.getPortHandle(1).clear()
-
-	// PORT 2: ALL INCOME SOURCES
-	ns.getPortHandle(2).clear()
-	ns.getPortHandle(2).write({ "baseIncome": 0, "hnodes": 0, "gang": 0, "corp": 0, "plcrime": 0, "slcrime": 0, "plwork": 0, "slwork": 0, "hacking": 0})
-
-	// PORT 3: HASHES
-	ns.getPortHandle(3).clear()
-	ns.getPortHandle(3).write({ "hashes": 0, "income": 0, "maxhashes": 1})
-
-	// PORT 6: RUN PROGRESS TRACKER
-	ns.getPortHandle(6).clear()
-	ns.getPortHandle(6).write({ "backdoors": ["home"], "sleeveShock": 100 })
-
-	// PORT 7: GANG PROGRESS TRACKER
-	ns.getPortHandle(7).clear()
-	ns.getPortHandle(7).write({ "wantGang": false, "hasGang": false, "territory": 0, "respect": 0 })
-
-	// PORT 8: CORP PROGRESS TRACKER
-	ns.getPortHandle(8).clear()
-	ns.getPortHandle(8).write({ "wantCorp": false, "hasCorp": false, "hasProd": false, "hasLab": false, "hasTA.II": false, "research": 0, "funds": 0, "profit": 0, "products": [] })
-
-	// PORT 9: BLADEBURNER PROGRESS TRACKER
-	ns.getPortHandle(9).clear()
-	ns.getPortHandle(9).write({ "wantBB": false, "hasBB": false, "hasSimu": false, "city": "Sector-12", "blackOpsDone": ["failsafe"], "blackOpsCompleted": false })
-
 	let globalDict = {
-		bnMults: null,
-		sourceFiles: null,
-		strats: null,
+		bnMults: {},
+		sourceFiles: [],
+		strats: {},
 		backdoors: ["home"],
-		bitNode: null,
-		runType: null,
+		bitNode: 0,
+		runType: "",
 		income: { base: 0, hacknet: 0, gang: 0, corp: 0, playerCrime: 0, sleeveCrime: 0, playerWork: 0, sleeveWork: 0, hacking: 0, bladeburner: 0 },
 		hash: { count: 0, income: 0, max: 1 },
 		sleeve: { shock: 100 },
@@ -74,9 +47,9 @@ export async function main(ns) {
 		corp: { want: false, has: false, hasProd: false, hasLab: false, hasTAII: false, research: 0, funds: 0, profit: 0, products: [] },
 		bb: { want: false, has: false, hasSimu: false, city: "Sector-12", doneOps: ["failsafe"], allOpsDone: false }
 	}
-
-
-
+	globalDict.bnMults = bndata;
+	globalDict.sourceFiles = sourceFiles;
+	globalDict.bitNode = bitNode;
 
 
 
@@ -180,11 +153,9 @@ export async function main(ns) {
 		globalDict.bb.want = true;
 	}
 
-	globalDict.bitNode = bitNode
-	globalDict.bnMults = bndata
+	// Update the last few initial global vars then write to file.
 	globalDict.runType = runType
 	globalDict.strats = strats
-	globalDict.sourceFiles = sourceFiles
 	ns.write("global-vars.txt", JSON.stringify(globalDict), "w")
 
 	// ===========================================================================================================
