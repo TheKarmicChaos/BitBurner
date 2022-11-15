@@ -66,7 +66,7 @@ export function StandardNotation(num: number, decimalplaces: number = 1): string
 /** Sums all number values in a string:number pair dictionary.
  * @param dict - Dictionary of string:number pairs
  * */
- export function SumDict(dict: any) {
+ export function SumDict(dict: Record<string, number>) {
 	let total = 0;
 	for (let entry in dict) { total += dict[entry]; };
 	return total;
@@ -216,33 +216,19 @@ export function MakeLoadingBar(length: number, percent: number): string {
  * @param curDepth - ALWAYS LEAVE THIS ARG BLANK. Used to track recursive depth.
  * - Default value: 0
  * */
-export function RecursivePrint(obj: any, maxDepth: number = 3, curDepth: number = 0): string {
+export function RecursivePrint(obj: unknown, maxDepth: number = 3, curDepth: number = 0): string {
+	// return obj as string immediately if we are at max depth or obj is null / non-object type.
+	if (curDepth >= maxDepth || obj == null || typeof obj !== "object") return `${obj}`;
+
 	let printMsg = ``
-	// prep whitespace string for this depth
-	let spaces = []; for (let n = 0; n < curDepth; ++n) { spaces.push("   ") };
-	// if we aren't at maxDepth and the object is an array
-	if (curDepth < maxDepth && obj.constructor == Array) {
-		// Recursively call this function on each element in the array.
-		for (let subObj of obj) {
-			let tempPrintMsg = `\n${spaces.join("")}${RecursivePrint(subObj, maxDepth, curDepth + 1)}`
-			// if this element has no name/value, it is a nameless obj, so just call it "Object()"
-			if (tempPrintMsg.split(`\n`)[1] == `${spaces.join("")}`) {
-				let tempArr = tempPrintMsg.split(`\n`);
-				tempArr.shift(); tempArr.shift();
-				printMsg += `\n${spaces.join("")}Object()\n` + tempArr.join(`\n`);
-			} else { printMsg += tempPrintMsg }
-		}
+	if (Array.isArray(obj)) { // If obj is an array, iterate through array...
+		if (curDepth > 0) printMsg += ` []`;
+		for (let n = 0; n < obj.length; n++) printMsg += `\n${"   ".repeat(curDepth)}${RecursivePrint(obj[n], maxDepth, curDepth + 1)}`;
+	} else { // If obj is not an array, it is an object with key/vals, so iterate though [k,v] map...
+		if (curDepth > 0) printMsg += ` {}`;
+		printMsg += Object.entries(obj).map(([k,v]) => `\n${"   ".repeat(curDepth)}"${k}": ${RecursivePrint(v, maxDepth, curDepth + 1)}`).join("");
 	}
-	// if we aren't at maxDepth and the object is a dictionary/object
-	else if (curDepth < maxDepth && obj.constructor == Object) {
-		for (let subObj in obj) { 
-			printMsg += `\n${spaces.join("")}"${subObj}": ${RecursivePrint(obj[subObj], maxDepth, curDepth + 1)}`
-		}
-	}
-	// otherwise, just print the element
-	else { return `${obj}`; }
-	// if recursion completes, return print msg.
-	return printMsg;
+	return printMsg; // if recursion completes, return print msg.
 };
 
 // -------------------------------------------------------------------------------------
