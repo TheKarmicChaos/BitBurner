@@ -2,6 +2,47 @@ import * as tb from "/lib/toolbox";
 import Queue from "/lib/classes";
 import { getNsDataThroughFile, runCommand, checkNsInstance } from "/lib/helpers";
 
+// -------------------------------------------------------------------------------------
+// Misc
+// -------------------------------------------------------------------------------------
+
+/** Runs a command remotely, so it doesn't eat up RAM.
+ * @param {import("../..").NS} ns
+ * @param {string} command - String of an actual function, with no args.
+ * - Example: "ns.getServerMaxRam()"
+ * @param {any[]} argList - Array of args to pass into the function.
+ * @param {boolean} shouldreturn - Default value: true
+ * - Bool for whether we can expect a return value from running the command.
+ * - ALWAYS set to false if running a command that has no return value.
+ * */
+export async function RunCom(ns, command, argList, shouldreturn = true) {
+	checkNsInstance(ns, 'RunCom');
+	let basecommand = command.split("(")[0]
+
+	let filePath = null //'/MiscTemp/' + basecommand.slice(3) + ".txt"
+
+	var realcommand = basecommand + "("
+	if (argList != null) {
+		for (let x = 0; x < argList.length; ++x) {
+			realcommand += "ns.args[" + x + "]"
+			if (x != argList.length - 1) { realcommand += ", " }
+		}
+	}
+	realcommand += ")"
+
+	var returnVal = null;
+	if (argList != null) {
+		if (shouldreturn) { returnVal = await getNsDataThroughFile(ns, String(realcommand), filePath, argList) }
+		else { await runCommand(ns, String(realcommand), filePath, argList) }
+	} else {
+		if (shouldreturn) { returnVal = await getNsDataThroughFile(ns, String(realcommand), filePath) }
+		else { await runCommand(ns, String(realcommand), filePath) }
+	}
+
+	if (returnVal != null) { return returnVal; }
+	//await runCommand(ns, String(realcommand), String(filePath), argList);
+}
+
 /** Returns an array with the following 2 elements:
  * - 0: An array of every server in the game.
  * - 1: A dictionary with the key/values as serv/parentserv for all servs.
@@ -43,42 +84,9 @@ export function ScanAll(ns, includePservs = false, includeHnodes = false) {
 	}
 }
 
-/** Runs a command remotely, so it doesn't eat up RAM.
- * @param {import("../..").NS} ns
- * @param {string} command - String of an actual function, with no args.
- * - Example: "ns.getServerMaxRam()"
- * @param {any[]} argList - Array of args to pass into the function.
- * @param {boolean} shouldreturn - Default value: true
- * - Bool for whether we can expect a return value from running the command.
- * - ALWAYS set to false if running a command that has no return value.
- * */
-export async function RunCom(ns, command, argList, shouldreturn = true) {
-	checkNsInstance(ns, 'RunCom');
-	let basecommand = command.split("(")[0]
-
-	let filePath = null //'/MiscTemp/' + basecommand.slice(3) + ".txt"
-
-	var realcommand = basecommand + "("
-	if (argList != null) {
-		for (let x = 0; x < argList.length; ++x) {
-			realcommand += "ns.args[" + x + "]"
-			if (x != argList.length - 1) { realcommand += ", " }
-		}
-	}
-	realcommand += ")"
-
-	var returnVal = null;
-	if (argList != null) {
-		if (shouldreturn) { returnVal = await getNsDataThroughFile(ns, String(realcommand), filePath, argList) }
-		else { await runCommand(ns, String(realcommand), filePath, argList) }
-	} else {
-		if (shouldreturn) { returnVal = await getNsDataThroughFile(ns, String(realcommand), filePath) }
-		else { await runCommand(ns, String(realcommand), filePath) }
-	}
-
-	if (returnVal != null) { return returnVal; }
-	//await runCommand(ns, String(realcommand), String(filePath), argList);
-}
+// -------------------------------------------------------------------------------------
+// Get Game Info Functions
+// -------------------------------------------------------------------------------------
 
 /** Returns the average gains per second for a specified stat from a specified crime.
  * @param {import("../..").NS} ns
@@ -226,6 +234,10 @@ export async function GetJobGains(ns, company, stat, sleeveid = -1) {
 	return gainsPerSec;
 };
 
+// -------------------------------------------------------------------------------------
+// Global Variable Functions
+// -------------------------------------------------------------------------------------
+
 /** Retrieves the global variable dictionary from global-vars.txt
  * @param {import("../..").NS} ns
  * */
@@ -242,7 +254,7 @@ export function getGlobals(ns) {
  * with each key immediately followed by the value for that key.
  * - Example: ["key1", 10, "category1.key2", true, "key17", "redpill"]
  * */
- export function updGlobals(ns, args) {
+export function updGlobals(ns, args) {
 	checkNsInstance(ns, 'updGlobals');
 	let curDict = getGlobals(ns);
 	try {
