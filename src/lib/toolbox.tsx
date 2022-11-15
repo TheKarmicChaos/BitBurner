@@ -838,7 +838,7 @@ export function GetBaseJobData(position: string) {
 				repMultiplier: 1,
 			}; break;
 		default:
-			data = {};
+			data = {baseSalary: 0};
 			break;
 	};
 	return data;
