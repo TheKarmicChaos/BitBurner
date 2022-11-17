@@ -372,22 +372,43 @@ function AddProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
 	// If color or backgroundColor is from the Theme, replace them with the correct rgb/hex code
 	if (color in colors) color = colors[color];
 	if (backgroundColor in colors) backgroundColor = colors[backgroundColor];
-	// Get an existing bar element from HUD.
-	let existingRow = d.getElementById(`ovv-row-str-progr`);
-	// Make a clone of it for our new hud element
-	let newHudRow = existingRow.cloneNode(true);
-	// give hook id to our new row-level element
-	newHudRow.id = `ovv-row-${hookName}-progr`;
-	// Remove the classes responsible for color.
-	let newBar = newHudRow.firstChild.firstChild.firstChild;
-	newBar.parentElement.className = "css-koo86v"
-	newBar.className = "css-14usnx9"
-	// Insert our custom style parameters
-	newBar.parentElement.style = `background-color: ${backgroundColor};`;  // set color of "empty" parts of bar
-	newBar.style = `transform: translateX(-100%); background-color: ${color};`; // set color of "full" parts of bar
-	// Insert our element at the bottom of the hud
-	existingRow.parentElement.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
-	return newHudRow;
+	// Create a new row element
+	let newRow = createElement("tr", {
+		id: `ovv-row-${hookName}-progr`,
+		class: "MuiTableRow-root css-1dix92e"
+	})
+	// Create a new column element
+	let newHeader = createElement("th", {
+		class: "jss11 css-hadb7u",
+		attributes: {
+				"scope": "row",
+				"colspan": "2",
+				"style": "padding-bottom: 2px; position: relative; top: -3px;"
+		}
+	})
+	// Create a new bar background element
+	let newEmptyBar = createElement("span", {
+		class: "css-koo86v",
+		attributes: {
+			"role": "progressbar",
+			"aria-valuenow": "0",
+			"aria-valuemin": "0",
+			"aria-valuemax": "100",
+			"style": `background-color: ${backgroundColor};`  // set color of "empty" parts of bar
+		}
+	})
+	// Create a new bar fill element
+	let newFillBar = createElement("span", {
+		class: "css-14usnx9",
+		attributes: { "style": `transform: translateX(-100%); background-color: ${color};` } // set color of "full" parts of bar
+	})
+	// Properly nest our newly made elements
+	newRow.appendChild(newHeader);
+	newHeader.appendChild(newEmptyBar);
+	newEmptyBar.appendChild(newFillBar);
+	// Insert our row element at the bottom of the hud
+	d.getElementById(`ovv-row-extra`).parentElement.insertBefore(newRow, d.getElementById(`ovv-row-extra`));
+	return newRow;
 };
 
 /** Inserts a progress bar at the bottom of the hud.
@@ -560,7 +581,7 @@ function AddLine(lineNum) {
  * @param {string} content - Text content of the tooltip.
  * @param {any} params - (optional) Dictionary of any additional params you want to use to further customizee this tooltip.
  * - Supported params:
- * tooltiptextAlign
+ * - tooltiptextAlign
  * */
 function AddTooltip(hookName, content, params = {}) {
 	params.tooltiptext = content
@@ -709,10 +730,10 @@ function MakeToolTipStyle() {
  * @param {string} tagName - name of element tag, like "span", "div", "a", "style", etc.
  * @param {any} params - Dictionary of relevant parameters.
  * - Supported param keys are:
- * id, className, innerHTML, innerText, tabIndex, tooltiptext, tooltiptextAlign
+ * - id, class, innerHTML, innerText, tabIndex, tooltiptext, tooltiptextAlign, attributes
  * - All param key values must be strings, EXCEPT attributes, which uses a string:string dict of attributes & their desired values
  * - Example:
- * {id: "hook-name", innerText: "Hello World", attributes: {"colspan": "1", "scope": "row"}}
+ * - {id: "hook-name", innerText: "Hello World", attributes: {"colspan": "1", "scope": "row"}}
  * */
 function createElement(tagName, params = {}) {
 	const el = d.createElement(tagName);
