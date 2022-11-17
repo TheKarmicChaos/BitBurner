@@ -210,7 +210,20 @@ export async function main(ns) {
 			* - A dict with keys: all augs from all factions + gang, and vals: object containing aug cost, repreq, and required faction. */
 			async function UpdAugs() {
 				let gangdata;
-				if (hasGang) gangdata = await nstb.RunCom(ns, 'ns.gang.getGangInformation()'); // Update gang data
+				if (hasGang) { // Add gang augs first so buying an aug from gang takes priority over buying the same aug from regular factions.
+					gangdata = await nstb.RunCom(ns, 'ns.gang.getGangInformation()'); // Update gang data
+					let currentGangAugs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationsFromFaction()', [gangdata.faction]) // Arr of all augs available through gang
+					for (let aug of currentGangAugs) {
+						if (!ownedAugs.includes(aug) && await HaveAugPreReqs(aug) && !auglist.includes(aug)) {
+							if ((aug == "QLink" && player.money >= 50e12) || aug != "QLink") { // exclude QLink as long as we don't have >$200t
+								let reqs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationCost()', [aug]);
+								let repreq = reqs[0]; let cost = reqs[1];
+								augData.push({ "name": aug, "cost": cost, "repreq": repreq, "faction": gangdata.faction })
+								auglist.push(aug);
+							}
+						}
+					};
+				}
 				let factions = player.factions;
 				for (let faction of factions) {
 					// Iterate through all non-special and non-gang factions
@@ -218,24 +231,13 @@ export async function main(ns) {
 						let factionaugs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationsFromFaction()', [faction])
 						//ns.print(`\n${faction}:\n${factionaugs}`)
 						for (let aug of factionaugs) {
-							if (!ownedAugs.includes(aug) && await HaveAugPreReqs(aug)) {
+							if (!ownedAugs.includes(aug) && await HaveAugPreReqs(aug) && !auglist.includes(aug)) {
 								let reqs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationCost()', [aug]);
 								let repreq = reqs[0]; let cost = reqs[1];
 								augData.push({ "name": aug, "cost": cost, "repreq": repreq, "faction": faction })
+								auglist.push(aug);
 							}
 						}
-					}
-					else if (hasGang && faction == gangdata.faction) {
-						let currentGangAugs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationsFromFaction()', [gangdata.faction]) // Arr of all augs available through gang
-						for (let aug of currentGangAugs) {
-							if (!ownedAugs.includes(aug) && await HaveAugPreReqs(aug)) {
-								if ((aug == "QLink" && player.money >= 200e12) || aug != "QLink") { // exclude QLink as long as we don't have >$200t
-									let reqs = await nstb.RunCom(ns, 'ns.singularity.getAugmentationCost()', [aug]);
-									let repreq = reqs[0]; let cost = reqs[1];
-									augData.push({ "name": aug, "cost": cost, "repreq": repreq, "faction": gangdata.faction })
-								}
-							}
-						};
 					}
 				};
 				// sort augData from most to least expensive
@@ -243,7 +245,8 @@ export async function main(ns) {
 					if (x.cost > y.cost) { return -1; }
 					if (x.cost < y.cost) { return 1; }
 					return 0;
-				}); //ns.print("augData:\n", augData)
+				});
+				auglist = [] // wipe auglist so we can add augs in sorted order
 				for (let augObj of augData) {
 					auglist.push(augObj.name);
 					augDict[augObj.name] = augObj
