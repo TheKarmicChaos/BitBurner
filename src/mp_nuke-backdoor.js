@@ -35,8 +35,8 @@ export async function main(ns) {
 			let GLOBAL_VARS = nstb.getGlobals(ns);
 			let backdooredServs = GLOBAL_VARS["backdoors"]
 			// if we have root access but no backdoor
-			if (ns.hasRootAccess(node) && !backdooredServs.includes(node)) {
-				 // get at least 2 connections away from node, to test backdoor
+			if (ns.getServerRequiredHackingLevel(node) <= ns.getHackingLevel() && ns.hasRootAccess(node) && !backdooredServs.includes(node)) {
+				// get at least 2 connections away from node, to test backdoor
 				if (node != 'darkweb') { ns.singularity.connect('home'); ns.singularity.connect('darkweb'); }
 				else if (node == 'darkweb') { ns.singularity.connect('home'); ns.singularity.connect('n00dles'); }
 
