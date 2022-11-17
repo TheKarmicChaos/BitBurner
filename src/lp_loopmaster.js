@@ -16,7 +16,7 @@ export async function main(ns) {
 	while (true) {
 		GLOBAL_VARS = nstb.getGlobals(ns);
 		let player = await nstb.RunCom(ns, 'ns.getPlayer()');
-		const ownedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()', [true])
+		let ownedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()', [true])
 		const installedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
 		let queuedAugs = tb.ArrSubtract(ownedAugs, installedAugs, 1);
 
