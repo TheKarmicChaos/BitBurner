@@ -14,7 +14,7 @@ Before you do, make sure you have already done the following.
 
 - Delete both imports.
 - Ctrl + F "REMOVE THIS LINE BEFORE RUNNING" and delete all 6 lines with that comment.
-- (Optional) Tweak the constants under the section labelled "Settings" (before the main function) to fit to your liking.
+- (Optional) Tweak the consts/vars under the section labelled "Settings" (before the main function) to fit to your liking.
 - WIP
 
 Step 1: Creating Your Hud -----------------
@@ -581,6 +581,22 @@ function AddTooltip(hookName, content, params = {}) {
 	} else { return formattedNum; }
 };
 
+// WIP
+function AddButton(rowhook, column, text, func){
+	/*<div class="MuiBox-root css-1dskn3o">
+	<button class="MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeMedium css-jhk36g" tabindex="0" type="button" aria-label="kill all scripts">
+	<svg class="MuiSvgIcon-root MuiSvgIcon-colorError MuiSvgIcon-fontSizeMedium css-ahfcdp" focusable="false" viewBox="0 0 24 24" aria-hidden="true" data-testid="ClearAllIcon" aria-label="Kill all running scripts">
+		<path d="M5 13h14v-2H5v2zm-2 4h14v-2H3v2zM7 7v2h14V7H7z">
+		</path>
+	</svg>
+	<span class="MuiTouchRipple-root css-w0pj6f">
+	</span>
+	</button>
+	</div>*/
+}
+
+
+
 // Incomplete - this function works, but not as intended.
 function MakeToolTipFromDict(dict, format = `%key%: %val%`, exclude0 = false) {
 	let entries = [];
@@ -603,39 +619,43 @@ function MakeToolTipFromDict(dict, format = `%key%: %val%`, exclude0 = false) {
 // Helper & Setup Functions - DO NOT USE - DELETE/MODIFY AT YOUR OWN RISK
 // -------------------------------------------------------------------------------------
 
-/** Initializes the hud for editing */
+/** Initializes the hud for editing & handles changing default hud elements to fit your settings.*/
 function InitHud() {
-	// Implement all hud settings -- NOTE: THESE CONFLICT WITH TOOLTIPS
-	//ovvTableCont.style.maxHeight = `${maxHudHeight}px`;
-	//ovvTableCont.style.transition = "all .2s";
-	//ovvTableCont.style.overflow = "scroll";
-
 	let hooknames = ["hp", "money", "str", "def", "dex", "agi", "cha", "int", "extra"];
 	let progrhooks = ["str", "def", "dex", "agi", "cha", "int", "hack"]
 	// give every default hud element a row-level hook
 	for (let hook of hooknames) {
 		let rowElement = d.getElementById(`ovv-row-${hook}`); 
-		if (rowElement !== null) continue;
+		if (rowElement !== null) continue; // only proceed if the row-hook doesn't exist yet
 		if (hook == "extra") { d.getElementById(`overview-extra-hook-0`).parentElement.parentElement.id = `ovv-row-extra` }
 		else { d.getElementById(`overview-${hook}-hook`).parentElement.parentElement.id = `ovv-row-${hook}`}
 		if (progrhooks.includes(hook)) { d.getElementById(`ovv-row-${hook}`).nextSibling.id = `ovv-row-${hook}-progr`}
 	}
-	// fix the broken hack hook in the default hud.
+	// If the element of this id doesn't exist, then this is the first time InitHud has run, so run the following code.
 	let rowElement = d.getElementById(`ovv-row-hack`);
-	if (rowElement !== null) return;
-	d.getElementById("overview-hack-hook").parentElement.parentElement.previousSibling.previousSibling.id = "ovv-row-hack";
-	let nodeToDel = d.getElementById("overview-hack-hook").parentElement.parentElement;
-	d.getElementById("overview-hack-hook").parentElement.parentElement.parentElement.removeChild(nodeToDel);
-	d.getElementById("ovv-row-hack").nextSibling.id = `ovv-row-hack-progr`;
-	// Remove all separator lines from the default hud.
-	d.getElementById("ovv-row-agi").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
-	d.getElementById("ovv-row-int").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
-	// Tidy up the game's messy css class names
-	d.getElementById("ovv-row-agi").parentElement.querySelectorAll("th").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-sizeMedium ", ""))
-	d.getElementById("ovv-row-agi").parentElement.querySelectorAll("td").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-alignRight MuiTableCell-sizeMedium ", ""))
-	d.getElementById("ovv-row-agi").parentElement.querySelectorAll("p").forEach((el) => el.className = el.className.replace("MuiTypography-root MuiTypography-body1 ", ""))
-	d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-root MuiLinearProgress-colorPrimary MuiLinearProgress-determinate ", ""))
-	d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-bar MuiLinearProgress-barColorPrimary ", ""))
+	if (rowElement === null) { 
+		// fix the broken hack hook in the default hud.
+		d.getElementById("overview-hack-hook").parentElement.parentElement.previousSibling.previousSibling.id = "ovv-row-hack";
+		let nodeToDel = d.getElementById("overview-hack-hook").parentElement.parentElement;
+		d.getElementById("overview-hack-hook").parentElement.parentElement.parentElement.removeChild(nodeToDel);
+		d.getElementById("ovv-row-hack").nextSibling.id = `ovv-row-hack-progr`;
+		// Remove all separator lines from the default hud.
+		d.getElementById("ovv-row-agi").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
+		d.getElementById("ovv-row-int").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
+		// Tidy up the game's messy css class names
+		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("th").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-sizeMedium ", ""))
+		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("td").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-alignRight MuiTableCell-sizeMedium ", ""))
+		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("p").forEach((el) => el.className = el.className.replace("MuiTypography-root MuiTypography-body1 ", ""))
+		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-root MuiLinearProgress-colorPrimary MuiLinearProgress-determinate ", ""))
+		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-bar MuiLinearProgress-barColorPrimary ", ""))
+	}
+	// Implement all hud settings
+	// NOTE: THESE CONFLICT WITH TOOLTIPS
+	//ovvTableCont.style.maxHeight = `${maxHudHeight}px`;
+	//ovvTableCont.style.transition = "all .2s";
+	//ovvTableCont.style.overflow = "scroll";
+}
+
 }
 
 /** Creates or updates a custom css style used for our custom-made tooltips */
@@ -733,17 +753,3 @@ function formatNumberShort(num, maxSignificantFigures = 6, maxDecimalPlaces = 3)
     // TODO: A number like 9.999 once rounded to show 3 sig figs, will become 10.00, which is now 4 sig figs.
     return ((sign < 0) ? "-" : "") + num.toFixed(Math.max(0, Math.min(maxDecimalPlaces, maxSignificantFigures - Math.floor(1 + Math.log10(num))))) + symbols[i];
 }
-
-/* HTML of a button, for reference */
-/*
-<div class="MuiBox-root css-1dskn3o">
-<button class="MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeMedium css-jhk36g" tabindex="0" type="button" aria-label="kill all scripts">
-   <svg class="MuiSvgIcon-root MuiSvgIcon-colorError MuiSvgIcon-fontSizeMedium css-ahfcdp" focusable="false" viewBox="0 0 24 24" aria-hidden="true" data-testid="ClearAllIcon" aria-label="Kill all running scripts">
-	  <path d="M5 13h14v-2H5v2zm-2 4h14v-2H3v2zM7 7v2h14V7H7z">
-	  </path>
-   </svg>
-   <span class="MuiTouchRipple-root css-w0pj6f">
-   </span>
-</button>
-</div>
-*/
