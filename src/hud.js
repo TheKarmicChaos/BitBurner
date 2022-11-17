@@ -314,9 +314,7 @@ function AddTextRow(hookName, color) {
 	// Override the game's style parameters by inserting our own.
 	newHudRow.querySelectorAll("p").forEach((el) => el.style = `color: ${color};${textStyleParams};`);
 	// Set the innerText for all p children to be empty (making the row invisible)
-	newHudRow.querySelectorAll("p")[0].innerText = "";
-	newHudRow.querySelectorAll("p")[1].innerText = "";
-	newHudRow.querySelectorAll("p")[2].innerText = "";
+	newHudRow.querySelectorAll("p").forEach((el) => el.innerText = "");
 	// Insert our element at the bottom of the hud
 	existingRow.parentElement.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
 	if (showHiddenRows) d.getElementById(`ovv-${hookName}-0`).innerText = hookName;
@@ -345,9 +343,8 @@ function RecolorTextRow(hookToRecolor, color) {
  * */
  function UpdateTextRow(hookName, textL, textR, text3 = null) {
 	// Determine the text we want in each column
-	if (showHiddenRows) textL = hookName + ` `;
+	if (showHiddenRows) textL = hookName;
 	else if (textL == null) textL = "";
-	else textL += ` `;
 	if (textR == null) textR = "";
 	if (text3 == null) text3 = "";
 	// Update the relevant elements' innerText
@@ -369,6 +366,7 @@ function RecolorTextRow(hookToRecolor, color) {
 function AddProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
 	// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
 	if (!(bars_to_clear.includes(hookName))) bars_to_clear.push(hookName);
+	// Check if this hook already has an existing row element. If so, use that.
 	let rowElement = d.getElementById(`ovv-row-${hookName}-progr`);
 	if (rowElement !== null) return rowElement;
 	// If color or backgroundColor is from the Theme, replace them with the correct rgb/hex code
@@ -562,7 +560,7 @@ function AddLine(lineNum) {
  * @param {string} content - Text content of the tooltip.
  * @param {any} params - (optional) Dictionary of any additional params you want to use to further customizee this tooltip.
  * - Supported params:
- * - textAlign
+ * tooltiptextAlign
  * */
 function AddTooltip(hookName, content, params = {}) {
 	params.tooltiptext = content
@@ -671,12 +669,12 @@ function SimplifyWorkInfoRows() {
 	if (bottomEls.length == 0) return;
 	// Iterate through the bottom hud elements, changing attributes based on their purpose
 	for (let el of bottomEls) {
+		el.parentElement.setAttribute("colspan", 3);
 		// make all text rows to take up less horizontal space and align to the left
-		el.querySelectorAll("p").forEach((elp) => elp.style = `padding: 0px 0px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; text-align: left;`)
+		el.querySelectorAll("p").forEach((elp) => elp.style = `padding: 0px 0px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;`)
+		el.querySelectorAll("br").forEach((elbr) => elbr.outerHTML = " ");
 		// make the Focus button occupy less space
-		el.querySelectorAll("button").forEach((elbutton) => elbutton.style = "padding: 0px 0px; margin: 0px 0px 0px;")
-		// make the Focus button align to the right
-		el.querySelectorAll("button").forEach((elbutton) => elbutton.parentElement.style = "text-align: right;")
+		el.querySelectorAll("button").forEach((elbutton) => elbutton.style = "padding: 0px 0px; margin: 1px 0px 0px;")
 		// id the "th" (column element) for the Focus button
 		el.querySelectorAll("button").forEach((elbutton) => elbutton.parentElement.id = "ovv-focus-button")
 	}
@@ -684,22 +682,9 @@ function SimplifyWorkInfoRows() {
 	let firstEl = bottomEls[0].querySelector("p")
 	if (firstEl !== null) {
 		// Add top padding to the first element
-		firstEl.style = `padding: 3px 0px 0px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; text-align: left;`;
+		firstEl.style = `padding: 3px 0px 0px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;`;
 		// If needed, shorten the abnoxiously long crime message of the first element "You are attempting to ..."
 		firstEl.innerText = firstEl.innerText.replace("You are attempting to", "Committing");
-	}
-	let focusButton = d.getElementById("ovv-focus-button");
-	// if the focus button column has no previous sibling, it is still in its own row, so relocate it to be in the same row as the work details
-	if (focusButton !== null && focusButton.previousSibling === null) {
-		let workDetails = focusButton.parentElement.previousSibling.firstChild
-		// insert button before details
-		workDetails.parentElement.insertBefore(focusButton, workDetails);
-		// swap places so details are before button
-		workDetails.parentElement.insertBefore(workDetails, focusButton);
-		// make both elements have colspan of 1
-		workDetails.setAttribute("colspan", "1")
-		focusButton.setAttribute("colspan", "1")
-		// DO NOT remove the residual row element where focus button used to be. This causes the game to enter recovery mode when you click "Focus"
 	}
 }
 
@@ -732,7 +717,6 @@ function createElement(tagName, params = {}) {
 	if (params.innerHTML !== undefined) { el.innerHTML = params.innerHTML; }
 	if (params.innerText !== undefined) { el.innerText = params.innerText; }
 	if (params.tabIndex !== undefined) { el.tabIndex = params.tabIndex; }
-
 	// This is one of many helper functions that is called in this function, but is the only one we need.
 	setElementTooltip(el, params);
 	return el;
@@ -760,7 +744,7 @@ function setElementTooltip(el, params) {
 				}),
 			);
 			// Apply all additional parameters that were specified. Add more checks here as needed
-			if (params.textAlign !== undefined) d.getElementById(`${el.id}-tooltip`).style.textAlign = params.textAlign;
+			if (params.tooltiptextAlign !== undefined) d.getElementById(`${el.id}-tooltip`).style.textAlign = params.tooltiptextAlign;
 			// Set the tooltip to start out as invisible
 			d.getElementById(`${el.id}-tooltip`).style.visibility = "hidden";
 			d.getElementById(`${el.id}-tooltip`).style.opacity = "0";
