@@ -707,7 +707,12 @@ function MakeToolTipStyle() {
 
 /** Heavily modified helper function from the game's source code for creating new elements.
  * @param {string} tagName - name of element tag, like "span", "div", "a", "style", etc.
- * @param {any} params - Dictionary of relevant parameters
+ * @param {any} params - Dictionary of relevant parameters.
+ * - Supported param keys are:
+ * id, className, innerHTML, innerText, tabIndex, tooltiptext, tooltiptextAlign
+ * - All param key values must be strings, EXCEPT attributes, which uses a string:string dict of attributes & their desired values
+ * - Example:
+ * {id: "hook-name", innerText: "Hello World", attributes: {"colspan": "1", "scope": "row"}}
  * */
 function createElement(tagName, params = {}) {
 	const el = d.createElement(tagName);
@@ -717,6 +722,13 @@ function createElement(tagName, params = {}) {
 	if (params.innerHTML !== undefined) { el.innerHTML = params.innerHTML; }
 	if (params.innerText !== undefined) { el.innerText = params.innerText; }
 	if (params.tabIndex !== undefined) { el.tabIndex = params.tabIndex; }
+	// custom-made attributes logic
+	if (params.attributes !== undefined) {
+		try {
+			for (let attName of Object.keys(params.attributes)) el.setAttribute(attName, params.attributes[attName]);
+		} catch (err) { throw new Error(`Invalid createElement attributes: ${err}`) }
+	}
+	
 	// This is one of many helper functions that is called in this function, but is the only one we need.
 	setElementTooltip(el, params);
 	return el;
