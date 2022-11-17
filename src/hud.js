@@ -105,6 +105,7 @@ let updArg3;
 // Settings ----------------------------------------------------------------------------
 const showHiddenRows = false; // Debug tool to unhide all hidden text rows; only applies to rows that are currently being updated, or to all rows when resetting hud via "kill all running scripts"
 const lineColSpan = 2; // Number of columns your separator lines should occupy.
+const simplifyWorkInfo = true; // If true, replaces the default "Working at ..." text, info, button, etc. at the bottom of the hud with a much more compact version.
 let ToolTipStyleParams = // Default css style parameters used for your tooltips.
 `font-family: "Lucida Console", "Lucida Sans Unicode", "Fira Mono", Consolas, "Courier New", Courier, monospace, "Times New Roman";
 padding: 4px 8px;
@@ -650,12 +651,56 @@ function InitHud() {
 		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-bar MuiLinearProgress-barColorPrimary ", ""))
 	}
 	// Implement all hud settings
+	if (simplifyWorkInfo) SimplifyWorkInfoRows();
 	// NOTE: THESE CONFLICT WITH TOOLTIPS
 	//ovvTableCont.style.maxHeight = `${maxHudHeight}px`;
 	//ovvTableCont.style.transition = "all .2s";
 	//ovvTableCont.style.overflow = "scroll";
 }
 
+/** Replaces the default "Working at ..." text, info, button, etc. at the bottom of the hud with a much more compact version.*/
+function SimplifyWorkInfoRows() {
+	// Make an array of the current bottom hud elements ("Working for...", Focus button, etc.)
+	let bottomEls = []
+	let siblingEl = d.getElementById("ovv-row-extra").nextSibling
+	while (siblingEl !== null) {
+		bottomEls.push(siblingEl);
+		siblingEl = siblingEl.nextSibling;
+	}
+	// If there are no elements at the bottom of the hud, stop here.
+	if (bottomEls.length == 0) return;
+	// Iterate through the bottom hud elements, changing attributes based on their purpose
+	for (let el of bottomEls) {
+		// make all text rows to take up less horizontal space and align to the left
+		el.querySelectorAll("p").forEach((elp) => elp.style = `padding: 0px 0px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; text-align: left;`)
+		// make the Focus button occupy less space
+		el.querySelectorAll("button").forEach((elbutton) => elbutton.style = "padding: 0px 0px; margin: 0px 0px 0px;")
+		// make the Focus button align to the right
+		el.querySelectorAll("button").forEach((elbutton) => elbutton.parentElement.style = "text-align: right;")
+		// id the "th" (column element) for the Focus button
+		el.querySelectorAll("button").forEach((elbutton) => elbutton.parentElement.id = "ovv-focus-button")
+	}
+	// If the first element is a text element
+	let firstEl = bottomEls[0].querySelector("p")
+	if (firstEl !== null) {
+		// Add top padding to the first element
+		firstEl.style = `padding: 3px 0px 0px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; text-align: left;`;
+		// If needed, shorten the abnoxiously long crime message of the first element "You are attempting to ..."
+		firstEl.innerText = firstEl.innerText.replace("You are attempting to", "Committing");
+	}
+	let focusButton = d.getElementById("ovv-focus-button");
+	// if the focus button column has no previous sibling, it is still in its own row, so relocate it to be in the same row as the work details
+	if (focusButton !== null && focusButton.previousSibling === null) {
+		let workDetails = focusButton.parentElement.previousSibling.firstChild
+		// insert button before details
+		workDetails.parentElement.insertBefore(focusButton, workDetails);
+		// swap places so details are before button
+		workDetails.parentElement.insertBefore(workDetails, focusButton);
+		// make both elements have colspan of 1
+		workDetails.setAttribute("colspan", "1")
+		focusButton.setAttribute("colspan", "1")
+		// DO NOT remove the residual row element where focus button used to be. This causes the game to enter recovery mode when you click "Focus"
+	}
 }
 
 /** Creates or updates a custom css style used for our custom-made tooltips */
