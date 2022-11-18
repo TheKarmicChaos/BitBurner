@@ -167,9 +167,14 @@ export async function main(ns) {
 		var canrecruitmore = await nstb.RunCom(ns, 'ns.gang.canRecruitMember()');
 		while (canrecruitmore == true) {
 			members = await nstb.RunCom(ns, 'ns.gang.getMemberNames()');
-			let prevmem = members[members.length-1]
-			var didrecruit = await nstb.RunCom(ns, 'ns.gang.recruitMember()', ["Thug-" + (Number(prevmem.split("-")[1]) + 1)]);
-			if (didrecruit == true) { ns.toast("RECRUITED: Thug-" + (Number(prevmem.split("-")[1]) + 1), "warning", 10000) }
+			if (members.length == 0) {
+				var didrecruit = await nstb.RunCom(ns, 'ns.gang.recruitMember()', ["Thug-0"]);
+				if (didrecruit == true) { ns.toast("RECRUITED: Thug-0", "warning", 10000) }
+			} else if (members.length > 0) {
+				let prevmem = members[members.length-1]
+				var didrecruit = await nstb.RunCom(ns, 'ns.gang.recruitMember()', ["Thug-" + (Number(prevmem.split("-")[1]) + 1)]);
+				if (didrecruit == true) { ns.toast("RECRUITED: Thug-" + (Number(prevmem.split("-")[1]) + 1), "warning", 10000) }
+			}
 			canrecruitmore = await nstb.RunCom(ns, 'ns.gang.canRecruitMember()');
 			await ns.sleep(10);
 		}
