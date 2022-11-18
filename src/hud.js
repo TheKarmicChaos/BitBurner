@@ -105,7 +105,7 @@ let updArg3;
 // Settings ----------------------------------------------------------------------------
 const showHiddenRows = false; // Debug tool to unhide all hidden text rows; only applies to rows that are currently being updated, or to all rows when resetting hud via "kill all running scripts"
 const lineColSpan = 2; // Number of columns your separator lines should occupy.
-const simplifyWorkInfo = true; // If true, replaces the default "Working at ..." text, info, button, etc. at the bottom of the hud with a much more compact version.
+const squishWorkInfo = true; // If true, modifies the default "Working at ..." text, info, button, etc. at the bottom of the hud into a much more compact version.
 let ToolTipStyleParams = // Default css style parameters used for your tooltips.
 `font-family: "Lucida Console", "Lucida Sans Unicode", "Fira Mono", Consolas, "Courier New", Courier, monospace, "Times New Roman";
 padding: 4px 8px;
@@ -593,7 +593,7 @@ function AddTooltip(hookName, content, params = {}) {
  * @param {number} num - Number to convert to standard notation
  * @param {number} decimalplaces - Number of decimal places to round to.
  * */
- function StandardNotation(num, decimalplaces = 1) {
+function StandardNotation(num, decimalplaces = 1) {
 	let formattedNum = formatNumberShort(num, 6, decimalplaces);
 	
 	if (String(num).length <= formattedNum.length && (num % 1) == 0) {
@@ -670,14 +670,14 @@ function InitHud() {
 		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-bar MuiLinearProgress-barColorPrimary ", ""))
 	}
 	// Implement all hud settings
-	if (simplifyWorkInfo) SimplifyWorkInfoRows();
-	// NOTE: THESE CONFLICT WITH TOOLTIPS
+	if (squishWorkInfo) SimplifyWorkInfoRows();
+	// NOTE: THESE SETTINGS ARE DISABLED AS THEY CONFLICT WITH TOOLTIPS
 	//ovvTableCont.style.maxHeight = `${maxHudHeight}px`;
 	//ovvTableCont.style.transition = "all .2s";
 	//ovvTableCont.style.overflow = "scroll";
 }
 
-/** Replaces the default "Working at ..." text, info, button, etc. at the bottom of the hud with a much more compact version.*/
+/** Modifies the default "Working at ..." text, info, button, etc. at the bottom of the hud into a much more compact version.*/
 function SimplifyWorkInfoRows() {
 	// Make an array of the current bottom hud elements ("Working for...", Focus button, etc.)
 	let bottomEls = []
@@ -688,7 +688,7 @@ function SimplifyWorkInfoRows() {
 	}
 	// If there are no elements at the bottom of the hud, stop here.
 	if (bottomEls.length == 0) return;
-	// Iterate through the bottom hud elements, changing attributes based on their purpose
+	// Iterate through the bottom hud elements, changing styles to be more compact
 	for (let el of bottomEls) {
 		el.parentElement.setAttribute("colspan", 3);
 		// make all text rows to take up less horizontal space and align to the left
@@ -696,15 +696,13 @@ function SimplifyWorkInfoRows() {
 		el.querySelectorAll("br").forEach((elbr) => elbr.outerHTML = " ");
 		// make the Focus button occupy less space
 		el.querySelectorAll("button").forEach((elbutton) => elbutton.style = "padding: 0px 0px; margin: 1px 0px 0px;")
-		// id the "th" (column element) for the Focus button
-		el.querySelectorAll("button").forEach((elbutton) => elbutton.parentElement.id = "ovv-focus-button")
 	}
 	// If the first element is a text element
 	let firstEl = bottomEls[0].querySelector("p")
 	if (firstEl !== null) {
-		// Add top padding to the first element
+		// Add some top padding to the first element
 		firstEl.style = `padding: 3px 0px 0px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;`;
-		// If needed, shorten the abnoxiously long crime message of the first element "You are attempting to ..."
+		// If present, shorten the abnoxiously long crime message of the first element "You are attempting to ..."
 		firstEl.innerText = firstEl.innerText.replace("You are attempting to", "Committing");
 	}
 }
@@ -729,11 +727,12 @@ function MakeToolTipStyle() {
 /** Heavily modified helper function from the game's source code for creating new elements.
  * @param {string} tagName - name of element tag, like "span", "div", "a", "style", etc.
  * @param {any} params - Dictionary of relevant parameters.
- * - Supported param keys are:
+ * - Valid keys:
  * - id, class, innerHTML, innerText, tabIndex, tooltiptext, tooltiptextAlign, attributes
- * - All param key values must be strings, EXCEPT attributes, which uses a string:string dict of attributes & their desired values
+ * - Valid value data types:
+ * - string (for all keys except attributes), {string: string} dictionary (for attributes key)
  * - Example:
- * - {id: "hook-name", innerText: "Hello World", attributes: {"colspan": "1", "scope": "row"}}
+ * - {id: "hook-name", innerText: "Hello World", attributes: {"colspan": "1", "scope": "row"} }
  * */
 function createElement(tagName, params = {}) {
 	const el = d.createElement(tagName);
