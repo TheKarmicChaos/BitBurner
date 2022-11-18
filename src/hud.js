@@ -130,10 +130,8 @@ transform-origin: top;
 transition: all 0.2s;`;
 let textStyleParams = // Default css style parameters added to the text rows in your hud (applies to all columns)
 ``;
-
 // Experimental settings (use at your own risk)
 const squishWorkInfo = false; // If true, modifies the default "Working at ..." text, info, button, etc. at the bottom of the hud into a much more compact version.
-
 // Unused settings
 const maxHudHeight = 1000 // Maximum vertical space (in pixels) the hud can occupy before requiring the player to scroll.
 const CAr = "◄"; // Text used for "Contracted dropdown" button
@@ -205,10 +203,10 @@ export async function main(ns) {
 		AddTextRow("gangtimer", "info");
 		AddTextRow("augtimer", "info");
 		AddLine(4);
-		AddButton("buttons1", 0, "run-scanhud", "scan-hud.js", ns.run, [`scan-hud.js`], "right");
-		AddButton("buttons1", 1, "run-testfile", "test.js", ns.run, [`test.js`], "left");
-		AddButton("buttons2", 0, "toast-test", "Toast!", ns.toast, [`clicked!`, "success", 500]);
-		AddButton("buttons2", 1, "toast2", "Click Me!");
+		AddButton("buttons1", 0, "run-scanhud", "scan-hud.js", "right", ns.run, [`scan-hud.js`]);
+		AddButton("buttons1", 1, "run-testfile", "test.js", "left", ns.run, [`test.js`]);
+		AddButton("buttons2", 0, "toast-test", "Toast!", "right", ns.toast, [`clicked!`, "success", 500]);
+		AddButton("buttons2", 1, "missing-test", "Click Me!", "left");
 
 		// #################################################
 		// LIST YOUR LOCAL UPDATES HERE
@@ -249,8 +247,8 @@ export async function main(ns) {
 		// ##################################################################################################
 
 
-
-		switch (updType) { // If we run this file with certain args we can update hud elements from other files!
+		// If we run this file with certain args we can update hud elements from other files!
+		switch (updType) {
 			case "upd":
 				if (updArg1 == null) updArg1 = "";
 				if (updArg2 == null) updArg2 = "";
@@ -290,210 +288,330 @@ export async function main(ns) {
 				break;
 		}
 
-		// Run the stored button function for whatever button was clicked (if any were clicked)
+		// Run the stored function for whatever button was clicked (if any were clicked)
 		RunButtonCom(ns, clicked_button_temp);
 
 	} catch (err) { ns.toast("ERROR: HUD update Skipped: " + String(err), "error", 1000); }
+}
 
 
 
+/* ==================================================================================
+-------------------------------------------------------------------------------------
+
+					Functions - DELETE/MODIFY AT YOUR OWN RISK
+
+-------------------------------------------------------------------------------------
+================================================================================== */
 
 
-	// -------------------------------------------------------------------------------------
-	// Functions - DELETE/MODIFY AT YOUR OWN RISK
-	// -------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------
+// Text Row functions
+// -------------------------------------------------------------------------------------
 
-	/** Inserts a new text row at the bottom of the hud.
-	 * @param {string} hookName - Unique hook name for this text row.
-	 * - Must be distinct from all other text row hooks.
-	 * - Does not need to be distinct from progr bar hooks.
-	 * @param {string} color - Color of this row.
-	 * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
-	 * */
-	function AddTextRow(hookName, color) {
-		// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
-		if (!(hooks_to_clear.includes(hookName))) hooks_to_clear.push(hookName);
-		// Check if this hook already has an existing row element. If so, use that.
-		let rowElement = d.getElementById(`ovv-row-${hookName}`);
-		if (rowElement !== null) return rowElement;
-		// If color is from the Theme, replace it with the correct rgb/hex code
-		if (color in colors) color = colors[color];
-		// Get an existing display element from HUD.
-		let existingRow = d.getElementById(`ovv-row-hp`);
-		// Make a clone of it for our new hud element
-		let newHudRow = existingRow.cloneNode(true);
-		// give hook id to our new row-level element
-		newHudRow.id = `ovv-row-${hookName}`
-		// Remove any nested elements created by stats.js
-		newHudRow.querySelectorAll("p > p").forEach(el => el.parentElement.removeChild(el));
-		// Create hook id's for the children where we will be modifying the innerText.
-		newHudRow.querySelectorAll("p").forEach((el, i) => el.id = `ovv-${hookName}-${i}`);
-		// Remove the class responsible for color.
-		newHudRow.querySelectorAll("p").forEach((el) => el.className = `css-cxl1tz`);
-		// Override the game's style parameters by inserting our own.
-		newHudRow.querySelectorAll("p").forEach((el) => el.style = `color: ${color};${textStyleParams};`);
-		// Set the innerText for all p children to be empty (making the row invisible)
-		newHudRow.querySelectorAll("p").forEach((el) => el.innerText = "");
-		// Insert our element at the bottom of the hud
-		existingRow.parentElement.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
-		if (showHiddenRows) d.getElementById(`ovv-${hookName}-0`).innerText = hookName;
-		return newHudRow;
-	};
 
-	/** Recolors an existing custom text row.
-	 * @param {string} hookToRecolor - Hook name for the text row to recolor.
-	 * @param {string} color - New color for this text row.
-	 * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
-	 * */
-	function RecolorTextRow(hookToRecolor, color) {
-		// If color is from the Theme, replace it with the correct rgb/hex code
-		if (color in colors) color = colors[color];
-		// Replace the appropriate style colors to get the desired effect.
-		d.getElementById(`ovv-row-${hookToRecolor}`).querySelectorAll("p").forEach((el) => el.style = `color: ${color};${textStyleParams};`);
-	};
+/** Inserts a new text row at the bottom of the hud.
+ * @param {string} hookName - Unique hook name for this text row.
+ * - Must be distinct from all other text row hooks.
+ * - Does not need to be distinct from progr bar hooks.
+ * @param {string} color - Color of this row.
+ * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
+ * */
+function AddTextRow(hookName, color) {
+	// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
+	if (!(hooks_to_clear.includes(hookName))) hooks_to_clear.push(hookName);
+	// Check if this hook already has an existing row element. If so, use that.
+	let rowElement = d.getElementById(`ovv-row-${hookName}`);
+	if (rowElement !== null) return rowElement;
+	// If color is from the Theme, replace it with the correct rgb/hex code
+	if (color in colors) color = colors[color];
+	// Get an existing display element from HUD.
+	let existingRow = d.getElementById(`ovv-row-hp`);
+	// Make a clone of it for our new hud element
+	let newHudRow = existingRow.cloneNode(true);
+	// give hook id to our new row-level element
+	newHudRow.id = `ovv-row-${hookName}`
+	// Remove any nested elements created by stats.js
+	newHudRow.querySelectorAll("p > p").forEach(el => el.parentElement.removeChild(el));
+	// Create hook id's for the children where we will be modifying the innerText.
+	newHudRow.querySelectorAll("p").forEach((el, i) => el.id = `ovv-${hookName}-${i}`);
+	// Remove the class responsible for color.
+	newHudRow.querySelectorAll("p").forEach((el) => el.className = `css-cxl1tz`);
+	// Override the game's style parameters by inserting our own.
+	newHudRow.querySelectorAll("p").forEach((el) => el.style = `color: ${color};${textStyleParams};`);
+	// Set the innerText for all p children to be empty (making the row invisible)
+	newHudRow.querySelectorAll("p").forEach((el) => el.innerText = "");
+	// Insert our element at the bottom of the hud
+	existingRow.parentElement.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
+	if (showHiddenRows) d.getElementById(`ovv-${hookName}-0`).innerText = hookName;
+	return newHudRow;
+};
 
-	/** Updates a custom text row with new text in each column.
-	 * - If textL, textR, and text3 are all set to the string "null", this row will be hidden.
-	 * @param {string} hookName - Name of the hook for text row
-	 * @param {string} textL - Text to display in column 1 of this row (left side)
-	 * @param {string} textR - Text to display in column 2 of this row (right side)
-	 * @param {string} text3 - (optional) Text to display in column 3 of this row
-	 * - Default value: null
-	 * */
-	function UpdateTextRow(hookName, textL, textR, text3 = null) {
-		// Determine the text we want in each column
-		if (showHiddenRows) textL = hookName;
-		else if (textL == null) textL = "";
-		if (textR == null) textR = "";
-		if (text3 == null) text3 = "";
-		// Get each column element by id
-		let col1 = d.getElementById(`ovv-${hookName}-0`)
-		let col2 = d.getElementById(`ovv-${hookName}-1`)
-		let col3 = d.getElementById(`ovv-${hookName}-2`)
-		// Update the relevant elements' innerText (only if they exist & have a "p" tag; otherwise the column is a button)
-		if (col1 !== null && col1.tagName == "P") col1.innerHTML = textL;
-		if (col2 !== null && col2.tagName == "P") col2.innerHTML = textR;
-		if (col3 !== null && col3.tagName == "P") col3.innerHTML = text3;
-	};
 
-	/** Inserts a progress bar at the bottom of the hud.
-	 * @param {string} hookName - Unique hook name for this progress bar.
-	 * - Must be distinct from all other progress bar hooks.
-	 * - Does not need to be distinct from text row hooks.
-	 * @param {string} color - Color of the progress bar.
-	 * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
-	 * @param {string} backgroundColor - (optional) Color of the background for progress bar.
-	 * - Default value: "rgb(17, 17, 17)"
-	 * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
-	 * */
-	function AddProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
-		// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
-		if (!(bars_to_clear.includes(hookName))) bars_to_clear.push(hookName);
-		// Check if this hook already has an existing row element. If so, use that.
-		let rowElement = d.getElementById(`ovv-row-${hookName}-progr`);
-		if (rowElement !== null) return rowElement;
-		// If color or backgroundColor is from the Theme, replace them with the correct rgb/hex code
-		if (color in colors) color = colors[color];
-		if (backgroundColor in colors) backgroundColor = colors[backgroundColor];
-		// Create a new row element
-		let newRow = createElement("tr", {
-			id: `ovv-row-${hookName}-progr`,
-			class: "MuiTableRow-root css-1dix92e"
-		})
-		// Create a new column element
-		let newHeader = createElement("th", {
-			class: "jss11 css-hadb7u",
+/** Recolors an existing custom text row.
+ * @param {string} hookToRecolor - Hook name for the text row to recolor.
+ * @param {string} color - New color for this text row.
+ * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
+ * */
+function RecolorTextRow(hookToRecolor, color) {
+	// If color is from the Theme, replace it with the correct rgb/hex code
+	if (color in colors) color = colors[color];
+	// Replace the appropriate style colors to get the desired effect.
+	d.getElementById(`ovv-row-${hookToRecolor}`).querySelectorAll("p").forEach((el) => el.style = `color: ${color};${textStyleParams};`);
+};
+
+
+/** Updates a custom text row with new text in each column.
+ * - If textL, textR, and text3 are all null, this row will be hidden.
+ * @param {string} hookName - Name of the hook for text row
+ * @param {string} textL - (optional) Text to display in column 1 of this row (left side)
+ * @param {string} textR - (optional) Text to display in column 2 of this row (right side)
+ * @param {string} text3 - (optional) Text to display in column 3 of this row
+ * */
+function UpdateTextRow(hookName, textL = null, textR = null, text3 = null) {
+	// Determine the text we want in each column
+	if (showHiddenRows) textL = hookName;
+	else if (textL == null) textL = "";
+	if (textR == null) textR = "";
+	if (text3 == null) text3 = "";
+	// Get each column element by id
+	let col1 = d.getElementById(`ovv-${hookName}-0`)
+	let col2 = d.getElementById(`ovv-${hookName}-1`)
+	let col3 = d.getElementById(`ovv-${hookName}-2`)
+	// Update the relevant elements' innerText (only if they exist & have a "p" tag; otherwise the column is a button)
+	if (col1 !== null && col1.tagName == "P") col1.innerHTML = textL;
+	if (col2 !== null && col2.tagName == "P") col2.innerHTML = textR;
+	if (col3 !== null && col3.tagName == "P") col3.innerHTML = text3;
+};
+
+
+/** Adds/Updates a customizable button to an existing/new text row in the hud.
+ * @param {string} hookName - Hook name for the row where you want to insert the button.
+ * - Can be the hook of an existing text row or a new hook for a new row.
+ * If it is a new hook, the newly made text row will be inserted at the bottom of the hud.
+ * @param {number} column - The column in which to insert the button (out of 0, 1, or 2)
+ * - Default value: 0
+ * @param {string} buttonID - Unique string used to identify this button.
+ * @param {string} buttonText - Text to display within the button.
+ * @param {string} buttonAlign - (optional) Horizontal alignment of button.
+ * - Valid strings: "left", "right", "center"
+ * @param {Function} clickFunc - Function to run when the button is clicked. Do not include parenthases or args. Custom-made functions are allowed.
+ * - Example: ns.toast
+ * @param {any[]} clickFuncArgs - Array of args to run with clickFuncFunction to run when the button is clicked. Do not include parenthases or args.
+ * - Example: ["HELP IM STUCK IN THE CODE DOCUMENTATION", "warning", 1000]
+ * */
+function AddButton(hookName, column = 0, buttonID, buttonText, buttonAlign = "center", clickFunc = null, clickFuncArgs) {
+	// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
+	if (!(hooks_to_clear.includes(hookName))) hooks_to_clear.push(hookName);
+	// Check if this hook already has an existing row element. If so, use that.
+	let rowElement = d.getElementById(`ovv-row-${hookName}`);
+	// if no row under this id exists, first create a new text row specifically for this button.
+	if (rowElement === null) rowElement = AddTextRow(hookName, "primary");
+	// find the button with this ID (if it exists)
+	let buttonEl = d.getElementById(`ovv-button-${buttonID}`);
+	
+	// If a button with this ID does exist, update its attributes
+	if (buttonEl !== null) {
+		// update the parent (column) element
+		buttonEl.parentElement.style = `text-align: ${buttonAlign};`
+		buttonEl.parentElement.setAttribute("colspan", "1")
+		// update the innerText
+		buttonEl.innerText = `${buttonText}`;
+	}
+	// if no button with this ID exists, make one.
+	else {
+		// Get the hook of the text element in the appropriate column, to replace with a button
+		let elToReplace = d.getElementById(`ovv-${hookName}-${column}`);
+		// If this hook is null, it has already been replaced with a button or is not a valid column.
+		if (elToReplace === null) throw new Error(`AddButton: ${buttonText} is trying to insert into column ${column} which is already occupied by a button or doesn't exist!`);
+		// Modify the parent (column) element
+		let parentEl = elToReplace.parentElement
+		parentEl.style = `text-align: ${buttonAlign};`
+		parentEl.setAttribute("colspan", "1")
+		// Remove the text element from the column
+		parentEl.removeChild(elToReplace)
+		// Create a new button element
+		let newButton = createElement("button", {
+			class: "css-fw8wf6",
+			tabIndex: 0,
+			id: `ovv-button-${buttonID}`,
+			innerText: `${buttonText}`,
 			attributes: {
-					"scope": "row",
-					"colspan": "2",
-					"style": "padding-bottom: 2px; position: relative; top: -3px;"
+				"type": "button",
+				"style": "padding: 0px 10px; margin: 4px 4px 4px 4px;"
 			}
 		})
-		// Create a new bar background element
-		let newEmptyBar = createElement("span", {
-			class: "css-koo86v",
-			attributes: {
-				"role": "progressbar",
-				"aria-valuenow": "0",
-				"aria-valuemin": "0",
-				"aria-valuemax": "100",
-				"style": `background-color: ${backgroundColor};`  // set color of "empty" parts of bar
-			}
-		})
-		// Create a new bar fill element
-		let newFillBar = createElement("span", {
-			class: "css-14usnx9",
-			attributes: { "style": `transform: translateX(-100%); background-color: ${color};` } // set color of "full" parts of bar
-		})
-		// Properly nest our newly made elements
-		newRow.appendChild(newHeader);
-		newHeader.appendChild(newEmptyBar);
-		newEmptyBar.appendChild(newFillBar);
-		// Insert our row element at the bottom of the hud
-		d.getElementById(`ovv-row-extra`).parentElement.insertBefore(newRow, d.getElementById(`ovv-row-extra`));
-		return newRow;
-	};
+		newButton.appendChild( createElement("span", {class: "MuiTouchRipple-root css-w0pj6f"}) )
+		// Insert the new button element into the column.
+		parentEl.appendChild(newButton);
+		buttonEl = newButton;
+		//buttonEl.removeEventListener("mouseup", listenFunc);
+		buttonEl.addEventListener("click", ((e) => { clicked_button = buttonID; }));
+	}
 
-	/** Inserts a progress bar at the bottom of the hud.
-	 * @param {string} hookName - Unique hook name for this progress bar.
-	 * - Must be distinct from all other progress bar hooks.
-	 * - Does not need to be distinct from text row hooks.
-	 * @param {string} color - Color of the progress bar.
-	 * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
-	 * @param {string} backgroundColor - (optional) Color of the background for progress bar.
-	 * - Default value: "rgb(17, 17, 17)"
-	 * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
-	 * */
-	function RecolorProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
-		// If color or backgroundColor is from the Theme, replace them with the correct rgb/hex code
-		if (color in colors) color = colors[color];
-		if (backgroundColor in colors) backgroundColor = colors[backgroundColor];
-		// Update the style of the second-depth child, setting "background-color" to the desired color for "empty" parts of bar
-		let backElement = d.getElementById(`ovv-row-${hookName}-progr`).firstChild.firstChild
-		backElement.style = `background-color: ${backgroundColor};`;
-		// get existing HTML
-		let curHTML = backElement.parentElement.innerHTML;
-		// split the HTML so we get the sections we want to edit. We can't edit style directly since there are other style paramaters.
-		let htmlL = curHTML.split("; background-color: ")[0]
-		let htmlR = curHTML.split(`;">`)[1];
-		// Update the style of the deepest child, setting "background-color" to the desired color for "full" parts of bar
-		backElement.innerHTML = `${htmlL}; background-color: ${color};">${htmlR}`;
+	// If no function was specified for this button, set up a placeholder function to warn the player
+	if (clickFunc === null || clickFunc === undefined) {
+		clickFunc = alert
+		clickFuncArgs = ["WARNING: This button lacks a function!"]
+	}
+	// Create the function to run when the button is clicked, and store it in button_funcs
+	button_funcs[buttonID] = function() {
+		try { clickFunc(...clickFuncArgs); }
+		catch(err) { throw new Error(`Click event listener threw an error while executing function - ${String(err)}`)}
 	};
+	return buttonEl;
+};
 
-	/** Updates a progress bar and its tooltip with a new percentage.
-	 * - If textL, textR, and text3 are all set to the string "null", this row will be hidden.
-	 * @param {string} hookName - Name of the hook for text row
-	 * @param {number} curAmt - How much of the "thing" we currently have
-	 * @param {number} maxAmt - How much of the "thing" we need to have in order for progr bar to be 100% full.
-	 * */
-	function UpdateProgrBar(hookName, curAmt, maxAmt) {
-		let elementToUpdate = d.getElementById(`ovv-row-${hookName}-progr`).firstChild.firstChild
-		// calculate the percentage progress
-		let remaining =  Math.max(0, maxAmt - curAmt)
-		let percent = Math.min(curAmt, maxAmt) * 100 / maxAmt
-		// update the tooltip
-		let ttContent = `<strong>Progress:</strong> ${StandardNotation(Math.abs(curAmt), 3)} / ${StandardNotation(Math.abs(maxAmt), 3)}<br /><strong>Remaining:</strong> ${StandardNotation(remaining, 3)} (${percent.toFixed(2)}%)`
-		AddTooltip(`${hookName}-progr`, ttContent, {textAlign: "right"});
-		// get existing HTML
-		let curHTML = elementToUpdate.innerHTML;
-		// split the HTML so we get the sections we want to edit. We can't edit style directly since there are other style paramaters.
-		let htmlL = curHTML.split("transform: translateX(")[0]
-		let htmlR = curHTML.split("%);")[1];
-		// Update the style of the deepest child, setting "transform" to "translateX(-N%)" where N is the inverse percentage of the progress bar's completion. 
-		elementToUpdate.innerHTML = `${htmlL}transform: translateX(-${(100 - percent).toFixed(2)}%);${htmlR}`;
-	};
 
-	/** Hides a visbile progress bar on the hud.
-	 * @param {string} hookName - Name of the hook for the progress bar
-	 * @param {string} visibilityChange - String telling the function what to do to the visibility of the progress bar.
-	 * - Valid inputs are "show", "hide", or "toggle"
-	 * */
-	function ToggleProgrBar(hookName, visibilityChange) {
-		let rowElement = d.getElementById(`ovv-row-${hookName}-progr`);
-		if (rowElement !== null) {
-			var barElement = rowElement.firstChild.firstChild.firstChild // deepest child
-			switch (visibilityChange) {
-				case "show":
+// -------------------------------------------------------------------------------------
+// Progress Bar functions
+// -------------------------------------------------------------------------------------
+
+
+/** Inserts a progress bar at the bottom of the hud.
+ * @param {string} hookName - Unique hook name for this progress bar.
+ * - Must be distinct from all other progress bar hooks.
+ * - Does not need to be distinct from text row hooks.
+ * @param {string} color - Color of the progress bar.
+ * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
+ * @param {string} backgroundColor - (optional) Color of the background for progress bar.
+ * - Default value: "rgb(17, 17, 17)"
+ * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
+ * */
+function AddProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
+	// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
+	if (!(bars_to_clear.includes(hookName))) bars_to_clear.push(hookName);
+	// Check if this hook already has an existing row element. If so, use that.
+	let rowElement = d.getElementById(`ovv-row-${hookName}-progr`);
+	if (rowElement !== null) return rowElement;
+	// If color or backgroundColor is from the Theme, replace them with the correct rgb/hex code
+	if (color in colors) color = colors[color];
+	if (backgroundColor in colors) backgroundColor = colors[backgroundColor];
+	// Create a new row element
+	let newRow = createElement("tr", {
+		id: `ovv-row-${hookName}-progr`,
+		class: "MuiTableRow-root css-1dix92e"
+	})
+	// Create a new column element
+	let newHeader = createElement("th", {
+		class: "jss11 css-hadb7u",
+		attributes: {
+				"scope": "row",
+				"colspan": "2",
+				"style": "padding-bottom: 2px; position: relative; top: -3px;"
+		}
+	})
+	// Create a new bar background element
+	let newEmptyBar = createElement("span", {
+		class: "css-koo86v",
+		attributes: {
+			"role": "progressbar",
+			"aria-valuenow": "0",
+			"aria-valuemin": "0",
+			"aria-valuemax": "100",
+			"style": `background-color: ${backgroundColor};`  // set color of "empty" parts of bar
+		}
+	})
+	// Create a new bar fill element
+	let newFillBar = createElement("span", {
+		class: "css-14usnx9",
+		attributes: { "style": `transform: translateX(-100%); background-color: ${color};` } // set color of "full" parts of bar
+	})
+	// Properly nest our newly made elements
+	newRow.appendChild(newHeader);
+	newHeader.appendChild(newEmptyBar);
+	newEmptyBar.appendChild(newFillBar);
+	// Insert our row element at the bottom of the hud
+	d.getElementById(`ovv-row-extra`).parentElement.insertBefore(newRow, d.getElementById(`ovv-row-extra`));
+	return newRow;
+};
+
+
+/** Recolors an existing progress bar.
+ * @param {string} hookName - Unique hook name for this progress bar.
+ * - Must be distinct from all other progress bar hooks.
+ * - Does not need to be distinct from text row hooks.
+ * @param {string} color - Color of the progress bar.
+ * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
+ * @param {string} backgroundColor - (optional) Color of the background for progress bar.
+ * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
+ * */
+function RecolorProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
+	// If color or backgroundColor is from the Theme, replace them with the correct rgb/hex code
+	if (color in colors) color = colors[color];
+	if (backgroundColor in colors) backgroundColor = colors[backgroundColor];
+	// Update the style of the second-depth child, setting "background-color" to the desired color for "empty" parts of bar
+	let backElement = d.getElementById(`ovv-row-${hookName}-progr`).firstChild.firstChild
+	backElement.style = `background-color: ${backgroundColor};`;
+	// get existing HTML
+	let curHTML = backElement.parentElement.innerHTML;
+	// split the HTML so we get the sections we want to edit. We can't edit style directly since there are other style paramaters.
+	let htmlL = curHTML.split("; background-color: ")[0]
+	let htmlR = curHTML.split(`;">`)[1];
+	// Update the style of the deepest child, setting "background-color" to the desired color for "full" parts of bar
+	backElement.innerHTML = `${htmlL}; background-color: ${color};">${htmlR}`;
+};
+
+
+/** Updates a progress bar and its tooltip with a new percentage.
+ * - If textL, textR, and text3 are all set to the string "null", this row will be hidden.
+ * @param {string} hookName - Name of the hook for text row
+ * @param {number} curAmt - How much of the "thing" we currently have
+ * @param {number} maxAmt - How much of the "thing" we need to have in order for progr bar to be 100% full.
+ * */
+function UpdateProgrBar(hookName, curAmt, maxAmt) {
+	let elementToUpdate = d.getElementById(`ovv-row-${hookName}-progr`).firstChild.firstChild
+	// calculate the percentage progress
+	let remaining =  Math.max(0, maxAmt - curAmt)
+	let percent = Math.min(curAmt, maxAmt) * 100 / maxAmt
+	// update the tooltip
+	let ttContent = `<strong>Progress:</strong> ${StandardNotation(Math.abs(curAmt), 3)} / ${StandardNotation(Math.abs(maxAmt), 3)}<br /><strong>Remaining:</strong> ${StandardNotation(remaining, 3)} (${percent.toFixed(2)}%)`
+	AddTooltip(`${hookName}-progr`, ttContent, {textAlign: "right"});
+	// get existing HTML
+	let curHTML = elementToUpdate.innerHTML;
+	// split the HTML so we get the sections we want to edit. We can't edit style directly since there are other style paramaters.
+	let htmlL = curHTML.split("transform: translateX(")[0]
+	let htmlR = curHTML.split("%);")[1];
+	// Update the style of the deepest child, setting "transform" to "translateX(-N%)" where N is the inverse percentage of the progress bar's completion. 
+	elementToUpdate.innerHTML = `${htmlL}transform: translateX(-${(100 - percent).toFixed(2)}%);${htmlR}`;
+};
+
+
+/** Hides/Shows a progress bar on the hud.
+ * @param {string} hookName - Name of the hook for the progress bar
+ * @param {string} visibilityChange - String telling the function what to do to the visibility of the progress bar.
+ * - Valid inputs are "show", "hide", or "toggle"
+ * */
+function ToggleProgrBar(hookName, visibilityChange) {
+	let rowElement = d.getElementById(`ovv-row-${hookName}-progr`);
+	if (rowElement !== null) {
+		var barElement = rowElement.firstChild.firstChild.firstChild // deepest child
+		switch (visibilityChange) {
+			case "show":
+				// Replace the missing className in the deepest child
+				barElement.className = "css-14usnx9";
+				// get existing HTML
+				var curHTML = rowElement.innerHTML
+				// split the HTML so we get the sections we want to edit
+				var htmlL = curHTML.split(`-3px;"><span cl`)[0]
+				var htmlR = curHTML.split(`-3px;"><span cl`)[1]
+				// Rename "class" back to "clss" in the HTML of the second-depth child so the information can be parsed once again.
+				if (htmlR[0] != "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cla${htmlR}`; }
+				break;
+			case "hide":
+				// Remove the className from the deepest child so the HTML doesn't break
+				barElement.className = "";
+				// get existing HTML
+				var curHTML = rowElement.innerHTML
+				// split the HTML so we get the sections we want to edit
+				var htmlL = curHTML.split(`-3px;"><span cl`)[0]
+				var htmlR = curHTML.split(`-3px;"><span cl`)[1]
+				// Rename "class" to "clss" in the HTML of the second-depth child so the information cannot be parsed.
+				if (htmlR[0] == "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cl${htmlR.substring(1)}`; }
+				break;
+			case "toggle":
+				// Determine whether the bar is currently hidden or not, and switch it to the other state
+				if (barElement.className == "") { // Currently hidden
 					// Replace the missing className in the deepest child
 					barElement.className = "css-14usnx9";
 					// get existing HTML
@@ -503,8 +621,7 @@ export async function main(ns) {
 					var htmlR = curHTML.split(`-3px;"><span cl`)[1]
 					// Rename "class" back to "clss" in the HTML of the second-depth child so the information can be parsed once again.
 					if (htmlR[0] != "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cla${htmlR}`; }
-					break;
-				case "hide":
+				} else {  // Currently visible
 					// Remove the className from the deepest child so the HTML doesn't break
 					barElement.className = "";
 					// get existing HTML
@@ -514,388 +631,319 @@ export async function main(ns) {
 					var htmlR = curHTML.split(`-3px;"><span cl`)[1]
 					// Rename "class" to "clss" in the HTML of the second-depth child so the information cannot be parsed.
 					if (htmlR[0] == "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cl${htmlR.substring(1)}`; }
-					break;
-				case "toggle":
-					// Determine whether the bar is currently hidden or not, and switch it to the other state
-					if (barElement.className == "") { // Currently hidden
-						// Replace the missing className in the deepest child
-						barElement.className = "css-14usnx9";
-						// get existing HTML
-						var curHTML = rowElement.innerHTML
-						// split the HTML so we get the sections we want to edit
-						var htmlL = curHTML.split(`-3px;"><span cl`)[0]
-						var htmlR = curHTML.split(`-3px;"><span cl`)[1]
-						// Rename "class" back to "clss" in the HTML of the second-depth child so the information can be parsed once again.
-						if (htmlR[0] != "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cla${htmlR}`; }
-					} else {  // Currently visible
-						// Remove the className from the deepest child so the HTML doesn't break
-						barElement.className = "";
-						// get existing HTML
-						var curHTML = rowElement.innerHTML
-						// split the HTML so we get the sections we want to edit
-						var htmlL = curHTML.split(`-3px;"><span cl`)[0]
-						var htmlR = curHTML.split(`-3px;"><span cl`)[1]
-						// Rename "class" to "clss" in the HTML of the second-depth child so the information cannot be parsed.
-						if (htmlR[0] == "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cl${htmlR.substring(1)}`; }
-					}
-					break;
-				default:
-					ns.toast(`ERROR: Invalid arg ${visibilityChange} @ ToggleProgrBar`, "error", 1000);
-					break;
-			}
-		}
-	};
-
-	/** Inserts a default hud row (and its corresponding progress bar) at the bottom of the hud.
-	 * @param {string} hookName - Existing hook name for this default hud element.
-	 * - Valid hookNames are:
-	 * - "hp", "money", "hack", "str", "def", "dex", "agi", "cha", "int".
-	 * @param {string} nextRowHook - The expected name of the hook for the next non-default row.
-	 * - This is used to prevent over-updating the hud when you install augs, which pushes default rows to the bottom of the hud.
-	 * */
-	function AddDefault(hookName, nextRowHook = "extra") {
-		// Get the existing default display element from HUD, and the nextRow element if it exists
-		let rowElement = d.getElementById(`ovv-row-${hookName}`);
-		let nextRowElement = d.getElementById(`ovv-row-${nextRowHook}`);
-		// Remember the element of the progr bar if it exists
-		let progrEl = d.getElementById(`ovv-row-${hookName}-progr`);
-		if (rowElement !== null) {
-			// If the hook for the next row element exists, insert our element(s) before it
-			if (nextRowElement !== null) {
-				rowElement.parentElement.insertBefore(rowElement, nextRowElement);
-				if (progrEl !== null) {progrEl.parentElement.insertBefore(progrEl, nextRowElement)}
-			}
-			// otherwise, insert our element(s) at the bottom of the hud
-			else { 
-				rowElement.parentElement.insertBefore(rowElement, d.getElementById(`ovv-row-extra`));
-				if (progrEl !== null) {progrEl.parentElement.insertBefore(progrEl, d.getElementById(`ovv-row-extra`))}
-			}
-			return rowElement;
-		}
-	};
-
-	/** Updates or inserts a decorative separator line at the bottom of the hud.
-	 * @param {number} lineNum - Unique number used to construct the hook for this line.
-	 * - Must be distinct from all other line numbers.
-	 * */
-	function AddLine(lineNum) {
-		let rowElement = d.getElementById(`ovv-row-line${lineNum}`);
-		let desiredHTML = `<th class="jss12 css-hadb7u" scope="row" colspan="${lineColSpan}"></th>`
-		// If this element already exists, update it if needed, then return it.
-		if (rowElement !== null) { 
-			if (rowElement.innerHTML != desiredHTML) rowElement.innerHTML = desiredHTML;
-			return rowElement;
-		}
-		// Get an existing display element from HUD.
-		let existingRow = d.getElementById(`ovv-row-extra`);
-		// Make a clone of it for our new hud element
-		let newHudRow = existingRow.cloneNode(true);
-		// Replace existing childNodes with a new childNode to create the line
-		newHudRow.innerHTML = desiredHTML
-		// Give hook id to our new row-level element
-		newHudRow.id = `ovv-row-line${lineNum}`
-		// Insert our element at the bottom of the hud
-		existingRow.parentElement.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
-		return newHudRow;
-	};
-
-	/** Updates or creates a tooltip for a custom row element.
-	 * @param {string} hookName - Name of the hook to add the tooltip to
-	 * @param {string} content - Text content of the tooltip.
-	 * @param {any} params - (optional) Dictionary of any additional params you want to use to further customizee this tooltip.
-	 * - Supported params:
-	 * - tooltiptextAlign
-	 * */
-	function AddTooltip(hookName, content, params = {}) {
-		params.tooltiptext = content
-		let el = d.getElementById(`ovv-row-${hookName}`)
-		setElementTooltip(el, params)
-	};
-
-	/** Puts any large number into a standard notation "000.000a" string 
-	 * @param {number} num - Number to convert to standard notation
-	 * @param {number} decimalplaces - Number of decimal places to round to.
-	 * */
-	function StandardNotation(num, decimalplaces = 1) {
-		let formattedNum = formatNumberShort(num, 6, decimalplaces);
-		
-		if (String(num).length <= formattedNum.length && (num % 1) == 0) {
-			return String(num);
-		} else { return formattedNum; }
-	};
-
-	// Incomplete - this function works, but not as intended.
-	function MakeToolTipFromDict(dict, format = `%key%: %val%`, exclude0 = false) {
-		let entries = [];
-		for (let key in dict) {
-			let seg1 = format.split("%key%")[0]
-			let seg2 = format.split("%key%")[1].split("%val%")[0]
-			let seg3 = format.split("%val%")[1]
-			let val = dict[key]
-			if (typeof val == "number") val = StandardNotation(val, 3);
-			if (exclude0 && dict[key] != 0) {
-				entries.push(`${seg1}${key}${seg2}${val}${seg3}`)
-			} else if (!exclude0) {
-				entries.push(`${seg1}${key}${seg2}${val}${seg3}`)
-			}
-		}
-		return entries.join(`\n`);
-	}
-
-	/** Adds a customizable button to an existing text row in the hud.
-	 * @param {string} hookName - Hook name for the row where you want to insert the button.
-	 * - Can be the hook of an existing text row or a new hook for a new row.
-	 * @param {number} column - The column in which to insert the button (out of 0, 1, or 2)
-	 * - Default value: 0
-	 * @param {string} buttonID - Unique string used to identify this button.
-	 * @param {string} buttonText - Text to display within the button.
-	 * @param {method} clickFunc - Function to run when the button is clicked. Do not include parenthases or args.
-	 * - Custom-made functions are allowed.
-	 * - Example: ns.toast
-	 * @param {any[]} clickFuncArgs - Array of Args to run with clickFuncFunction to run when the button is clicked. Do not include parenthases or args.
-	 * - Example for ns.toast:
-	 * - ["HELP IM STUCK IN THE CODE DOCUMENTATION", "warning", 1000]
-	 * @param {string} buttonAlign - Horizontal alignment of button.
-	 * - Default value: "center"
-	 * - Valid values: "left", "right", "center"
-	 * */
-	function AddButton(hookName, column = 0, buttonID, buttonText, clickFunc = ns.toast, clickFuncArgs = ["This button lacks a function!", 'warning', 1000], buttonAlign = "center") {
-		// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
-		if (!(hooks_to_clear.includes(hookName))) hooks_to_clear.push(hookName);
-		// Check if this hook already has an existing row element. If so, use that.
-		let rowElement = d.getElementById(`ovv-row-${hookName}`);
-		// if no row under this id exists, first create a new text row specifically for this button.
-		if (rowElement === null) rowElement = AddTextRow(hookName, "primary");
-		// find the button with this ID (if it exists)
-		let buttonEl = d.getElementById(`ovv-button-${buttonID}`);
-		// if no button with this ID exists yet, make one.
-		if (buttonEl === null) {
-			// Get the hook of the text element in the appropriate column, to replace with a button
-			let elToReplace = d.getElementById(`ovv-${hookName}-${column}`);
-			// If this hook is null, it has already been replaced with a button or is not a valid column.
-			if (elToReplace === null) throw new Error(`AddButton: ${buttonText} is trying to insert into column ${column} which is already occupied by a button or doesn't exist!`);
-			// Modify the parent (column) element
-			let parentEl = elToReplace.parentElement
-			parentEl.style = `text-align: ${buttonAlign};`
-			parentEl.setAttribute("colspan", "1")
-			// Remove the text element from the column
-			parentEl.removeChild(elToReplace)
-			// Create a new button element
-			let newButton = createElement("button", {
-				class: "css-fw8wf6",
-				tabIndex: 0,
-				id: `ovv-button-${buttonID}`,
-				innerText: `${buttonText}`,
-				attributes: {
-					"type": "button",
-					"style": "padding: 0px 10px; margin: 4px 4px 4px 4px;"
 				}
-			})
-			newButton.appendChild( createElement("span", {class: "MuiTouchRipple-root css-w0pj6f"}) )
-			// Insert the new button element into the column.
-			parentEl.appendChild(newButton);
-			buttonEl = newButton;
-			//buttonEl.removeEventListener("mouseup", listenFunc);
-			buttonEl.addEventListener("click", ((e) => {
-				clicked_button = buttonID;
-			}));
-		}
-		// Create the function to run when the button is clicked
-		button_funcs[buttonID] = function() {
-			try { clickFunc(...clickFuncArgs); }
-			catch(err) { throw new Error(`Click event listener threw an error while executing function - ${String(err)}`)}
-		}
-		
-		return buttonEl;
-	}
-
-	// -------------------------------------------------------------------------------------
-	// Helper & Setup Functions - DO NOT USE - DELETE/MODIFY AT YOUR OWN RISK
-	// -------------------------------------------------------------------------------------
-
-	/** Initializes the hud for editing & handles changing default hud elements to fit your settings.*/
-	function InitHud() {
-		let hooknames = ["hp", "money", "str", "def", "dex", "agi", "cha", "int", "extra"];
-		let progrhooks = ["str", "def", "dex", "agi", "cha", "int", "hack"]
-		// give every default hud element a row-level hook
-		for (let hook of hooknames) {
-			let rowElement = d.getElementById(`ovv-row-${hook}`); 
-			if (rowElement !== null) continue; // only proceed if the row-hook doesn't exist yet
-			if (hook == "extra") { d.getElementById(`overview-extra-hook-0`).parentElement.parentElement.id = `ovv-row-extra` }
-			else { d.getElementById(`overview-${hook}-hook`).parentElement.parentElement.id = `ovv-row-${hook}`}
-			if (progrhooks.includes(hook)) { d.getElementById(`ovv-row-${hook}`).nextSibling.id = `ovv-row-${hook}-progr`}
-		}
-		// If the element of this id doesn't exist, then this is the first time InitHud has run, so run the following code.
-		let rowElement = d.getElementById(`ovv-row-hack`);
-		if (rowElement === null) { 
-			// fix the broken hack hook in the default hud.
-			d.getElementById("overview-hack-hook").parentElement.parentElement.previousSibling.previousSibling.id = "ovv-row-hack";
-			let nodeToDel = d.getElementById("overview-hack-hook").parentElement.parentElement;
-			d.getElementById("overview-hack-hook").parentElement.parentElement.parentElement.removeChild(nodeToDel);
-			d.getElementById("ovv-row-hack").nextSibling.id = `ovv-row-hack-progr`;
-			// Remove all separator lines from the default hud.
-			d.getElementById("ovv-row-agi").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
-			d.getElementById("ovv-row-int").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
-			// Tidy up the game's messy css class names
-			d.getElementById("ovv-row-agi").parentElement.querySelectorAll("th").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-sizeMedium ", ""))
-			d.getElementById("ovv-row-agi").parentElement.querySelectorAll("td").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-alignRight MuiTableCell-sizeMedium ", ""))
-			d.getElementById("ovv-row-agi").parentElement.querySelectorAll("p").forEach((el) => el.className = el.className.replace("MuiTypography-root MuiTypography-body1 ", ""))
-			d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-root MuiLinearProgress-colorPrimary MuiLinearProgress-determinate ", ""))
-			d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-bar MuiLinearProgress-barColorPrimary ", ""))
-		}
-		// Implement all hud settings
-		if (squishWorkInfo) SimplifyWorkInfoRows();
-		// NOTE: THESE SETTINGS ARE DISABLED AS THEY CONFLICT WITH TOOLTIPS
-		//ovvTableCont.style.maxHeight = `${maxHudHeight}px`;
-		//ovvTableCont.style.transition = "all .2s";
-		//ovvTableCont.style.overflow = "scroll";
-	}
-
-	/** Modifies the default "Working at ..." text, info, button, etc. at the bottom of the hud into a much more compact version.*/
-	function SimplifyWorkInfoRows() {
-		// Make an array of the current bottom hud elements ("Working for...", Focus button, etc.)
-		let bottomEls = []
-		let siblingEl = d.getElementById("ovv-row-extra").nextSibling
-		while (siblingEl !== null) {
-			bottomEls.push(siblingEl);
-			siblingEl = siblingEl.nextSibling;
-		}
-		// If there are no elements at the bottom of the hud, stop here.
-		if (bottomEls.length == 0) return;
-		// Iterate through the bottom hud elements, changing styles to be more compact
-		for (let el of bottomEls) {
-			//el.parentElement.setAttribute("colspan", 3);
-			// make all text rows to take up less horizontal space and align to the left
-			el.querySelectorAll("p").forEach((elp) => elp.style = `padding: 0px 0px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;`)
-			el.querySelectorAll("br").forEach((elbr) => elbr.outerHTML = " ");
-			// make the Focus button occupy less space
-			el.querySelectorAll("button").forEach((elbutton) => elbutton.style = "padding: 0px 0px; margin: 1px 0px 0px;")
-		}
-		// If the first element is a text element
-		let firstEl = bottomEls[0].querySelector("p")
-		if (firstEl !== null) {
-			// Add some top padding to the first element
-			firstEl.style = `padding: 3px 0px 0px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;`;
-			// If present, shorten the abnoxiously long crime message of the first element "You are attempting to ..."
-			firstEl.innerText = firstEl.innerText.replace("You are attempting to", "Committing");
+				break;
+			default:
+				throw new Error(`Invalid arg ${visibilityChange} @ ToggleProgrBar`);
 		}
 	}
+};
 
-	/** Runs appropriate button functions when needed
-	 * @param {import("../").NS} ns
-	 * @param {string} buttonClicked - The ID for the button element that was clicked
-	 * */
-	async function RunButtonCom(ns, buttonClicked) {
-		if (buttonClicked !== null && buttonClicked !== undefined) {
-			await button_funcs[buttonClicked]();
+
+// -------------------------------------------------------------------------------------
+// Misc functions
+// -------------------------------------------------------------------------------------
+
+
+/** Inserts a default hud row (and its corresponding progress bar) at the bottom of the hud.
+ * @param {string} hookName - Existing hook name for this default hud element.
+ * - Valid hookNames are:
+ * - "hp", "money", "hack", "str", "def", "dex", "agi", "cha", "int".
+ * @param {string} nextRowHook - The expected name of the hook for the next non-default row.
+ * - This is used to prevent over-updating the hud when you install augs, which pushes default rows to the bottom of the hud.
+ * */
+function AddDefault(hookName, nextRowHook = "extra") {
+	// Get the existing default display element from HUD, and the nextRow element if it exists
+	let rowElement = d.getElementById(`ovv-row-${hookName}`);
+	let nextRowElement = d.getElementById(`ovv-row-${nextRowHook}`);
+	// Remember the element of the progr bar if it exists
+	let progrEl = d.getElementById(`ovv-row-${hookName}-progr`);
+	if (rowElement !== null) {
+		// If the hook for the next row element exists, insert our element(s) before it
+		if (nextRowElement !== null) {
+			rowElement.parentElement.insertBefore(rowElement, nextRowElement);
+			if (progrEl !== null) {progrEl.parentElement.insertBefore(progrEl, nextRowElement)}
 		}
+		// otherwise, insert our element(s) at the bottom of the hud
+		else { 
+			rowElement.parentElement.insertBefore(rowElement, d.getElementById(`ovv-row-extra`));
+			if (progrEl !== null) {progrEl.parentElement.insertBefore(progrEl, d.getElementById(`ovv-row-extra`))}
+		}
+		return rowElement;
 	}
+};
 
-	/** Creates or updates a custom css style used for our custom-made tooltips */
-	function MakeToolTipStyle() {
-		let existingStyle = d.getElementById(`custom-tooltip-style`);
-		let desiredHTML = `.tooltiptext{${ToolTipStyleParams}}`
-		// if no custom tooltip style exists, create one at the root element level (so it can be used for non-overview elements)
-		if (existingStyle === null) {
-			d.getElementById('root').parentElement.appendChild(createElement("style", {
-				id: `custom-tooltip-style`,
-				innerHTML: desiredHTML
-			} ))
-		}
-		// if the existing custom tooltip style contains different info from what we want, update it.
-		else if (existingStyle.innerHTML != desiredHTML) {
-			existingStyle.innerHTML = desiredHTML
-		}
+
+/** Updates or inserts a decorative separator line at the bottom of the hud.
+ * @param {number} lineNum - Unique number used to construct the hook for this line.
+ * - Must be distinct from all other line numbers.
+ * */
+function AddLine(lineNum) {
+	let rowElement = d.getElementById(`ovv-row-line${lineNum}`);
+	let desiredHTML = `<th class="jss12 css-hadb7u" scope="row" colspan="${lineColSpan}"></th>`
+	// If this element already exists, update it if needed, then return it.
+	if (rowElement !== null) { 
+		if (rowElement.innerHTML != desiredHTML) rowElement.innerHTML = desiredHTML;
+		return rowElement;
 	}
+	// Get an existing display element from HUD.
+	let existingRow = d.getElementById(`ovv-row-extra`);
+	// Make a clone of it for our new hud element
+	let newHudRow = existingRow.cloneNode(true);
+	// Replace existing childNodes with a new childNode to create the line
+	newHudRow.innerHTML = desiredHTML
+	// Give hook id to our new row-level element
+	newHudRow.id = `ovv-row-line${lineNum}`
+	// Insert our element at the bottom of the hud
+	existingRow.parentElement.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
+	return newHudRow;
+};
 
-	/** Heavily modified helper function from the game's source code for creating new elements.
-	 * @param {string} tagName - name of element tag, like "span", "div", "a", "style", etc.
-	 * @param {any} params - Dictionary of relevant parameters.
-	 * - Valid keys:
-	 * - id, class, innerHTML, innerText, tabIndex, tooltiptext, tooltiptextAlign, attributes
-	 * - Valid value data types:
-	 * - string (for all keys except attributes), {string: string} dictionary (for attributes key)
-	 * - Example:
-	 * - {id: "hook-name", innerText: "Hello World", attributes: {"colspan": "1", "scope": "row"} }
-	 * */
-	function createElement(tagName, params = {}) {
-		const el = d.createElement(tagName);
 
-		if (params.id !== undefined) { el.id = params.id; }
-		if (params.class !== undefined) { el.className = params.class; }
-		if (params.innerHTML !== undefined) { el.innerHTML = params.innerHTML; }
-		if (params.innerText !== undefined) { el.innerText = params.innerText; }
-		if (params.tabIndex !== undefined) { el.tabIndex = params.tabIndex; }
-		// custom-made attributes logic
-		if (params.attributes !== undefined) {
-			try {
-				for (let attName of Object.keys(params.attributes)) el.setAttribute(attName, params.attributes[attName]);
-			} catch (err) { throw new Error(`Invalid createElement attributes: ${err}`) }
-		}
-		
-		// This is one of many helper functions that is called in this function, but is the only one we need.
-		setElementTooltip(el, params);
-		return el;
+/** Updates or creates a tooltip for a custom row element.
+ * @param {string} hookName - Name of the hook to add the tooltip to
+ * @param {string} content - Text content of the tooltip.
+ * @param {any} params - (optional) Dictionary of any additional params you want to use to further customizee this tooltip.
+ * - Supported params:
+ * - tooltiptextAlign
+ * */
+function AddTooltip(hookName, content, params = {}) {
+	params.tooltiptext = content
+	let el = d.getElementById(`ovv-row-${hookName}`)
+	setElementTooltip(el, params)
+};
+
+
+// -------------------------------------------------------------------------------------
+// Setup/Init functions
+// -------------------------------------------------------------------------------------
+
+
+/** Initializes the hud for editing & handles changing default hud elements to fit your settings.*/
+function InitHud() {
+	let hooknames = ["hp", "money", "str", "def", "dex", "agi", "cha", "int", "extra"];
+	let progrhooks = ["str", "def", "dex", "agi", "cha", "int", "hack"]
+	// give every default hud element a row-level hook
+	for (let hook of hooknames) {
+		let rowElement = d.getElementById(`ovv-row-${hook}`); 
+		if (rowElement !== null) continue; // only proceed if the row-hook doesn't exist yet
+		if (hook == "extra") { d.getElementById(`overview-extra-hook-0`).parentElement.parentElement.id = `ovv-row-extra` }
+		else { d.getElementById(`overview-${hook}-hook`).parentElement.parentElement.id = `ovv-row-${hook}`}
+		if (progrhooks.includes(hook)) { d.getElementById(`ovv-row-${hook}`).nextSibling.id = `ovv-row-${hook}-progr`}
 	}
+	// If the element of this id doesn't exist, then this is the first time InitHud has run, so run the following code.
+	let rowElement = d.getElementById(`ovv-row-hack`);
+	if (rowElement === null) { 
+		// fix the broken hack hook in the default hud.
+		d.getElementById("overview-hack-hook").parentElement.parentElement.previousSibling.previousSibling.id = "ovv-row-hack";
+		let nodeToDel = d.getElementById("overview-hack-hook").parentElement.parentElement;
+		d.getElementById("overview-hack-hook").parentElement.parentElement.parentElement.removeChild(nodeToDel);
+		d.getElementById("ovv-row-hack").nextSibling.id = `ovv-row-hack-progr`;
+		// Remove all separator lines from the default hud.
+		d.getElementById("ovv-row-agi").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
+		d.getElementById("ovv-row-int").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
+		// Tidy up the game's messy css class names
+		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("th").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-sizeMedium ", ""))
+		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("td").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-alignRight MuiTableCell-sizeMedium ", ""))
+		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("p").forEach((el) => el.className = el.className.replace("MuiTypography-root MuiTypography-body1 ", ""))
+		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-root MuiLinearProgress-colorPrimary MuiLinearProgress-determinate ", ""))
+		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-bar MuiLinearProgress-barColorPrimary ", ""))
+	}
+	// Implement all hud settings
 
-	/** Heavily modified helper function from the game's source code for creating tooltips
-	 * @param {Element} el - The element to attatch the tooltip to
-	 * @param {any} params - Dictionary of relevant tooltip parameters
-	 * */
-	function setElementTooltip(el, params) {
-		if (params.tooltiptext !== undefined && params.tooltiptext !== "") {
-			// If the parent has not had a tooltip class added yet, add one and make its position relative.
-			if (el.className.split("tool")[1] != "tip") {
-				el.className += " tooltip";
-				el.style.position = "relative";
-			}
-			// If the tooltip does not exist, make a new one.
-			let curToolTip = d.getElementById(`${el.id}-tooltip`)
-			if (curToolTip === null) {
-				d.getElementById(el.id).appendChild(
-					createElement("span", {
-						id: `${el.id}-tooltip`,
-						class: "tooltiptext",
-						innerHTML: params.tooltiptext,
-					}),
-				);
-				// Apply all additional parameters that were specified. Add more checks here as needed
-				if (params.tooltiptextAlign !== undefined) d.getElementById(`${el.id}-tooltip`).style.textAlign = params.tooltiptextAlign;
-				// Set the tooltip to start out as invisible
+	// These settings are experimental
+	if (squishWorkInfo) SimplifyWorkInfoRows();
+
+	// These settings are DISABLED, as they conflict with tooltips
+	/* ovvTableCont.style.maxHeight = `${maxHudHeight}px`;
+	ovvTableCont.style.transition = "all .2s";
+	ovvTableCont.style.overflow = "scroll"; */
+};
+
+
+/** Creates or updates a custom css style used for our custom-made tooltips */
+function MakeToolTipStyle() {
+	let existingStyle = d.getElementById(`custom-tooltip-style`);
+	let desiredHTML = `.tooltiptext{${ToolTipStyleParams}}`
+	// if no custom tooltip style exists, create one at the root element level (so it can be used for non-overview elements)
+	if (existingStyle === null) {
+		d.getElementById('root').parentElement.appendChild(createElement("style", {
+			id: `custom-tooltip-style`,
+			innerHTML: desiredHTML
+		} ))
+	}
+	// if the existing custom tooltip style contains different info from what we want, update it.
+	else if (existingStyle.innerHTML != desiredHTML) {
+		existingStyle.innerHTML = desiredHTML
+	}
+};
+
+
+/** EXPERIMENTAL: Modifies the default "Working at ..." text, info, button, etc. at the bottom of the hud into a much more compact version.*/
+function SimplifyWorkInfoRows() {
+	// Make an array of the current bottom hud elements ("Working for...", Focus button, etc.)
+	let bottomEls = []
+	let siblingEl = d.getElementById("ovv-row-extra").nextSibling
+	while (siblingEl !== null) {
+		bottomEls.push(siblingEl);
+		siblingEl = siblingEl.nextSibling;
+	}
+	// If there are no elements at the bottom of the hud, stop here.
+	if (bottomEls.length == 0) return;
+	// Iterate through the bottom hud elements, changing styles to be more compact
+	for (let el of bottomEls) {
+		//el.parentElement.setAttribute("colspan", 3);
+		// make all text rows to take up less horizontal space and align to the left
+		el.querySelectorAll("p").forEach((elp) => elp.style = `padding: 0px 0px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;`)
+		el.querySelectorAll("br").forEach((elbr) => elbr.outerHTML = " ");
+		// make the Focus button occupy less space
+		el.querySelectorAll("button").forEach((elbutton) => elbutton.style = "padding: 0px 0px; margin: 1px 0px 0px;")
+	}
+	// If the first element is a text element
+	let firstEl = bottomEls[0].querySelector("p")
+	if (firstEl !== null) {
+		// Add some top padding to the first element
+		firstEl.style = `padding: 3px 0px 0px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;`;
+		// If present, shorten the abnoxiously long crime message of the first element "You are attempting to ..."
+		firstEl.innerText = firstEl.innerText.replace("You are attempting to", "Committing");
+	}
+};
+
+
+// -------------------------------------------------------------------------------------
+// Helper functions
+// -------------------------------------------------------------------------------------
+
+
+/** Runs appropriate button functions when needed
+ * @param {import("../").NS} ns
+ * @param {string} buttonClicked - The ID for the button element that was clicked
+ * */
+async function RunButtonCom(ns, buttonClicked) {
+	if (buttonClicked !== null && buttonClicked !== undefined) {
+		await button_funcs[buttonClicked]();
+	}
+};
+
+
+/** Heavily modified helper function from the game's source code for creating new elements.
+ * @param {string} tagName - name of element tag, like "span", "div", "a", "style", etc.
+ * @param {any} params - Dictionary of relevant parameters.
+ * - Valid keys:
+ * - id, class, innerHTML, innerText, tabIndex, tooltiptext, tooltiptextAlign, attributes
+ * - Valid value data types:
+ * - string (for all keys except attributes), {string: string} dictionary (for attributes key)
+ * - Example: {id: "hook-name", innerText: "Hello World", attributes: {"colspan": "1", "scope": "row"} }
+ * */
+function createElement(tagName, params = {}) {
+	const el = d.createElement(tagName);
+
+	if (params.id !== undefined) { el.id = params.id; }
+	if (params.class !== undefined) { el.className = params.class; }
+	if (params.innerHTML !== undefined) { el.innerHTML = params.innerHTML; }
+	if (params.innerText !== undefined) { el.innerText = params.innerText; }
+	if (params.tabIndex !== undefined) { el.tabIndex = params.tabIndex; }
+	// custom-made attributes logic
+	if (params.attributes !== undefined) {
+		try {
+			for (let attName of Object.keys(params.attributes)) el.setAttribute(attName, params.attributes[attName]);
+		} catch (err) { throw new Error(`Invalid createElement attributes: ${err}`) }
+	}
+	
+	// This is one of many helper functions that is called in this function, but is the only one we need.
+	setElementTooltip(el, params);
+	return el;
+};
+
+
+/** Heavily modified helper function from the game's source code for creating tooltips.
+ * @param {Element} el - The element to attatch the tooltip to
+ * @param {any} params - Dictionary of relevant tooltip parameters
+ * */
+function setElementTooltip(el, params) {
+	if (params.tooltiptext !== undefined && params.tooltiptext !== "") {
+		// If the parent has not had a tooltip class added yet, add one and make its position relative.
+		if (el.className.split("tool")[1] != "tip") {
+			el.className += " tooltip";
+			el.style.position = "relative";
+		}
+		// If the tooltip does not exist, make a new one.
+		let curToolTip = d.getElementById(`${el.id}-tooltip`)
+		if (curToolTip === null) {
+			d.getElementById(el.id).appendChild(
+				createElement("span", {
+					id: `${el.id}-tooltip`,
+					class: "tooltiptext",
+					innerHTML: params.tooltiptext,
+				}),
+			);
+			// Apply all additional parameters that were specified. Add more checks here as needed
+			if (params.tooltiptextAlign !== undefined) d.getElementById(`${el.id}-tooltip`).style.textAlign = params.tooltiptextAlign;
+			// Set the tooltip to start out as invisible
+			d.getElementById(`${el.id}-tooltip`).style.visibility = "hidden";
+			d.getElementById(`${el.id}-tooltip`).style.opacity = "0";
+			d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 20px, 0px) scale3d(0.95, 0.95, 0.95)";
+			// Add event listeners for mouseout/mouseover to hide/show the tooltip.
+			el.addEventListener('mouseover', (e) => {
+				d.getElementById(`${el.id}-tooltip`).style.visibility = "visible";
+				d.getElementById(`${el.id}-tooltip`).style.opacity = "1";
+				d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 20px, 0px) scale3d(1, 1, 1)";
+			});
+			el.addEventListener('mouseout', (e) => {
 				d.getElementById(`${el.id}-tooltip`).style.visibility = "hidden";
 				d.getElementById(`${el.id}-tooltip`).style.opacity = "0";
 				d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 20px, 0px) scale3d(0.95, 0.95, 0.95)";
-				// Add event listeners for mouseout/mouseover to hide/show the tooltip.
-				el.addEventListener('mouseover', (e) => {
-					d.getElementById(`${el.id}-tooltip`).style.visibility = "visible";
-					d.getElementById(`${el.id}-tooltip`).style.opacity = "1";
-					d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 20px, 0px) scale3d(1, 1, 1)";
-				});
-				el.addEventListener('mouseout', (e) => {
-					d.getElementById(`${el.id}-tooltip`).style.visibility = "hidden";
-					d.getElementById(`${el.id}-tooltip`).style.opacity = "0";
-					d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 20px, 0px) scale3d(0.95, 0.95, 0.95)";
-				});
-			}
-			// If the current tooltip exists but the text does not match what we want, replace it.
-			else if (curToolTip.innerHTML != params.tooltiptext) {
-				curToolTip.innerHTML = params.tooltiptext
-			}
+			});
+		}
+		// If the current tooltip exists but the text does not match what we want, replace it.
+		else if (curToolTip.innerHTML != params.tooltiptext) {
+			curToolTip.innerHTML = params.tooltiptext
 		}
 	}
+};
 
-	/** Return a formatted representation of the monetary amount using scale sympols (e.g. 6.50M)
-	 * - NOTE: This function was originally written by alianbryden, and can be found in the repo below, under "helpers.js".
-	 * - https://github.com/alainbryden/bitburner-scripts
-	 * @param {number} num - The number to format
-	 * @param {number=} maxSignificantFigures - (default: 6) The maximum significant figures you wish to see (e.g. 123, 12.3 and 1.23 all have 3 significant figures)
-	 * @param {number=} maxDecimalPlaces - (default: 3) The maximum decimal places you wish to see, regardless of significant figures. (e.g. 12.3, 1.2, 0.1 all have 1 decimal)
-	 **/
-	function formatNumberShort(num, maxSignificantFigures = 6, maxDecimalPlaces = 3) {
-		if (Math.abs(num) > 10 ** (3 * symbols.length)) // If we've exceeded our max symbol, switch to exponential notation
-			return num.toExponential(Math.min(maxDecimalPlaces, maxSignificantFigures - 1));
-		for (var i = 0, sign = Math.sign(num), num = Math.abs(num); num >= 1000 && i < symbols.length; i++) num /= 1000;
-		// TODO: A number like 9.999 once rounded to show 3 sig figs, will become 10.00, which is now 4 sig figs.
-		return ((sign < 0) ? "-" : "") + num.toFixed(Math.max(0, Math.min(maxDecimalPlaces, maxSignificantFigures - Math.floor(1 + Math.log10(num))))) + symbols[i];
+
+// Incomplete - this function works, but not as intended.
+function MakeToolTipFromDict(dict, format = `%key%: %val%`, exclude0 = false) {
+	let entries = [];
+	for (let key in dict) {
+		let seg1 = format.split("%key%")[0]
+		let seg2 = format.split("%key%")[1].split("%val%")[0]
+		let seg3 = format.split("%val%")[1]
+		let val = dict[key]
+		if (typeof val == "number") val = StandardNotation(val, 3);
+		if (exclude0 && dict[key] != 0) {
+			entries.push(`${seg1}${key}${seg2}${val}${seg3}`)
+		} else if (!exclude0) {
+			entries.push(`${seg1}${key}${seg2}${val}${seg3}`)
+		}
 	}
-}
+	return entries.join(`\n`);
+};
+
+	
+/** Puts any large number into a standard notation "000.000a" string 
+ * @param {number} num - Number to convert to standard notation
+ * @param {number} decimalplaces - Number of decimal places to round to.
+ * */
+function StandardNotation(num, decimalplaces = 1) {
+	let formattedNum = formatNumberShort(num, 6, decimalplaces);
+	if (String(num).length <= formattedNum.length && (num % 1) == 0) return String(num);
+	else return formattedNum;
+};
+
+
+/** Return a formatted representation of the monetary amount using scale sympols (e.g. 6.50M)
+ * - NOTE: This function was originally written by alianbryden, and can be found in the repo below, under "helpers.js".
+ * - https://github.com/alainbryden/bitburner-scripts
+ * @param {number} num - The number to format
+ * @param {number=} maxSignificantFigures - (default: 6) The maximum significant figures you wish to see (e.g. 123, 12.3 and 1.23 all have 3 significant figures)
+ * @param {number=} maxDecimalPlaces - (default: 3) The maximum decimal places you wish to see, regardless of significant figures. (e.g. 12.3, 1.2, 0.1 all have 1 decimal)
+ * */
+function formatNumberShort(num, maxSignificantFigures = 6, maxDecimalPlaces = 3) {
+	if (Math.abs(num) > 10 ** (3 * symbols.length)) // If we've exceeded our max symbol, switch to exponential notation
+		return num.toExponential(Math.min(maxDecimalPlaces, maxSignificantFigures - 1));
+	for (var i = 0, sign = Math.sign(num), num = Math.abs(num); num >= 1000 && i < symbols.length; i++) num /= 1000;
+	// TODO: A number like 9.999 once rounded to show 3 sig figs, will become 10.00, which is now 4 sig figs.
+	return ((sign < 0) ? "-" : "") + num.toFixed(Math.max(0, Math.min(maxDecimalPlaces, maxSignificantFigures - Math.floor(1 + Math.log10(num))))) + symbols[i];
+};
