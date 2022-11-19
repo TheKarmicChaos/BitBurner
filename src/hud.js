@@ -77,12 +77,10 @@ Step 4: Making Buttons -------------------
 
 		TODO LIST:
 	- Overhaul all "Add" functions to try to update the element if they already exist (allowing for function changes to be made without killing all scripts)
-	- Ingame progress bar tooltips still look a bit different from the ones this script generates.
-		- Update tooltip line spacing to match that of the ingame tooltips
-		- Figure out how to center tooltips, like the ones the game uses for progress bars
-	- Add new feature: Clickable dropdown buttons that allow the player to collapse categories of rows in the hud. (probably will use column 3 for this)
-	- Add support for hiding/showing hud buttons.
+	- Figure out how to center tooltips, like the ones the game uses for progress bars
 	- Add fancy ripple effect on button click that the game uses.
+	- Add support for hiding/showing hud buttons.
+	- Add new feature: Clickable dropdown buttons that allow the player to collapse categories of rows in the hud. (probably will use column 3 for this)
 
 -------------------------------------------
 */
