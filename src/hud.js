@@ -81,87 +81,82 @@ Step 4: Making Buttons -------------------
 		- Update tooltip line spacing to match that of the ingame tooltips
 		- Figure out how to center tooltips, like the ones the game uses for progress bars
 	- Add new feature: Clickable dropdown buttons that allow the player to collapse categories of rows in the hud. (probably will use column 3 for this)
+	- Add support for hiding/showing hud buttons.
 
 -------------------------------------------
 */
 
 
-
-
-// Constants & Global Vars - DO NOT MODIFY ---------------------------------------------
+	// Global Constants & Vars - DO NOT MODIFY ---------------------------------------------
 //const d = document
 const d = eval("document")
+let clicked_button = null;
 const ovv = d.getElementsByClassName('MuiPaper-root')[0];
 const ovvHeader = ovv.childNodes[0].firstChild.firstChild.firstChild; // unused
 const ovvTableCont = ovv.childNodes[1].firstChild.firstChild.firstChild; // unused
-const hooks_to_clear = [];
-const bars_to_clear = [];
-const button_funcs = {};
-let clicked_button = null;
 const symbols = ["", "k", "m", "b", "t", "q", "Q", "s", "S", "o", "n", "e33", "e36", "e39"];
-let colors;
-let updType;
-let updHook;
-let updArg1;
-let updArg2;
-let updArg3;
 
-
-// Settings ----------------------------------------------------------------------------
-const showHiddenRows = false; // Debug tool to unhide all hidden text rows; only applies to rows that are currently being updated, or to all rows when resetting hud via "kill all running scripts"
-const lineColSpan = 2; // Number of columns your separator lines should occupy.
-let ToolTipStyleParams = // Default css style parameters used for your tooltips.
-`font-family: "Lucida Console", "Lucida Sans Unicode", "Fira Mono", Consolas, "Courier New", Courier, monospace, "Times New Roman";
-padding: 4px 8px;
-margin: 2px;
-overflow-wrap: normal;
-display: absolute;
-white-space: pre;
-font-weight: 500;
-font-size: 1em;
-line-height: 1.4;
-border-radius: 0px;
-border: 2px solid white;
-max-width: 100vh;
-position: absolute;
-z-index: 9999999;
-inset: 0px auto auto 0px;
-transform-origin: top;
-transition: all 0.2s;`;
-let textStyleParams = // Default css style parameters added to the text rows in your hud (applies to all columns)
-``;
-// Experimental settings (use at your own risk)
-const squishWorkInfo = false; // If true, modifies the default "Working at ..." text, info, button, etc. at the bottom of the hud into a much more compact version.
-// Unused settings
-const maxHudHeight = 1000 // Maximum vertical space (in pixels) the hud can occupy before requiring the player to scroll.
-const CAr = "◄"; // Text used for "Contracted dropdown" button
-const EAr = "▼"; // Text used for "Expanded dropdown" button
-
-
-// Main Function -----------------------------------------------------------------------
 
 /** @param {import("../").NS} ns */
 export async function main(ns) {
-	//ns.tail('hud.js', "home", ...ns.args); ns.disableLog("ALL"); ns.clearLog();
+
+	// Local Constants & Vars - DO NOT MODIFY ----------------------------------------------
+	const hooks_to_clear = [];
+	const bars_to_clear = [];
+	const button_funcs = {};
+	const colors = ns.ui.getTheme();
+	let updType = ns.args[0] || null;
+	let updHook = ns.args[1] || null;
+	let updArg1 = ns.args[2] || null;
+	let updArg2 = ns.args[3] || null;
+	let updArg3 = ns.args[4] || null;
+
+
+	// Settings ----------------------------------------------------------------------------
+	const tailWindow = false; // Enables/Disables tail windows. Not reccommended for anything other than debugging.
+	const showHiddenRows = false; // Debug tool to unhide all hidden text rows; only applies to rows that are currently being updated, or to all rows when resetting hud via "kill all running scripts"
+	const lineColSpan = 2; // Number of columns your separator lines should occupy.
+	const ToolTipStyleParams = // Default css style parameters used for your tooltips.
+	`font-family: "Lucida Console", "Lucida Sans Unicode", "Fira Mono", Consolas, "Courier New", Courier, monospace, "Times New Roman";
+	padding: 4px 8px;
+	margin: 2px;
+	overflow-wrap: normal;
+	display: absolute;
+	white-space: pre;
+	font-weight: 500;
+	font-size: 1em;
+	line-height: 1.4;
+	border-radius: 0px;
+	border: 2px solid white;
+	max-width: 100vh;
+	position: absolute;
+	z-index: 9999999;
+	inset: 0px auto auto 0px;
+	transform-origin: top;
+	transition: all 0.2s;
+	color: ${colors.primary};
+	background-color: ${colors.well};`;
+	const textStyleParams = // Default css style parameters added to the text rows in your hud (applies to all text columns)
+	``;
+	const buttonSyleParams = // Default css style parameters used for your custom buttons
+	`padding: 0px 10px;
+	margin: 4px 4px 4px 4px;`;
+
+	// Experimental settings (use at your own risk)
+	const squishWorkInfo = false; // If true, modifies the default "Working at ..." text, info, button, etc. at the bottom of the hud into a much more compact version.
 	
+	// Unused settings
+	const maxHudHeight = 1000 // Maximum vertical space (in pixels) the hud can occupy before requiring the player to scroll.
+	const CAr = "◄"; // Text used for "Contracted dropdown" button
+	const EAr = "▼"; // Text used for "Expanded dropdown" button
+
+
+	// Main Function -----------------------------------------------------------------------
 	try {
-		// store clicked_button in temp variable, then clear it.
-		let clicked_button_temp = clicked_button;
-		if (clicked_button !== null) clicked_button = null;
-		// Initialize variables requiring ns
-		updType = ns.args[0] || null;
-		updHook = ns.args[1] || null;
-		updArg1 = ns.args[2] || null;
-		updArg2 = ns.args[3] || null;
-		updArg3 = ns.args[4] || null;
-		colors = ns.ui.getTheme();
-		ToolTipStyleParams +=
-			`color: ${colors.primary};
-			background-color: ${colors.well};`
 		// Run initialization functions
+		if (tailWindow) { ns.tail("hud.js", "home", ...ns.args); ns.disableLog("ALL"); ns.clearLog(); }
 		InitHud();
 		MakeToolTipStyle();
-
 
 		// ##################################################################################################
 
@@ -292,7 +287,7 @@ export async function main(ns) {
 		RunButtonCom(ns, clicked_button_temp);
 
 	} catch (err) { ns.toast("ERROR: HUD update Skipped: " + String(err), "error", 1000); }
-}
+
 
 
 
