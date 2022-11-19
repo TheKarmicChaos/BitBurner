@@ -91,9 +91,9 @@ Step 4: Making Buttons -------------------
 const d = eval("document")
 const symbols = ["", "k", "m", "b", "t", "q", "Q", "s", "S", "o", "n", "e33", "e36", "e39"];
 let clicked_button = null;
-// const ovv = d.getElementsByClassName('MuiPaper-root')[0]; // unused
-// const ovvHeader = ovv.childNodes[0].firstChild.firstChild.firstChild; // unused
-// const ovvTableCont = ovv.childNodes[1].firstChild.firstChild.firstChild; // unused
+const ovv = d.getElementsByClassName('MuiPaper-root')[0]; // unused
+const ovvHeader = ovv.childNodes[0].firstChild.firstChild.firstChild; // unused
+const ovvTableCont = ovv.childNodes[1].firstChild.firstChild.firstChild; // unused
 
 
 /** @param {import("../").NS} ns */
@@ -213,6 +213,8 @@ export async function main(ns) {
 		const GLOBAL_VARS = nstb.getGlobals(ns); // REMOVE THIS LINE BEFORE RUNNING
 		AddTooltip("bitnode", MakeToolTipFromDict(GLOBAL_VARS["bnMults"])); // REMOVE THIS LINE BEFORE RUNNING
 		AddTooltip("income",  MakeToolTipFromDict(GLOBAL_VARS["income"], `%key%: $%val%`, true)); // REMOVE THIS LINE BEFORE RUNNING
+		AddTooltip("run-scanhud", "Run scan-hud.js");
+		AddTooltip("run-testfile", "Run test.js");
 
 		// Kills
 		let kills = ns.getPlayer().numPeopleKilled;
@@ -286,8 +288,6 @@ export async function main(ns) {
 
 		// If a button was clicked, run the stored function for that button.
 		if (clicked_button_temp in button_funcs) await button_funcs[clicked_button_temp]();
-		// Reset the global clicked_button variable
-		if (clicked_button !== null) clicked_button = null;
 		
 	} catch (err) { ns.toast("ERROR: HUD update Skipped: " + String(err), "error", 1000); }
 
@@ -395,7 +395,7 @@ function UpdateTextRow(hookName, textL = null, textR = null, text3 = null) {
  * @param {Function} clickFunc - Nameless arrow function to run when the button is clicked. Custom-made functions are allowed.
  * - Example: () => { ns.print("foo"); ns.toast("bar") }
  * */
-function AddButton(hookName, column = 0, buttonID, buttonText, buttonAlign = "center", clickFunc = () => alert("WARNING: This button lacks a function!")) {
+function AddButton(hookName, column = 0, buttonID, buttonText, buttonAlign = "center", clickFunc = () => ns.toast("This button lacks a function!", "warning")) {
 	// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
 	if (!(hooks_to_clear.includes(hookName))) hooks_to_clear.push(hookName);
 	// Check if this hook already has an existing row element. If so, use that.
@@ -407,7 +407,8 @@ function AddButton(hookName, column = 0, buttonID, buttonText, buttonAlign = "ce
 	// If a button with this ID does exist, update its attributes
 	if (buttonEl !== null) {
 		// update the parent (column) element
-		buttonEl.parentElement.style = `text-align: ${buttonAlign};`
+		buttonEl.parentElement.id = `ovv-buttoncol-${buttonID}`
+		buttonEl.parentElement.style.textAlign = `${buttonAlign}`
 		buttonEl.parentElement.setAttribute("colspan", "1")
 		// update the button innerText
 		buttonEl.innerText = `${buttonText}`;
@@ -422,8 +423,9 @@ function AddButton(hookName, column = 0, buttonID, buttonText, buttonAlign = "ce
 		if (elToReplace === null) throw new Error(`AddButton: ${buttonText} is trying to insert into column ${column} which is already occupied by a button or doesn't exist!`);
 		// Modify the parent (column) element
 		let parentEl = elToReplace.parentElement
-		parentEl.style = `text-align: ${buttonAlign};`
+		parentEl.style.textAlign = `${buttonAlign}`
 		parentEl.setAttribute("colspan", "1")
+		parentEl.id = `ovv-buttoncol-${buttonID}`
 		// Remove the text element from the column
 		parentEl.removeChild(elToReplace)
 		// Create a new button element
@@ -697,6 +699,7 @@ function AddLine(lineNum) {
 function AddTooltip(hookName, content, params = {}) {
 	params.tooltiptext = content
 	let el = d.getElementById(`ovv-row-${hookName}`)
+	if (el === null) el = d.getElementById(`ovv-button-${hookName}`).parentElement;
 	setElementTooltip(el, params)
 };
 
@@ -855,17 +858,17 @@ function setElementTooltip(el, params) {
 			// Set the tooltip to start out as invisible
 			d.getElementById(`${el.id}-tooltip`).style.visibility = "hidden";
 			d.getElementById(`${el.id}-tooltip`).style.opacity = "0";
-			d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 20px, 0px) scale3d(0.95, 0.95, 0.95)";
+			d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 30px, 0px) scale3d(0.95, 0.95, 0.95)";
 			// Add event listeners for mouseout/mouseover to hide/show the tooltip.
 			el.addEventListener('mouseover', (e) => {
 				d.getElementById(`${el.id}-tooltip`).style.visibility = "visible";
 				d.getElementById(`${el.id}-tooltip`).style.opacity = "1";
-				d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 20px, 0px) scale3d(1, 1, 1)";
+				d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 30px, 0px) scale3d(1, 1, 1)";
 			});
 			el.addEventListener('mouseout', (e) => {
 				d.getElementById(`${el.id}-tooltip`).style.visibility = "hidden";
 				d.getElementById(`${el.id}-tooltip`).style.opacity = "0";
-				d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 20px, 0px) scale3d(0.95, 0.95, 0.95)";
+				d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 30px, 0px) scale3d(0.95, 0.95, 0.95)";
 			});
 		}
 		// If the current tooltip exists but the text does not match what we want, replace it.
