@@ -82,6 +82,7 @@ Step 4: Making Buttons -------------------
 		- Figure out how to center tooltips, like the ones the game uses for progress bars
 	- Add new feature: Clickable dropdown buttons that allow the player to collapse categories of rows in the hud. (probably will use column 3 for this)
 	- Add support for hiding/showing hud buttons.
+	- Add fancy ripple effect on button click that the game uses.
 
 -------------------------------------------
 */
@@ -90,17 +91,19 @@ Step 4: Making Buttons -------------------
 	// Global Constants & Vars - DO NOT MODIFY ---------------------------------------------
 //const d = document
 const d = eval("document")
-let clicked_button = null;
-const ovv = d.getElementsByClassName('MuiPaper-root')[0];
-const ovvHeader = ovv.childNodes[0].firstChild.firstChild.firstChild; // unused
-const ovvTableCont = ovv.childNodes[1].firstChild.firstChild.firstChild; // unused
 const symbols = ["", "k", "m", "b", "t", "q", "Q", "s", "S", "o", "n", "e33", "e36", "e39"];
+let clicked_button = null;
+// const ovv = d.getElementsByClassName('MuiPaper-root')[0]; // unused
+// const ovvHeader = ovv.childNodes[0].firstChild.firstChild.firstChild; // unused
+// const ovvTableCont = ovv.childNodes[1].firstChild.firstChild.firstChild; // unused
 
 
 /** @param {import("../").NS} ns */
 export async function main(ns) {
 
 	// Local Constants & Vars - DO NOT MODIFY ----------------------------------------------
+	let clicked_button_temp = null;
+	if (clicked_button !== null) { clicked_button_temp = clicked_button; clicked_button = null; }
 	const hooks_to_clear = [];
 	const bars_to_clear = [];
 	const button_funcs = {};
@@ -198,9 +201,9 @@ export async function main(ns) {
 		AddTextRow("gangtimer", "info");
 		AddTextRow("augtimer", "info");
 		AddLine(4);
-		AddButton("buttons1", 0, "run-scanhud", "scan-hud.js", "right", ns.run, [`scan-hud.js`]);
-		AddButton("buttons1", 1, "run-testfile", "test.js", "left", ns.run, [`test.js`]);
-		AddButton("buttons2", 0, "toast-test", "Toast!", "right", ns.toast, [`clicked!`, "success", 500]);
+		AddButton("buttons1", 0, "run-scanhud", "scan-hud.js", "right", () => ns.run(`scan-hud.js`));
+		AddButton("buttons1", 1, "run-testfile", "test.js", "left", () => ns.run(`test.js`));
+		AddButton("buttons2", 0, "toast-test", "Toast!", "right", () => ns.toast(`clicked!`, "success", 500));
 		AddButton("buttons2", 1, "missing-test", "Click Me!", "left");
 
 		// #################################################
@@ -283,9 +286,11 @@ export async function main(ns) {
 				break;
 		}
 
-		// Run the stored function for whatever button was clicked (if any were clicked)
-		RunButtonCom(ns, clicked_button_temp);
-
+		// If a button was clicked, run the stored function for that button.
+		if (clicked_button_temp in button_funcs) await button_funcs[clicked_button_temp]();
+		// Reset the global clicked_button variable
+		if (clicked_button !== null) clicked_button = null;
+		
 	} catch (err) { ns.toast("ERROR: HUD update Skipped: " + String(err), "error", 1000); }
 
 
@@ -384,18 +389,15 @@ function UpdateTextRow(hookName, textL = null, textR = null, text3 = null) {
  * @param {string} hookName - Hook name for the row where you want to insert the button.
  * - Can be the hook of an existing text row or a new hook for a new row.
  * If it is a new hook, the newly made text row will be inserted at the bottom of the hud.
- * @param {number} column - The column in which to insert the button (out of 0, 1, or 2)
- * - Default value: 0
+ * @param {number} column - The column in which to insert the button (out of 0, 1, or 2) (Default value: 0)
  * @param {string} buttonID - Unique string used to identify this button.
  * @param {string} buttonText - Text to display within the button.
- * @param {string} buttonAlign - (optional) Horizontal alignment of button.
+ * @param {string} buttonAlign - Horizontal alignment of button.
  * - Valid strings: "left", "right", "center"
- * @param {Function} clickFunc - Function to run when the button is clicked. Do not include parenthases or args. Custom-made functions are allowed.
- * - Example: ns.toast
- * @param {any[]} clickFuncArgs - Array of args to run with clickFuncFunction to run when the button is clicked. Do not include parenthases or args.
- * - Example: ["HELP IM STUCK IN THE CODE DOCUMENTATION", "warning", 1000]
+ * @param {Function} clickFunc - Nameless arrow function to run when the button is clicked. Custom-made functions are allowed.
+ * - Example: () => { ns.print("foo"); ns.toast("bar") }
  * */
-function AddButton(hookName, column = 0, buttonID, buttonText, buttonAlign = "center", clickFunc = null, clickFuncArgs) {
+function AddButton(hookName, column = 0, buttonID, buttonText, buttonAlign = "center", clickFunc = () => alert("WARNING: This button lacks a function!")) {
 	// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
 	if (!(hooks_to_clear.includes(hookName))) hooks_to_clear.push(hookName);
 	// Check if this hook already has an existing row element. If so, use that.
@@ -404,14 +406,15 @@ function AddButton(hookName, column = 0, buttonID, buttonText, buttonAlign = "ce
 	if (rowElement === null) rowElement = AddTextRow(hookName, "primary");
 	// find the button with this ID (if it exists)
 	let buttonEl = d.getElementById(`ovv-button-${buttonID}`);
-	
 	// If a button with this ID does exist, update its attributes
 	if (buttonEl !== null) {
 		// update the parent (column) element
 		buttonEl.parentElement.style = `text-align: ${buttonAlign};`
 		buttonEl.parentElement.setAttribute("colspan", "1")
-		// update the innerText
+		// update the button innerText
 		buttonEl.innerText = `${buttonText}`;
+		// update the button style
+		buttonEl.style = `${buttonSyleParams}`;
 	}
 	// if no button with this ID exists, make one.
 	else {
@@ -428,32 +431,23 @@ function AddButton(hookName, column = 0, buttonID, buttonText, buttonAlign = "ce
 		// Create a new button element
 		let newButton = createElement("button", {
 			class: "css-fw8wf6",
-			tabIndex: 0,
 			id: `ovv-button-${buttonID}`,
 			innerText: `${buttonText}`,
 			attributes: {
 				"type": "button",
-				"style": "padding: 0px 10px; margin: 4px 4px 4px 4px;"
+				"style": `${buttonSyleParams}`
 			}
 		})
 		newButton.appendChild( createElement("span", {class: "MuiTouchRipple-root css-w0pj6f"}) )
 		// Insert the new button element into the column.
 		parentEl.appendChild(newButton);
 		buttonEl = newButton;
-		//buttonEl.removeEventListener("mouseup", listenFunc);
-		buttonEl.addEventListener("click", ((e) => { clicked_button = buttonID; }));
 	}
-
-	// If no function was specified for this button, set up a placeholder function to warn the player
-	if (clickFunc === null || clickFunc === undefined) {
-		clickFunc = alert
-		clickFuncArgs = ["WARNING: This button lacks a function!"]
-	}
+	// Set/update the onclick function for this button to update the CURRENTLY USED global clicked_button variable
+	// (We cannot use addEventListener, since we can't constantly push updates to the event listener. This is a problem since if we save changes to hud.js while it is running, the pointer to clicked_button becomes outdated.)
+	buttonEl.onclick = () => { clicked_button = buttonID; };
 	// Create the function to run when the button is clicked, and store it in button_funcs
-	button_funcs[buttonID] = function() {
-		try { clickFunc(...clickFuncArgs); }
-		catch(err) { throw new Error(`Click event listener threw an error while executing function - ${String(err)}`)}
-	};
+	button_funcs[buttonID] = () => clickFunc();
 	return buttonEl;
 };
 
@@ -745,10 +739,7 @@ function InitHud() {
 		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-bar MuiLinearProgress-barColorPrimary ", ""))
 	}
 	// Implement all hud settings
-
-	// These settings are experimental
 	if (squishWorkInfo) SimplifyWorkInfoRows();
-
 	// These settings are DISABLED, as they conflict with tooltips
 	/* ovvTableCont.style.maxHeight = `${maxHudHeight}px`;
 	ovvTableCont.style.transition = "all .2s";
@@ -787,7 +778,7 @@ function SimplifyWorkInfoRows() {
 	if (bottomEls.length == 0) return;
 	// Iterate through the bottom hud elements, changing styles to be more compact
 	for (let el of bottomEls) {
-		//el.parentElement.setAttribute("colspan", 3);
+		el.parentElement.setAttribute("colspan", 3);
 		// make all text rows to take up less horizontal space and align to the left
 		el.querySelectorAll("p").forEach((elp) => elp.style = `padding: 0px 0px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;`)
 		el.querySelectorAll("br").forEach((elbr) => elbr.outerHTML = " ");
@@ -808,17 +799,6 @@ function SimplifyWorkInfoRows() {
 // -------------------------------------------------------------------------------------
 // Helper functions
 // -------------------------------------------------------------------------------------
-
-
-/** Runs appropriate button functions when needed
- * @param {import("../").NS} ns
- * @param {string} buttonClicked - The ID for the button element that was clicked
- * */
-async function RunButtonCom(ns, buttonClicked) {
-	if (buttonClicked !== null && buttonClicked !== undefined) {
-		await button_funcs[buttonClicked]();
-	}
-};
 
 
 /** Heavily modified helper function from the game's source code for creating new elements.
@@ -942,3 +922,5 @@ function formatNumberShort(num, maxSignificantFigures = 6, maxDecimalPlaces = 3)
 	// TODO: A number like 9.999 once rounded to show 3 sig figs, will become 10.00, which is now 4 sig figs.
 	return ((sign < 0) ? "-" : "") + num.toFixed(Math.max(0, Math.min(maxDecimalPlaces, maxSignificantFigures - Math.floor(1 + Math.log10(num))))) + symbols[i];
 };
+
+}
