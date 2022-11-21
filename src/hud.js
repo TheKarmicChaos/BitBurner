@@ -199,9 +199,9 @@ export async function main(ns) {
 		AddTextRow("gangtimer", "info");
 		AddTextRow("augtimer", "info");
 		AddLine(4);
-		AddButton("buttons1", 0, "run-scanhud", "scan-hud.js", "right", () => ns.run(`scan-hud.js`));
-		AddButton("buttons1", 1, "run-testfile", "test.js", "left", () => ns.run(`test.js`));
-		AddButton("buttons2", 0, "toast-test", "Toast!", "right", () => ns.toast(`clicked!`, "success", 500));
+		AddButton("buttons1", 0, "run-scanhud", "Scan Hud", "right", () => ns.run(`scan-hud.js`));
+		AddButton("buttons1", 1, "run-testfile", "Test", "left", () => ns.run(`test.js`));
+		AddButton("buttons2", 0, "run-globaltail", "Globals", "right", () => ns.run(`global-display.js`));
 		AddButton("buttons2", 1, "missing-test", "Click Me!", "left");
 
 		// #################################################
@@ -215,6 +215,7 @@ export async function main(ns) {
 		AddTooltip("income",  MakeToolTipFromDict(GLOBAL_VARS["income"], `%key%: $%val%`, true)); // REMOVE THIS LINE BEFORE RUNNING
 		AddTooltip("run-scanhud", "Run scan-hud.js");
 		AddTooltip("run-testfile", "Run test.js");
+		AddTooltip("run-globaltail", "Run global-display.js");
 
 		// Kills
 		let kills = ns.getPlayer().numPeopleKilled;
@@ -741,6 +742,7 @@ function InitHud() {
 	}
 	// Implement all hud settings
 	if (squishWorkInfo) SimplifyWorkInfoRows();
+
 	// These settings are DISABLED, as they conflict with tooltips
 	/* ovvTableCont.style.maxHeight = `${maxHudHeight}px`;
 	ovvTableCont.style.transition = "all .2s";
@@ -795,7 +797,6 @@ function SimplifyWorkInfoRows() {
 		firstEl.innerText = firstEl.innerText.replace("You are attempting to", "Committing");
 	}
 };
-
 
 // -------------------------------------------------------------------------------------
 // Helper functions
