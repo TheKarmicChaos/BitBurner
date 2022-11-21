@@ -116,6 +116,7 @@ export async function main(ns) {
 	// Settings ----------------------------------------------------------------------------
 	const tailWindow = false; // Enables/Disables tail windows. Not reccommended for anything other than debugging.
 	const showHiddenRows = false; // Debug tool to unhide all hidden text rows; only applies to rows that are currently being updated, or to all rows when resetting hud via "kill all running scripts"
+	const squishWorkInfo = true; // If true, modifies the default "Working at ..." text, info, button, etc. at the bottom of the hud into a much more compact version.
 	const lineColSpan = 2; // Number of columns your separator lines should occupy.
 	const ToolTipStyleParams = // Default css style parameters used for your tooltips.
 	`font-family: "Lucida Console", "Lucida Sans Unicode", "Fira Mono", Consolas, "Courier New", Courier, monospace, "Times New Roman";
@@ -142,9 +143,6 @@ export async function main(ns) {
 	const buttonSyleParams = // Default css style parameters used for your custom buttons
 	`padding: 0px 10px;
 	margin: 4px 4px 4px 4px;`;
-
-	// Experimental settings (use at your own risk)
-	const squishWorkInfo = false; // If true, modifies the default "Working at ..." text, info, button, etc. at the bottom of the hud into a much more compact version.
 	
 	// Unused settings
 	const maxHudHeight = 1000 // Maximum vertical space (in pixels) the hud can occupy before requiring the player to scroll.
@@ -768,7 +766,7 @@ function MakeToolTipStyle() {
 };
 
 
-/** EXPERIMENTAL: Modifies the default "Working at ..." text, info, button, etc. at the bottom of the hud into a much more compact version.*/
+/** Modifies the default "Working at ..." text, info, button, etc. at the bottom of the hud into a much more compact version. */
 function SimplifyWorkInfoRows() {
 	// Make an array of the current bottom hud elements ("Working for...", Focus button, etc.)
 	let bottomEls = []
@@ -781,20 +779,25 @@ function SimplifyWorkInfoRows() {
 	if (bottomEls.length == 0) return;
 	// Iterate through the bottom hud elements, changing styles to be more compact
 	for (let el of bottomEls) {
-		el.parentElement.setAttribute("colspan", 3);
-		// make all text rows to take up less horizontal space and align to the left
-		el.querySelectorAll("p").forEach((elp) => elp.style = `padding: 0px 0px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;`)
-		el.querySelectorAll("br").forEach((elbr) => elbr.outerHTML = " ");
-		// make the Focus button occupy less space
-		el.querySelectorAll("button").forEach((elbutton) => elbutton.style = "padding: 0px 0px; margin: 1px 0px 0px;")
-	}
-	// If the first element is a text element
-	let firstEl = bottomEls[0].querySelector("p")
-	if (firstEl !== null) {
-		// Add some top padding to the first element
-		firstEl.style = `padding: 3px 0px 0px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;`;
-		// If present, shorten the abnoxiously long crime message of the first element "You are attempting to ..."
-		firstEl.innerText = firstEl.innerText.replace("You are attempting to", "Committing");
+		el.querySelectorAll("p").forEach((elp) => {
+			// If this text element is the FIRST bottom element, make text take up less horizontal space, align left, and add some top padding
+			if (elp === bottomEls[0].querySelector("p")) elp.style = `padding: 3px 0 0; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; text-align: left`;
+			// If not, make text take up less horizontal space, and align left
+			else elp.style = `padding: 0 0; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; text-align: left`;
+		})
+		el.querySelectorAll("button").forEach((elbutton) => {
+			elbutton.parentElement.setAttribute("colspan", 1);
+			// make the Focus button occupy less space
+			elbutton.style = `padding: 0 0; margin: 1px 0 0;`
+			// If the previous sibling is null, we have yet to relocate the focus button
+			if (elbutton.parentElement.previousSibling === null) {
+				// Move Focus button to be just after the job details (rep/sec, % done, etc.)
+				elbutton.parentElement.parentElement.previousSibling.appendChild(elbutton.parentElement)
+				// Make job details only occupy 1 column.
+				elbutton.parentElement.previousSibling.setAttribute("colspan", 1);
+				// NOTE: Do not delete the residual row element where the button used to be. This crashes the game to recovery mode.
+			}
+		})
 	}
 };
 
