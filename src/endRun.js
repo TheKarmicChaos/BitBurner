@@ -1,9 +1,13 @@
+import * as nstb from "./lib/nstools";
+
 /** @param {import("../").NS} ns */
 export async function main(ns) {
 	// ns.tail('endRun.js'); ns.disableLog("ALL"); ns.clearLog();
+	const GLOBAL_VARS = nstb.getGlobals(ns);
 	
 	ns.killall("home", true);
 	ns.toast(`RUN RESETS IN: 10`, "error", 900); await ns.sleep(1000)
+	nstb.updGlobals(ns, ["loop", GLOBAL_VARS["loop"] + 1]);
 	ns.toast(`RUN RESETS IN: 9`, "error", 900); await ns.sleep(1000)
 	ns.run("lp_stockmaster.js", 1, "-l");
 	ns.toast(`RUN RESETS IN: 8`, "error", 900); await ns.sleep(1000)

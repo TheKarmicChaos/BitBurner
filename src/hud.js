@@ -165,7 +165,8 @@ export async function main(ns) {
 		// (By default, this section will contain the hud rows that I personally use.)
 
 		AddTextRow("bitnode", "cha");
-		AddTextRow("aug", "cha");
+		AddTextRow("loop-sf", "cha");
+		AddTextRow("aug", "int");
 		AddDefault("hp", "ram");
 		AddTextRow("ram", "hp");
 		AddLine(0);

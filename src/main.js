@@ -18,6 +18,7 @@ export async function main(ns) {
 	let sourceFiles = await nstb.RunCom(ns, 'ns.singularity.getOwnedSourceFiles()')
 	let bndata = await nstb.RunCom(ns, 'ns.getBitNodeMultipliers()')
 	let runType = "redpill";
+	let PREV_VARS = nstb.getGlobals(ns);
 	let GLOBAL_VARS;
 
 	let numnodes = await nstb.RunCom(ns, 'ns.hacknet.numNodes()')
@@ -40,6 +41,7 @@ export async function main(ns) {
 		backdoors: ["home"],
 		bitNode: 0,
 		runType: "",
+		loop: 0,
 		income: { base: 0, hacknet: 0, gang: 0, corp: 0, playerCrime: 0, sleeveCrime: 0, playerWork: 0, sleeveWork: 0, hacking: 0, bladeburner: 0 },
 		hash: { count: 0, income: 0, max: 1 },
 		sleeve: { shock: 100 },
@@ -51,6 +53,8 @@ export async function main(ns) {
 	globalDict.sourceFiles = sourceFiles;
 	globalDict.bitNode = bitNode;
 
+	// Preserve loop counter if we didn't just switch bitnodes.
+	if (PREV_VARS && (PREV_VARS["bitNode"] === undefined || PREV_VARS["bitNode"] == bitNode)) globalDict.loop = PREV_VARS["loop"];
 
 
 	// SETTINGS & SETUP
@@ -345,9 +349,15 @@ export async function main(ns) {
 	};
 
 	async function UpdHud() {
+		const sfArray = GLOBAL_VARS["sourceFiles"]
+		let sfObj = sfArray.find((obj) => obj["n"] == bitNode)
+		let sfLv;
+		if (sfObj) sfLv = sfObj["lvl"];
+		else sfLv = 0;
 		let installedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()')
 		ns.run("hud.js", 1, "upd", "ram", "RAM", `${tb.StandardNotation(ns.getServerMaxRam('home'), 2)} GB`)
 		ns.run("hud.js", 1, "upd", "aug", "Augs", `${installedAugs.length} / ${bndata.DaedalusAugsRequirement}`)
-		ns.run("hud.js", 1, "upd", "bitnode", `BitNode-${GLOBAL_VARS["bitNode"]}:`, bName.substring(0, 14))
+		ns.run("hud.js", 1, "upd", "bitnode", `BitNode-${bitNode}:`, bName.substring(0, 14))
+		ns.run("hud.js", 1, "upd", "loop-sf", `Loop ${GLOBAL_VARS["loop"]}`, `SF ${sfLv}`)
 	}
 }
