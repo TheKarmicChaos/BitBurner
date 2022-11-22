@@ -62,11 +62,11 @@ Step 4: Making Buttons -------------------
 -------------------------------------------
 
 		External Updates Cheat Sheet:
-	TEXT ROW: UPDATE/SHOW 		ns.run("hud.js", 1, "upd", hook, "Leftside Text", "Rightside Text")
+	TEXT ROW: UPDATE/SHOW 		ns.run("hud.js", 1, "upd", hook, "Column 1 Text", "Column 2 Text", "Column 3 Text", ... )
 	TEXT ROW: HIDE				ns.run("hud.js", 1, "upd", hook)
 	TEXT ROW: CHANGE COLOR		ns.run("hud.js", 1, "color", hook, "new color")
 	PROGR BAR: UPDATE			ns.run("hud.js", 1, "progr", hook, currentValue, maximumValue)
-	PROGR BAR: CHANGE COLOR		ns.run("hud.js", 1, "progr color", hook, "new color", "new background color")
+	PROGR BAR: CHANGE COLOR		ns.run("hud.js", 1, "progr color", hook, "new color", "new background color (optional")
 	PROGR BAR: HIDE 			ns.run("hud.js", 1, "progr hide", hook)
 	PROGR BAR: SHOW				ns.run("hud.js", 1, "progr show", hook)
 	PROGR BAR: TOGGLE			ns.run("hud.js", 1, "progr toggle", hook)
@@ -81,6 +81,7 @@ Step 4: Making Buttons -------------------
 	- Add fancy ripple effect on button click that the game uses.
 	- Add support for hiding/showing hud buttons.
 	- Add new feature: Clickable dropdown buttons that allow the player to collapse categories of rows in the hud. (probably will use column 3 for this)
+	- Store & check much more info in global constants/vars to massively reduce lag.
 
 -------------------------------------------
 */
@@ -90,10 +91,10 @@ Step 4: Making Buttons -------------------
 //const d = document
 const d = eval("document")
 const symbols = ["", "k", "m", "b", "t", "q", "Q", "s", "S", "o", "n", "e33", "e36", "e39"];
-let clicked_button = null;
 const ovv = d.getElementsByClassName('MuiPaper-root')[0]; // unused
 const ovvHeader = ovv.childNodes[0].firstChild.firstChild.firstChild; // unused
 const ovvTableCont = ovv.childNodes[1].firstChild.firstChild.firstChild; // unused
+let clicked_button = null;
 
 
 /** @param {import("../").NS} ns */
@@ -102,22 +103,22 @@ export async function main(ns) {
 	// Local Constants & Vars - DO NOT MODIFY ----------------------------------------------
 	let clicked_button_temp = null;
 	if (clicked_button !== null) { clicked_button_temp = clicked_button; clicked_button = null; }
-	const hooks_to_clear = [];
-	const bars_to_clear = [];
+	const myTextHooks = [];
+	const myProgrHooks = [];
+	const myButtonHooks = [];
 	const button_funcs = {};
 	const colors = ns.ui.getTheme();
 	let updType = ns.args[0] || null;
 	let updHook = ns.args[1] || null;
-	let updArg1 = ns.args[2] || null;
-	let updArg2 = ns.args[3] || null;
-	let updArg3 = ns.args[4] || null;
-
+	let updArgs = ns.args.slice(2) || [];
 
 	// Settings ----------------------------------------------------------------------------
 	const tailWindow = false; // Enables/Disables tail windows. Not reccommended for anything other than debugging.
 	const showHiddenRows = false; // Debug tool to unhide all hidden text rows; only applies to rows that are currently being updated, or to all rows when resetting hud via "kill all running scripts"
 	const squishWorkInfo = true; // If true, modifies the default "Working at ..." text, info, button, etc. at the bottom of the hud into a much more compact version.
-	const lineColSpan = 2; // Number of columns your separator lines should occupy.
+	const numColumns = 3;	// Maximum number of columns you will ever use in your hud, excluding the auto-generated column for dropdown arrows. Minimum of 3.
+	const lineColSpan = 2;	// Number of columns your separator lines should span accross.
+	const progrColSpan = 2;	// Number of columns your progress bars should span accross.
 	const ToolTipStyleParams = // Default css style parameters used for your tooltips.
 	`font-family: "Lucida Console", "Lucida Sans Unicode", "Fira Mono", Consolas, "Courier New", Courier, monospace, "Times New Roman";
 	padding: 4px 8px;
@@ -218,7 +219,7 @@ export async function main(ns) {
 
 		// Kills
 		let kills = ns.getPlayer().numPeopleKilled;
-		UpdateTextRow("kill", "Kills", kills);
+		UpdateTextRow("kill", ["Kills", kills]);
 
 		// Kill progress (toward the 30 required to access all factions)
 		if (kills / 30 < 1) {
@@ -228,7 +229,7 @@ export async function main(ns) {
 
 		// Karma
 		var karma = ns.heart.break();
-		UpdateTextRow("karma", "Karma", StandardNotation(karma, 3));
+		UpdateTextRow("karma", ["Karma", StandardNotation(karma, 3)]);
 
 		// Karma progress (toward unlocking gang)
 		if (Math.abs(karma) / 54000 < 1
@@ -240,7 +241,7 @@ export async function main(ns) {
 
 		// Income
 		let totalCashPerSec = tb.SumDict(GLOBAL_VARS["income"]) // REMOVE THIS LINE BEFORE RUNNING
-		UpdateTextRow("income", "$/sec", `$${StandardNotation(totalCashPerSec, 3)}`); // REMOVE THIS LINE BEFORE RUNNING
+		UpdateTextRow("income", ["$/sec", `$${StandardNotation(totalCashPerSec, 3)}`]); // REMOVE THIS LINE BEFORE RUNNING
 
 		// ##################################################################################################
 
@@ -248,24 +249,19 @@ export async function main(ns) {
 		// If we run this file with certain args we can update hud elements from other files!
 		switch (updType) {
 			case "upd":
-				if (updArg1 == null) updArg1 = "";
-				if (updArg2 == null) updArg2 = "";
-				if (updArg3 == null) updArg3 = "";
-				UpdateTextRow(updHook, updArg1, updArg2, updArg3);
+				UpdateTextRow(updHook, updArgs);
 				break;
 			case "color":
-				if (updArg1 == null) updArg1 = "";
-				RecolorTextRow(updHook, updArg1);
+				if (updArgs.length == 0) throw new Error(`Too few args for updType "${updType}" passed into ns.run`);
+				else RecolorTextRow(updHook, updArgs[0]);
 				break;
 			case "progr":
-				if (updArg1 == null) updArg1 = 0; // Failsafe
-				if (updArg2 == null) updArg2 = 100; // Failsafe
-				UpdateProgrBar(updHook, updArg1, updArg2);
+				if (updArgs.length <= 1) throw new Error(`Too few args for updType "${updType}" passed into ns.run`);
+				else UpdateProgrBar(updHook, updArgs[0], updArgs[1]);
 				break;
 			case "progr color":
-				if (updArg1 == null) updArg1 = "primary"; // Failsafe
-				if (updArg2 == null) updArg2 = "rgb(17, 17, 17)"; // Default
-				RecolorProgrBar(updHook, updArg1, updArg2);
+				if (updArgs.length == 0) throw new Error(`Too few args for updType "${updType}" passed into ns.run`);
+				else RecolorProgrBar(updHook, updArgs[0], updArgs[1] || "rgb(17, 17, 17)");
 				break;
 			case "progr show":
 				ToggleProgrBar(updHook, "show");
@@ -277,13 +273,16 @@ export async function main(ns) {
 				ToggleProgrBar(updHook, "toggle");
 				break;
 			case "tooltip":
-				if (updArg1 == null) throw new Error(`Improper args for "tooltip" passed into ns.run`);
-				AddTooltip(updHook, updArg1);
+				if (updArgs.length == 0) throw new Error(`Too few args for updType "${updType}" passed into ns.run`);
+				else AddTooltip(updHook, updArgs[0]);
 				break;
 			case "clear":
-				for (const hook of hooks_to_clear) { UpdateTextRow(hook, null, null, null) };
-				for (const hook of bars_to_clear) { ToggleProgrBar(hook, "hide") };
+				for (const hook of myTextHooks) { UpdateTextRow(hook, []) };
+				for (const hook of myProgrHooks) { ToggleProgrBar(hook, "hide") };
+				for (const hook of myButtonHooks) {};
 				break;
+			default:
+				throw new Error(`Invalid updType "${updType}" passed into ns.run`);
 		}
 
 		// If a button was clicked, run the stored function for that button.
@@ -316,8 +315,8 @@ export async function main(ns) {
  * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
  * */
 function AddTextRow(hookName, color) {
-	// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
-	if (!(hooks_to_clear.includes(hookName))) hooks_to_clear.push(hookName);
+	// add this hook to the list of custom text hooks
+	if (!(myTextHooks.includes(hookName))) myTextHooks.push(hookName);
 	// Check if this hook already has an existing row element. If so, use that.
 	let rowElement = d.getElementById(`ovv-row-${hookName}`);
 	if (rowElement !== null) return rowElement;
@@ -355,31 +354,27 @@ function RecolorTextRow(hookToRecolor, color) {
 	// If color is from the Theme, replace it with the correct rgb/hex code
 	if (color in colors) color = colors[color];
 	// Replace the appropriate style colors to get the desired effect.
-	d.getElementById(`ovv-row-${hookToRecolor}`).querySelectorAll("p").forEach((el) => el.style = `color: ${color};${textStyleParams};`);
+	d.getElementById(`ovv-row-${hookToRecolor}`).querySelectorAll("p").forEach((el) => el.style = `color: ${color};${textStyleParams}`);
 };
 
 
 /** Updates a custom text row with new text in each column.
  * - If textL, textR, and text3 are all null, this row will be hidden.
  * @param {string} hookName - Name of the hook for text row
- * @param {string} textL - (optional) Text to display in column 1 of this row (left side)
- * @param {string} textR - (optional) Text to display in column 2 of this row (right side)
- * @param {string} text3 - (optional) Text to display in column 3 of this row
+ * @param {string} textL - (optional) Array of the new text to display in each column, from left to right.
+ * - If new text is not specified for some column, this function will clear all text from that column.
  * */
-function UpdateTextRow(hookName, textL = null, textR = null, text3 = null) {
-	// Determine the text we want in each column
-	if (showHiddenRows) textL = hookName;
-	else if (textL == null) textL = "";
-	if (textR == null) textR = "";
-	if (text3 == null) text3 = "";
-	// Get each column element by id
-	let col1 = d.getElementById(`ovv-${hookName}-0`)
-	let col2 = d.getElementById(`ovv-${hookName}-1`)
-	let col3 = d.getElementById(`ovv-${hookName}-2`)
-	// Update the relevant elements' innerText (only if they exist & have a "p" tag; otherwise the column is a button)
-	if (col1 !== null && col1.tagName == "P") col1.innerHTML = textL;
-	if (col2 !== null && col2.tagName == "P") col2.innerHTML = textR;
-	if (col3 !== null && col3.tagName == "P") col3.innerHTML = text3;
+function UpdateTextRow(hookName, newTextArray = []) {
+	// Iterate through each column
+	for (let n = 0; n < numColumns; n++) { 
+		// Determine the text we want in the column
+		let newText = newTextArray[n] || "";
+		if (n == 0 && showHiddenRows) newText = hookName;
+		// Get the column's <p> element by id
+		let el = d.getElementById(`ovv-${hookName}-${n}`)
+		// Update the element's innerText (only if it exists & has a "p" tag; otherwise the element doesn't exist or is a button)
+		if (el !== null && el.tagName == "P") el.innerHTML = newText;
+	}
 };
 
 
@@ -396,8 +391,8 @@ function UpdateTextRow(hookName, textL = null, textR = null, text3 = null) {
  * - Example: () => { ns.print("foo"); ns.toast("bar") }
  * */
 function AddButton(hookName, column = 0, buttonID, buttonText, buttonAlign = "center", clickFunc = () => ns.toast("This button lacks a function!", "warning")) {
-	// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
-	if (!(hooks_to_clear.includes(hookName))) hooks_to_clear.push(hookName);
+	// add this hook to the list of custom text hooks
+	if (!(myTextHooks.includes(hookName))) myTextHooks.push(hookName);
 	// Check if this hook already has an existing row element. If so, use that.
 	let rowElement = d.getElementById(`ovv-row-${hookName}`);
 	// if no row under this id exists, first create a new text row specifically for this button.
