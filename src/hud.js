@@ -138,17 +138,26 @@ export async function main(ns) {
 	transform-origin: top;
 	transition: all 0.2s;
 	color: ${colors.primary};
-	background-color: ${colors.well};`;
+	background-color: ${colors.well};
+	`.replace(/[\n\r\t]/g, ""); // This method removes the newline & tab characters.
 	const textStyleParams = // Default css style parameters added to the text rows in your hud (applies to all text columns)
+	`transform-origin: top;
+	overflow: hidden;
+	transition: all 0.2s;
+	max-height: 3em;
+	`.replace(/[\n\r\t]/g, ""); 
+	const textRowStyleParams = // Default css style parameters added to the text rows in your hud (applies to all text columns)
 	``;
 	const buttonSyleParams = // Default css style parameters used for your custom buttons
 	`padding: 0px 10px;
-	margin: 4px 4px 4px 4px;`;
+	margin: 4px 4px 4px 4px;
+	`.replace(/[\n\r\t]/g, ""); 
 	
 	// Unused settings
 	const maxHudHeight = 1000 // Maximum vertical space (in pixels) the hud can occupy before requiring the player to scroll.
 	const CAr = "◄"; // Text used for "Contracted dropdown" button
 	const EAr = "▼"; // Text used for "Expanded dropdown" button
+
 
 
 	// Main Function -----------------------------------------------------------------------
@@ -322,25 +331,39 @@ function AddTextRow(hookName, color) {
 	if (rowElement !== null) return rowElement;
 	// If color is from the Theme, replace it with the correct rgb/hex code
 	if (color in colors) color = colors[color];
-	// Get an existing display element from HUD.
-	let existingRow = d.getElementById(`ovv-row-hp`);
-	// Make a clone of it for our new hud element
-	let newHudRow = existingRow.cloneNode(true);
-	// give hook id to our new row-level element
-	newHudRow.id = `ovv-row-${hookName}`
-	// Remove any nested elements created by stats.js
-	newHudRow.querySelectorAll("p > p").forEach(el => el.parentElement.removeChild(el));
-	// Create hook id's for the children where we will be modifying the innerText.
-	newHudRow.querySelectorAll("p").forEach((el, i) => el.id = `ovv-${hookName}-${i}`);
-	// Remove the class responsible for color.
-	newHudRow.querySelectorAll("p").forEach((el) => el.className = `css-cxl1tz`);
-	// Override the game's style parameters by inserting our own.
-	newHudRow.querySelectorAll("p").forEach((el) => el.style = `color: ${color};${textStyleParams};`);
-	// Set the innerText for all p children to be empty (making the row invisible)
-	newHudRow.querySelectorAll("p").forEach((el) => el.innerText = "");
-	// Insert our element at the bottom of the hud
-	existingRow.parentElement.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
+	// Create a new row element
+	let newHudRow = createElement("tr", {
+		id: `ovv-row-${hookName}`,
+		class: "MuiTableRow-root css-1dix92e"
+	});
+	// Prepare the desired number of column elements (minimum of 3), and add them as children to the row element
+	// Iterate over the number of columns desired (minimum of 3)
+	for (let n = 0; n < Math.max(numColumns, 3); n++) { 
+		// Create a new column element
+		let newCol;
+		// The first column is constructed differently from the rest
+		if (n == 0) newCol = createElement("th", {
+			class: "jss11 css-hadb7u",
+			attributes: { "scope": "row" }
+		});
+		else newCol = createElement("td", {
+			class: "jss11 css-7v1cxh"
+		});
+		// Create a new <p> (paragraph) element for the text
+		let newPel = createElement("p", {
+			class: "css-cxl1tz",
+			id: `ovv-${hookName}-${n}`,
+			attributes: { "style": `color: ${color};${textStyleParams}` }
+		});
+		// Insert the new <p> element as a child of the new column element
+		newCol.appendChild(newPel);
+		// Insert the new column element as a child of the new row element
+		newHudRow.appendChild(newCol);
+	}
+	// Set the innerText of the first column to be visible, if we want to.
 	if (showHiddenRows) d.getElementById(`ovv-${hookName}-0`).innerText = hookName;
+	// Insert our row element at the bottom of the hud
+	d.getElementById(`ovv-row-hp`).parentElement.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
 	return newHudRow;
 };
 
@@ -463,8 +486,8 @@ function AddButton(hookName, column = 0, buttonID, buttonText, buttonAlign = "ce
  * - Supported colors are all rgb/hex colors & every named color in the "Theme Editor".
  * */
 function AddProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
-	// add this hook to the list of hooks to hide when hud.js is run with the arg "clear".
-	if (!(bars_to_clear.includes(hookName))) bars_to_clear.push(hookName);
+	// add this hook to the list of custom progr hooks.
+	if (!(myProgrHooks.includes(hookName))) myProgrHooks.push(hookName);
 	// Check if this hook already has an existing row element. If so, use that.
 	let rowElement = d.getElementById(`ovv-row-${hookName}-progr`);
 	if (rowElement !== null) return rowElement;
