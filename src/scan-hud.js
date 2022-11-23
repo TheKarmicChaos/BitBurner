@@ -6,7 +6,7 @@ export async function main(ns) {
 	const d = eval("document")
 	const ovv = d.getElementsByClassName('MuiPaper-root')[0];
 	const ovvHeader = ovv.childNodes[0].firstChild.firstChild.firstChild;
-	const ovvTableCont = ovv.childNodes[1].firstChild.firstChild.firstChild;
+	const ovvTableCont = ovv.childNodes[1].firstChild.firstChild.firstChild.firstChild;
 
 
 	PrintHTML(ovvTableCont);
