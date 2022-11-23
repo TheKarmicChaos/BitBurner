@@ -75,7 +75,7 @@ Step 4: Making Buttons -------------------
 	- Figure out how to center tooltips, like the ones the game uses for progress bars
 	- Add fancy ripple effect on button click that the game uses.
 	- Add support for hiding/showing hud buttons.
-	- Add support for progr bars & buttons to be inside dropdowns.
+	- Add support for lines, progr bars, & buttons to be inside dropdowns.
 
 -------------------------------------------
 */
@@ -124,7 +124,8 @@ const d = eval("document")
 const symbols = ["", "k", "m", "b", "t", "q", "Q", "s", "S", "o", "n", "e33", "e36", "e39"];
 const ovv = d.getElementsByClassName('MuiPaper-root')[0];
 const ovvHeader = ovv.childNodes[0].firstChild.firstChild.firstChild; // unused
-const ovvTableCont = ovv.childNodes[1].firstChild.firstChild.firstChild;
+const ovvTable = ovv.childNodes[1].firstChild.firstChild.firstChild; // unused
+const ovvTableCont = ovvTable.firstChild;
 let clicked_button = null;
 let myTextHooks = [];
 let myProgrHooks = [];
@@ -177,13 +178,7 @@ export async function main(ns) {
 	overflow: hidden;
 	transition: all 0.2s;
 	max-height: 3em;
-	`.replace(/[\n\r\t]/g, ""); 
-	const textRowStyleParams = // Default css style parameters added to the text rows in your hud (applies to all text columns)
-	`transform-origin: top;
-	overflow: hidden;
-	transition: all 0.2s;
-	max-height: 3em;
-	`.replace(/[\n\r\t]/g, ""); 
+	`.replace(/[\n\r\t]/g, "");
 	const buttonSyleParams = // Default css style parameters used for your custom buttons
 	`padding: 0px 10px;
 	margin: 4px 4px 4px 4px;
@@ -234,12 +229,14 @@ export async function main(ns) {
 		endDropdown("buyhash");
 		addLine(2);
 		addDefault("hack", "line3");
-		addDefault("str", "line3");
-		addDefault("def", "line3");
-		addDefault("dex", "line3");
-		addDefault("agi", "line3");
-		addDefault("cha", "line3");
-		addDefault("int", "line3");
+		startDropdown("hack");
+			addDefault("str", "line3");
+			addDefault("def", "line3");
+			addDefault("dex", "line3");
+			addDefault("agi", "line3");
+			addDefault("cha", "line3");
+			addDefault("int", "line3");
+		endDropdown("hack");
 		addLine(3);
 		addTextRow("karma", "error");
 		addProgrBar("karma", "error");
@@ -257,9 +254,9 @@ export async function main(ns) {
 		// #################################################
 		// LIST YOUR LOCAL UPDATES HERE
 		// #################################################
-		// (By default, this section will contain the hud elements that I personally update locally.)
+		// (By default, this section will contain stuff that I personally update locally.)
 
-		// Local Tooltip Updates
+		// My Local Tooltip Updates
 		addTooltip("run-scanhud", "Run scan-hud.js");
 		addTooltip("run-testfile", "Run test.js");
 		addTooltip("run-globaltail", "Run global-display.js");
@@ -349,7 +346,7 @@ export async function main(ns) {
 function addTextRow(hookName, color) {
 	// If hookName isn't in myTextHooks, add it.
 	if (!(myTextHooks.includes(hookName))) myTextHooks.push(hookName);
-	// If something is in the dropdownStack, add the hookName
+	// If the dropdownStack isn't empty, remember this hookName as a dropdownChild of the hook on the top of the stack.
 	if (!dropdownStack.isEmpty()) dropdownChildren[dropdownStack.peek()].push(hookName);
 	// If a row element with this hook already exists, we don't need to make a new one, so return here.
 	if (d.getElementById(`ovv-row-${hookName}`) !== null) return;
@@ -385,7 +382,7 @@ function addTextRow(hookName, color) {
 	// Set the innerText of the first column to be visible, if we want to.
 	if (showHiddenRows) d.getElementById(`ovv-${hookName}-0`).innerText = hookName;
 	// Insert our row element at the bottom of the hud
-	ovvTableCont.firstChild.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
+	ovvTableCont.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
 };
 
 
@@ -500,7 +497,7 @@ function startDropdown(hookName) {
 	dropdownChildren[hookName] = [];
 	// Add this hook to the top of the dropdownStack.
 	dropdownStack.push(hookName);
-}
+};
 
 
 function endDropdown(hookName) {
@@ -539,23 +536,23 @@ function endDropdown(hookName) {
 		// Re-assign variable dropdownEl to this newly added <p> element
 		dropdownEl = d.getElementById(`ovv-${hookName}-dropdown`);
 	}
-}
+};
+
 
 function expandDropdown(hookName) {
 	for (let hook of dropdownChildren[hookName]) {
 		//d.getElementById(`ovv-row-${hook}`).style.maxHeight = "3em"
 		d.getElementById(`ovv-row-${hook}`).querySelectorAll("p").forEach((el) => el.style.maxHeight = "3em")
 	}
-}
+};
+
 
 function collapseDropdown(hookName) {
 	for (let hook of dropdownChildren[hookName]) {
 		//d.getElementById(`ovv-row-${hook}`).style.maxHeight = "0"
 		d.getElementById(`ovv-row-${hook}`).querySelectorAll("p").forEach((el) => el.style.maxHeight = "0")
 	}
-}
-
-
+};
 
 
 // -------------------------------------------------------------------------------------
@@ -748,23 +745,30 @@ function toggleProgrBar(hookName, visibilityChange) {
  * - This is used to prevent over-updating the hud when you install augs, which pushes default rows to the bottom of the hud.
  * */
 function addDefault(hookName, nextRowHook = "extra") {
-	// Get the existing default display element from HUD, and the nextRow element if it exists
+	// Get the existing default display element from HUD, and the next row element if it exists
 	let rowElement = d.getElementById(`ovv-row-${hookName}`);
 	let nextRowElement = d.getElementById(`ovv-row-${nextRowHook}`);
 	// Remember the element of the progr bar if it exists
 	let progrEl = d.getElementById(`ovv-row-${hookName}-progr`);
 	if (rowElement !== null) {
+		// If the dropdownStack isn't empty, remember this hookName as a dropdownChild of the hook on the top of the stack.
+		if (!dropdownStack.isEmpty()) {
+			dropdownChildren[dropdownStack.peek()].push(hookName);
+			// If there is a progr bar, remember that too.
+			if (progrEl !== null) dropdownChildren[dropdownStack.peek()].push(`${hookName}-progr`);
+		}
 		// If the hook for the next row element exists, insert our element(s) before it
 		if (nextRowElement !== null) {
 			rowElement.parentElement.insertBefore(rowElement, nextRowElement);
+			// If there is a progr bar, insert that too
 			if (progrEl !== null) {progrEl.parentElement.insertBefore(progrEl, nextRowElement)}
 		}
-		// otherwise, insert our element(s) at the bottom of the hud
+		// Otherwise, insert our element(s) at the bottom of the hud
 		else { 
 			rowElement.parentElement.insertBefore(rowElement, d.getElementById(`ovv-row-extra`));
+			// If there is a progr bar, insert that too
 			if (progrEl !== null) {progrEl.parentElement.insertBefore(progrEl, d.getElementById(`ovv-row-extra`))}
 		}
-		return rowElement;
 	}
 };
 
@@ -829,18 +833,21 @@ function parseArgs() {
 		}
 	}
 	return parsedArray;
-}
+};
+
 
 /** Initializes the hud for editing & handles changing default hud elements to fit your settings.*/
 function initHud() {
 	let hooknames = ["hp", "money", "str", "def", "dex", "agi", "cha", "int", "extra"];
 	let progrhooks = ["str", "def", "dex", "agi", "cha", "int", "hack"];
-	// give every default hud element a row-level hook
+	// Iterate over every default hud hook 
 	for (let hook of hooknames) {
 		let rowElement = d.getElementById(`ovv-row-${hook}`); 
 		if (rowElement !== null) continue; // only proceed if the row-hook doesn't exist yet
+		// give every default hud element a row-level hook
 		if (hook == "extra") { d.getElementById(`overview-extra-hook-0`).parentElement.parentElement.id = `ovv-row-extra` }
 		else { d.getElementById(`overview-${hook}-hook`).parentElement.parentElement.id = `ovv-row-${hook}`}
+		// Also give the progr bar a row-level hook, if it exists.
 		if (progrhooks.includes(hook)) { d.getElementById(`ovv-row-${hook}`).nextSibling.id = `ovv-row-${hook}-progr`}
 	}
 	// If the element of this id doesn't exist, then this is the first time InitHud has run, so run the following code.
@@ -851,23 +858,26 @@ function initHud() {
 		let nodeToDel = d.getElementById("overview-hack-hook").parentElement.parentElement;
 		d.getElementById("overview-hack-hook").parentElement.parentElement.parentElement.removeChild(nodeToDel);
 		d.getElementById("ovv-row-hack").nextSibling.id = `ovv-row-hack-progr`;
+		d.getElementById("ovv-row-hack").appendChild(createElement("td", { class: "jss11 css-7v1cxh" }))
 		// Remove all separator lines from the default hud.
 		d.getElementById("ovv-row-agi").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
 		d.getElementById("ovv-row-int").childNodes.forEach((el) => el.className = el.className.replaceAll('jss12', 'jss11'));
 		// Tidy up the game's messy css class names
-		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("th").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-sizeMedium ", ""))
-		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("td").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-alignRight MuiTableCell-sizeMedium ", ""))
-		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("p").forEach((el) => el.className = el.className.replace("MuiTypography-root MuiTypography-body1 ", ""))
-		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-root MuiLinearProgress-colorPrimary MuiLinearProgress-determinate ", ""))
-		d.getElementById("ovv-row-agi").parentElement.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-bar MuiLinearProgress-barColorPrimary ", ""))
+		ovvTableCont.querySelectorAll("th").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-sizeMedium ", ""))
+		ovvTableCont.querySelectorAll("td").forEach((el) => el.className = el.className.replace("MuiTableCell-root MuiTableCell-body MuiTableCell-alignRight MuiTableCell-sizeMedium ", ""))
+		ovvTableCont.querySelectorAll("p").forEach((el) => el.className = el.className.replace("MuiTypography-root MuiTypography-body1 ", ""))
+		ovvTableCont.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-root MuiLinearProgress-colorPrimary MuiLinearProgress-determinate ", ""))
+		ovvTableCont.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-bar MuiLinearProgress-barColorPrimary ", ""))
+		// Add style to the default hud elements that will allow us to collapse them with dropdowns later
+		for (let hook of hooknames) d.getElementById(`ovv-row-${hook}`).querySelectorAll("p").forEach((el) => el.style = `${textStyleParams}`);
 	}
-	// Implement all hud settings
+	// Implement hud settings
 	if (squishWorkInfo) simplifyWorkInfoRows();
 
 	// These settings are DISABLED, as they conflict with tooltips
-	/* ovvTableCont.style.maxHeight = `${maxHudHeight}px`;
-	ovvTableCont.style.transition = "all .2s";
-	ovvTableCont.style.overflow = "scroll"; */
+	/* ovvTable.style.maxHeight = `${maxHudHeight}px`;
+	ovvTable.style.transition = "all .2s";
+	ovvTable.style.overflow = "scroll"; */
 };
 
 
