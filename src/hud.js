@@ -115,7 +115,7 @@ class Stack {
 	}
 	/** Clears the stack container */
 	clear() { this.container = []; }
-};
+}
 
 
 	// Global Constants & Vars - DO NOT MODIFY ---------------------------------------------
@@ -176,7 +176,7 @@ export async function main(ns) {
 	const textStyleParams = // Default css style parameters added to the text rows in your hud (applies to all text columns)
 	`transform-origin: top;
 	overflow: hidden;
-	transition: all 0.2s;
+	transition: all 0.5s;
 	max-height: 3em;
 	`.replace(/[\n\r\t]/g, "");
 	const buttonSyleParams = // Default css style parameters used for your custom buttons
@@ -300,9 +300,9 @@ export async function main(ns) {
 					break;
 				case "!!clear":
 					// Hide all custom-made hooks
-					for (const hook of myTextHooks) { updateTextRow(hook, []) };
-					for (const hook of myProgrHooks) { toggleProgrBar(hook, "hide") };
-					for (const hook of myButtonHooks) {};
+					for (const hook of myTextHooks) { updateTextRow(hook, []) }
+					for (const hook of myProgrHooks) { toggleProgrBar(hook, "hide") }
+					for (const hook of myButtonHooks) {}
 					// Wipe all stored data
 					myTextHooks = [];
 					myProgrHooks = [];
@@ -383,7 +383,7 @@ function addTextRow(hookName, color) {
 	if (showHiddenRows) d.getElementById(`ovv-${hookName}-0`).innerText = hookName;
 	// Insert our row element at the bottom of the hud
 	ovvTableCont.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
-};
+}
 
 
 /** Recolors an existing custom text row.
@@ -398,7 +398,7 @@ function recolorTextRow(hookToRecolor, color) {
 	d.getElementById(`ovv-row-${hookToRecolor}`).querySelectorAll("p").forEach((el) => {
 		if (el !== d.getElementById(`ovv-${hookToRecolor}-dropdown`)) el.style.color = `${color}`;
 	})
-};
+}
 
 
 /** Updates a custom text row with new text in each column.
@@ -418,7 +418,7 @@ function updateTextRow(hookName, newTextArray = []) {
 		// Update the element's innerText (only if it exists & has a "p" tag; otherwise the element doesn't exist or is a button)
 		if (el !== null && el.tagName == "P") el.innerHTML = newText;
 	}
-};
+}
 
 
 /** Creates/Updates a customizable button to an existing/new text row in the hud.
@@ -442,7 +442,7 @@ function addButton(hookName, column = 0, buttonID, buttonText, buttonAlign = "ce
 	if (rowElement === null) {
 		addTextRow(hookName, "primary");
 		rowElement = d.getElementById(`ovv-row-${hookName}`);
-	};
+	}
 	// Get the button using buttonID (if it exists)
 	let buttonEl = d.getElementById(`ovv-button-${buttonID}`);
 	// If no button using buttonID exists, make one.
@@ -477,10 +477,10 @@ function addButton(hookName, column = 0, buttonID, buttonText, buttonAlign = "ce
 	else { buttonEl.innerText = `${buttonText}`; }
 	// Update the onclick function for this button to update the CURRENTLY USED global clicked_button variable
 	// (NOTE: We cannot use addEventListener, since we can't constantly push updates to the event listener. This is a problem since if we save changes to hud.js while it is running, the pointer to clicked_button becomes outdated.)
-	buttonEl.onclick = () => { clicked_button = buttonID; };
+	buttonEl.onclick = () => { clicked_button = buttonID; }
 	// Create the function to run when the button is clicked, and store it in button_funcs
 	button_funcs[buttonID] = () => clickFunc();
-};
+}
 
 // -------------------------------------------------------------------------------------
 // Dropdown functions
@@ -497,7 +497,7 @@ function startDropdown(hookName) {
 	dropdownChildren[hookName] = [];
 	// Add this hook to the top of the dropdownStack.
 	dropdownStack.push(hookName);
-};
+}
 
 
 function endDropdown(hookName) {
@@ -536,7 +536,7 @@ function endDropdown(hookName) {
 		// Re-assign variable dropdownEl to this newly added <p> element
 		dropdownEl = d.getElementById(`ovv-${hookName}-dropdown`);
 	}
-};
+}
 
 
 function expandDropdown(hookName) {
@@ -544,7 +544,7 @@ function expandDropdown(hookName) {
 		//d.getElementById(`ovv-row-${hook}`).style.maxHeight = "3em"
 		d.getElementById(`ovv-row-${hook}`).querySelectorAll("p").forEach((el) => el.style.maxHeight = "3em")
 	}
-};
+}
 
 
 function collapseDropdown(hookName) {
@@ -552,7 +552,7 @@ function collapseDropdown(hookName) {
 		//d.getElementById(`ovv-row-${hook}`).style.maxHeight = "0"
 		d.getElementById(`ovv-row-${hook}`).querySelectorAll("p").forEach((el) => el.style.maxHeight = "0")
 	}
-};
+}
 
 
 // -------------------------------------------------------------------------------------
@@ -616,7 +616,7 @@ function addProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
 	// Insert our row element at the bottom of the hud
 	d.getElementById(`ovv-row-extra`).parentElement.insertBefore(newRow, d.getElementById(`ovv-row-extra`));
 	return newRow;
-};
+}
 
 
 /** Recolors an existing progress bar.
@@ -642,7 +642,7 @@ function recolorProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
 	let htmlR = curHTML.split(`;">`)[1];
 	// Update the style of the deepest child, setting "background-color" to the desired color for "full" parts of bar
 	backElement.innerHTML = `${htmlL}; background-color: ${color};">${htmlR}`;
-};
+}
 
 
 /** Updates a progress bar and its tooltip with a new percentage.
@@ -666,7 +666,7 @@ function updateProgrBar(hookName, curAmt, maxAmt) {
 	let htmlR = curHTML.split("%);")[1];
 	// Update the style of the deepest child, setting "transform" to "translateX(-N%)" where N is the inverse percentage of the progress bar's completion. 
 	elementToUpdate.innerHTML = `${htmlL}transform: translateX(-${(100 - percent).toFixed(2)}%);${htmlR}`;
-};
+}
 
 
 /** Hides/Shows a progress bar on the hud.
@@ -729,7 +729,7 @@ function toggleProgrBar(hookName, visibilityChange) {
 				throw new Error(`Invalid arg ${visibilityChange} @ toggleProgrBar`);
 		}
 	}
-};
+}
 
 
 // -------------------------------------------------------------------------------------
@@ -770,7 +770,7 @@ function addDefault(hookName, nextRowHook = "extra") {
 			if (progrEl !== null) {progrEl.parentElement.insertBefore(progrEl, d.getElementById(`ovv-row-extra`))}
 		}
 	}
-};
+}
 
 
 /** Updates or inserts a decorative separator line at the bottom of the hud.
@@ -796,7 +796,7 @@ function addLine(lineNum) {
 	// Insert our element at the bottom of the hud
 	existingRow.parentElement.insertBefore(newHudRow, d.getElementById(`ovv-row-extra`));
 	return newHudRow;
-};
+}
 
 
 /** Updates or creates a tooltip for a custom row element.
@@ -811,7 +811,7 @@ function addTooltip(hookName, content, params = {}) {
 	let el = d.getElementById(`ovv-row-${hookName}`)
 	if (el === null) el = d.getElementById(`ovv-button-${hookName}`).parentElement;
 	setElementTooltip(el, params)
-};
+}
 
 
 // -------------------------------------------------------------------------------------
@@ -833,7 +833,7 @@ function parseArgs() {
 		}
 	}
 	return parsedArray;
-};
+}
 
 
 /** Initializes the hud for editing & handles changing default hud elements to fit your settings.*/
@@ -878,7 +878,7 @@ function initHud() {
 	/* ovvTable.style.maxHeight = `${maxHudHeight}px`;
 	ovvTable.style.transition = "all .2s";
 	ovvTable.style.overflow = "scroll"; */
-};
+}
 
 
 /** Creates or updates a custom css style used for our custom-made tooltips */
@@ -896,7 +896,7 @@ function makeToolTipStyle() {
 	else if (existingStyle.innerHTML != desiredHTML) {
 		existingStyle.innerHTML = desiredHTML
 	}
-};
+}
 
 
 /** Modifies the default "Working at ..." text, info, button, etc. at the bottom of the hud into a much more compact version. */
@@ -932,7 +932,7 @@ function simplifyWorkInfoRows() {
 			}
 		})
 	}
-};
+}
 
 // -------------------------------------------------------------------------------------
 // Helper functions
@@ -966,7 +966,7 @@ function createElement(tagName, params = {}) {
 	// This is one of many helper functions that is called in this function, but is the only one we need.
 	setElementTooltip(el, params);
 	return el;
-};
+}
 
 
 /** Heavily modified helper function from the game's source code for creating tooltips.
@@ -1013,7 +1013,7 @@ function setElementTooltip(el, params) {
 			curToolTip.innerHTML = params.tooltiptext
 		}
 	}
-};
+}
 
 	
 /** Puts any large number into a standard notation "000.000a" string 
@@ -1024,7 +1024,7 @@ function standardNotation(num, decimalplaces = 1) {
 	let formattedNum = formatNumberShort(num, 6, decimalplaces);
 	if (String(num).length <= formattedNum.length && (num % 1) == 0) return String(num);
 	else return formattedNum;
-};
+}
 
 
 /** Return a formatted representation of the monetary amount using scale sympols (e.g. 6.50M)
@@ -1040,6 +1040,6 @@ function formatNumberShort(num, maxSignificantFigures = 6, maxDecimalPlaces = 3)
 	for (var i = 0, sign = Math.sign(num), num = Math.abs(num); num >= 1000 && i < symbols.length; i++) num /= 1000;
 	// TODO: A number like 9.999 once rounded to show 3 sig figs, will become 10.00, which is now 4 sig figs.
 	return ((sign < 0) ? "-" : "") + num.toFixed(Math.max(0, Math.min(maxDecimalPlaces, maxSignificantFigures - Math.floor(1 + Math.log10(num))))) + symbols[i];
-};
+}
 
 }
