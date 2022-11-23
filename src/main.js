@@ -355,9 +355,48 @@ export async function main(ns) {
 		if (sfObj) sfLv = sfObj["lvl"];
 		else sfLv = 0;
 		let installedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()')
-		ns.run("hud.js", 1, "upd", "ram", "RAM", `${tb.StandardNotation(ns.getServerMaxRam('home'), 2)} GB`)
-		ns.run("hud.js", 1, "upd", "aug", "Augs", `${installedAugs.length} / ${bndata.DaedalusAugsRequirement}`)
-		ns.run("hud.js", 1, "upd", "bitnode", `BitNode-${bitNode}:`, bName.substring(0, 14))
-		ns.run("hud.js", 1, "upd", "loop-sf", `Loop ${GLOBAL_VARS["loop"]}`, `SF ${sfLv}`)
+		let updArgs = []
+		updArgs.push("!!upd", "ram", "RAM", `${tb.StandardNotation(ns.getServerMaxRam('home'), 2)} GB`);
+		updArgs.push("!!upd", "aug", "Augs", `${installedAugs.length} / ${bndata.DaedalusAugsRequirement}`)
+		updArgs.push("!!upd", "bitnode", `BitNode-${bitNode}:`, bName.substring(0, 14))
+		updArgs.push("!!upd", "loop-sf", `Loop ${GLOBAL_VARS["loop"]}`, `SF ${sfLv}`)
+		// Tooltips
+		updArgs.push("!!tooltip", "bitnode", makeToolTipFromDict(GLOBAL_VARS["bnMults"]));
+		updArgs.push("!!tooltip", "income", makeToolTipFromDict(GLOBAL_VARS["income"], `%key%: $%val%`, true));
+		// Kills
+		let kills = player.numPeopleKilled;
+		updArgs.push("!!upd", "kill", "Kills", kills);
+		// Kill progress (toward the 30 required to access all factions)
+		if (kills / 30 < 1) updArgs.push("!!progr show", "kill", "!!progr", "kill", kills, 30);
+		else updArgs.push("!!progr hide", "kill");
+		// Karma
+		var karma = ns.heart.break();
+		updArgs.push("!!upd", "karma", "Karma", tb.StandardNotation(karma, 3));
+		// Karma progress (toward unlocking gang)
+		if (Math.abs(karma) / 54000 < 1 && GLOBAL_VARS["gang"]["want"])
+			updArgs.push("!!progr show", "karma", "!!progr", "karma", Math.abs(karma), 54000);
+		else updArgs.push("!!progr hide", "karma");
+		// Income
+		let totalCashPerSec = tb.SumDict(GLOBAL_VARS["income"]);
+		updArgs.push("!!upd", "income", "$/sec", `$${tb.StandardNotation(totalCashPerSec, 3)}`);
+
+		ns.run("hud.js", 1, ...updArgs)
+
+		function makeToolTipFromDict(dict, format = `%key%: %val%`, exclude0 = false) {
+			let entries = [];
+			for (let key in dict) {
+				let seg1 = format.split("%key%")[0]
+				let seg2 = format.split("%key%")[1].split("%val%")[0]
+				let seg3 = format.split("%val%")[1]
+				let val = dict[key]
+				if (typeof val == "number") val = tb.StandardNotation(val, 3);
+				if (exclude0 && dict[key] != 0) {
+					entries.push(`${seg1}${key}${seg2}${val}${seg3}`)
+				} else if (!exclude0) {
+					entries.push(`${seg1}${key}${seg2}${val}${seg3}`)
+				}
+			}
+			return entries.join(`\n`);
+		};
 	}
 }

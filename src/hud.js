@@ -1,7 +1,3 @@
-// I store lots of data in my "global vars". Remove these imports and all calls of imported functions before you run this script.
-import * as nstb from "./lib/nstools";
-import * as tb from "./lib/toolbox";
-
 /*
 ----------------------------------------------------------------------------------------
 				README - Instructions for how to use this script
@@ -12,8 +8,6 @@ Step 0: Setup -----------------------------
 	WIP :: After you have customized your hud via Steps 1-3, you may be tempted to run the script to test if it works.
 Before you do, make sure you have already done the following.
 
-- Delete both imports.
-- Ctrl + F "REMOVE THIS LINE BEFORE RUNNING" and delete all 6 lines with that comment.
 - (Optional) Tweak the consts/vars under the section labelled "Settings" (before the main function) to fit to your liking.
 - WIP
 
@@ -272,38 +266,9 @@ export async function main(ns) {
 		// (By default, this section will contain the hud elements that I personally update locally.)
 
 		// Local Tooltip Updates
-		const GLOBAL_VARS = nstb.getGlobals(ns); // REMOVE THIS LINE BEFORE RUNNING
-		addTooltip("bitnode", makeToolTipFromDict(GLOBAL_VARS["bnMults"])); // REMOVE THIS LINE BEFORE RUNNING
-		addTooltip("income",  makeToolTipFromDict(GLOBAL_VARS["income"], `%key%: $%val%`, true)); // REMOVE THIS LINE BEFORE RUNNING
 		addTooltip("run-scanhud", "Run scan-hud.js");
 		addTooltip("run-testfile", "Run test.js");
 		addTooltip("run-globaltail", "Run global-display.js");
-
-		// Kills
-		let kills = ns.getPlayer().numPeopleKilled;
-		updateTextRow("kill", ["Kills", kills]);
-
-		// Kill progress (toward the 30 required to access all factions)
-		if (kills / 30 < 1) {
-			toggleProgrBar("kill", "show");
-			updateProgrBar("kill", kills, 30);
-		} else toggleProgrBar("kill", "hide");
-
-		// Karma
-		var karma = ns.heart.break();
-		updateTextRow("karma", ["Karma", standardNotation(karma, 3)]);
-
-		// Karma progress (toward unlocking gang)
-		if (Math.abs(karma) / 54000 < 1
-			&& GLOBAL_VARS["gang"]["want"] // REMOVE THIS LINE BEFORE RUNNING
-			) {
-			toggleProgrBar("karma", "show");
-			updateProgrBar("karma", Math.abs(karma), 54000);
-		} else toggleProgrBar("karma", "hide");
-
-		// Income
-		let totalCashPerSec = tb.SumDict(GLOBAL_VARS["income"]) // REMOVE THIS LINE BEFORE RUNNING
-		updateTextRow("income", ["$/sec", `$${standardNotation(totalCashPerSec, 3)}`]); // REMOVE THIS LINE BEFORE RUNNING
 
 		// ##################################################################################################
 
