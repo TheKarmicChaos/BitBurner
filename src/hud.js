@@ -30,11 +30,11 @@ Step 2: Updating Your Hud -----------------
 reset your hud, you need to use the "Kill all running scripts" option (in the options menu or bottom-right corner of
 the hud). To actually update each line of the hud, you have two options. The more RAM-expensive option (not recommened)
 is to add a "while" loop to the main function of this script and update every row locally (within this script).
-The cheaper and easier option (recommended) is to update as few rows locally as possible, and instead use ns.run in your
+The cheaper, easier, and less laggy option (recommended) is to update as few things locally as possible, and instead use ns.run in your
 other looping scripts to run hud.js, passing arguments that tell the hud which row to update and with what information.
 
 - Go down to the section labelled "LIST YOUR LOCAL UPDATES HERE"
-- Define all hud updates you want to run locally. (Be wary of RAM usage here! These will happen every single time hud.js is run!)
+- Define all hud updates you want to run locally. (Be wary of RAM usage and script time complexity here! These will happen every single time hud.js is run!)
 - Go to each of your other scripts that contain information you want to display in your hud.
 - Add the command ns.run("hud.js") to each of those scripts, passing the proper arguments so that hud.js knows what to update. A cheat sheet can be found below.
 
@@ -45,7 +45,7 @@ extra non-vital information. Tooltips for progress bars will be automatically cr
 itself. For text rows, you will need to add and update tooltips manually.
 
 - Go down to the section labelled "LIST YOUR LOCAL UPDATES HERE"
-- Define all tooltip updates you want to run locally. (Again, be wary of RAM usage here!)
+- Define all tooltip updates you want to run locally. (Again, be wary of RAM usage & script complexity here!)
 - Go to each of your other scripts that contain information you want to display in a hud tooltip.
 - Add the command ns.run("hud.js") to each of those scripts, passing the proper arguments so that hud.js knows what to update. A cheat sheet can be found below.
 
@@ -66,6 +66,7 @@ Step 4: Making Buttons -------------------
 	PROGR BAR: TOGGLE			ns.run("hud.js", 1, "!!progr toggle", hook )
 	TOOLTIP: UPDATE/ADD			ns.run("hud.js", 1, "!!tooltip", hook, "Tooltip Content" )
 	CLEAR HUD ELEMENTS			ns.run("hud.js", 1, "!!clear" )
+	PASSING MULTIPLE UPDATES	ns.run("hud.js", 1, "!!progr show", hook1, "!!upd", hook2, "foo", "bar", "!!tooltip", hook3, "More Text", ... )
 
 -------------------------------------------
 
@@ -74,17 +75,13 @@ Step 4: Making Buttons -------------------
 	- Figure out how to center tooltips, like the ones the game uses for progress bars
 	- Add fancy ripple effect on button click that the game uses.
 	- Add support for hiding/showing hud buttons.
-	- Add new feature: Clickable dropdown buttons that allow the player to collapse categories of rows in the hud. (probably will use column 3 for this)
-	- Store & check much more info in global constants/vars to massively reduce lag.
+	- Add support for progr bars & buttons to be inside dropdowns.
 
 -------------------------------------------
 */
 
-// -------------------------------------------------------------------------------------
-// Classes
-// -------------------------------------------------------------------------------------
 
-
+	// Class definitions - DO NOT MODIFY ---------------------------------------------------
 /** Stack data structure (Last-In First-Out). */
 class Stack {
 	maxSize = 15;
@@ -140,8 +137,7 @@ export async function main(ns) {
 	// Local Constants & Vars - DO NOT MODIFY ----------------------------------------------
 	let clicked_button_temp = null;
 	if (clicked_button !== null) { clicked_button_temp = clicked_button; clicked_button = null; }
-
-	let hookOrder = [];
+	let hookOrder = []; //unused
 	const dropdownChildren = {};
 	const colors = ns.ui.getTheme();
 	var dropdownStack = new Stack();
@@ -154,7 +150,7 @@ export async function main(ns) {
 	const EAr = "▼"; // Clickable text used for "Expanded dropdown" button
 	const numColumns = 3;	// Maximum number of columns you will ever use in your hud, excluding the auto-generated column for dropdown arrows. Minimum of 3.
 	const lineColSpan = 2;	// Number of columns your separator lines should span accross.
-	const progrColSpan = 2;	// Number of columns your progress bars should span accross.
+	const progrColSpan = 2;	// unused // Number of columns your progress bars should span accross.
 	const ToolTipStyleParams = // Default css style parameters used for your tooltips.
 	`font-family: "Lucida Console", "Lucida Sans Unicode", "Fira Mono", Consolas, "Courier New", Courier, monospace, "Times New Roman";
 	padding: 4px 8px;
@@ -195,7 +191,6 @@ export async function main(ns) {
 	
 	// Unused settings
 	const maxHudHeight = 1000 // Maximum vertical space (in pixels) the hud can occupy before requiring the player to scroll.
-
 
 
 	// Main Function -----------------------------------------------------------------------
