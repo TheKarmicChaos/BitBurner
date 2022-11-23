@@ -56,16 +56,16 @@ Step 4: Making Buttons -------------------
 -------------------------------------------
 
 		External Updates Cheat Sheet:
-	TEXT ROW: UPDATE/SHOW 		ns.run("hud.js", 1, "upd", hook, "Column 1 Text", "Column 2 Text", "Column 3 Text", ... )
-	TEXT ROW: HIDE				ns.run("hud.js", 1, "upd", hook)
-	TEXT ROW: CHANGE COLOR		ns.run("hud.js", 1, "color", hook, "new color")
-	PROGR BAR: UPDATE			ns.run("hud.js", 1, "progr", hook, currentValue, maximumValue)
-	PROGR BAR: CHANGE COLOR		ns.run("hud.js", 1, "progr color", hook, "new color", "new background color (optional")
-	PROGR BAR: HIDE 			ns.run("hud.js", 1, "progr hide", hook)
-	PROGR BAR: SHOW				ns.run("hud.js", 1, "progr show", hook)
-	PROGR BAR: TOGGLE			ns.run("hud.js", 1, "progr toggle", hook)
-	TOOLTIP: UPDATE/ADD			ns.run("hud.js", 1, "tooltip", hook, "Tooltip Content")
-	CLEAR HUD ELEMENTS			ns.run("hud.js", 1, "clear")
+	TEXT ROW: UPDATE/SHOW 		ns.run("hud.js", 1, "!!upd", hook, "Column 1 Text", "Column 2 Text", "Column 3 Text", ... )
+	TEXT ROW: HIDE				ns.run("hud.js", 1, "!!upd", hook )
+	TEXT ROW: CHANGE COLOR		ns.run("hud.js", 1, "!!color", hook, "new color" )
+	PROGR BAR: UPDATE			ns.run("hud.js", 1, "!!progr", hook, currentValue, maximumValue )
+	PROGR BAR: CHANGE COLOR		ns.run("hud.js", 1, "!!progr color", hook, "new color", "new background color (optional)" )
+	PROGR BAR: HIDE 			ns.run("hud.js", 1, "!!progr hide", hook )
+	PROGR BAR: SHOW				ns.run("hud.js", 1, "!!progr show", hook )
+	PROGR BAR: TOGGLE			ns.run("hud.js", 1, "!!progr toggle", hook )
+	TOOLTIP: UPDATE/ADD			ns.run("hud.js", 1, "!!tooltip", hook, "Tooltip Content" )
+	CLEAR HUD ELEMENTS			ns.run("hud.js", 1, "!!clear" )
 
 -------------------------------------------
 
@@ -140,12 +140,10 @@ export async function main(ns) {
 	// Local Constants & Vars - DO NOT MODIFY ----------------------------------------------
 	let clicked_button_temp = null;
 	if (clicked_button !== null) { clicked_button_temp = clicked_button; clicked_button = null; }
+
 	let hookOrder = [];
 	const dropdownChildren = {};
 	const colors = ns.ui.getTheme();
-	let updType = ns.args[0] || null;
-	let updHook = ns.args[1] || null;
-	let updArgs = ns.args.slice(2) || [];
 	var dropdownStack = new Stack();
 
 	// Settings ----------------------------------------------------------------------------
@@ -204,6 +202,7 @@ export async function main(ns) {
 	try {
 		// Run initialization functions
 		if (tailWindow) { ns.tail("hud.js", "home", ...ns.args); ns.disableLog("ALL"); ns.clearLog(); }
+		let runArgs = parseArgs();
 		initHud();
 		makeToolTipStyle();
 
@@ -274,48 +273,53 @@ export async function main(ns) {
 
 
 		// If we run this file with certain args we can update hud elements from other files!
-		switch (updType) {
-			case "upd":
-				updateTextRow(updHook, updArgs);
-				break;
-			case "color":
-				if (updArgs.length == 0) throw new Error(`Too few args for updType "${updType}" passed into ns.run`);
-				else recolorTextRow(updHook, updArgs[0]);
-				break;
-			case "progr":
-				if (updArgs.length <= 1) throw new Error(`Too few args for updType "${updType}" passed into ns.run`);
-				else updateProgrBar(updHook, updArgs[0], updArgs[1]);
-				break;
-			case "progr color":
-				if (updArgs.length == 0) throw new Error(`Too few args for updType "${updType}" passed into ns.run`);
-				else recolorProgrBar(updHook, updArgs[0], updArgs[1] || "rgb(17, 17, 17)");
-				break;
-			case "progr show":
-				toggleProgrBar(updHook, "show");
-				break;
-			case "progr hide":
-				toggleProgrBar(updHook, "hide");
-				break;
-			case "progr toggle":
-				toggleProgrBar(updHook, "toggle");
-				break;
-			case "tooltip":
-				if (updArgs.length == 0) throw new Error(`Too few args for updType "${updType}" passed into ns.run`);
-				else addTooltip(updHook, updArgs[0]);
-				break;
-			case "clear":
-				// Hide all custom-made hooks
-				for (const hook of myTextHooks) { updateTextRow(hook, []) };
-				for (const hook of myProgrHooks) { toggleProgrBar(hook, "hide") };
-				for (const hook of myButtonHooks) {};
-				// Wipe all stored data
-				myTextHooks = [];
-				myProgrHooks = [];
-				myButtonHooks = [];
-				button_funcs = {};
-				break;
-			default:
-				throw new Error(`Invalid updType "${updType}" passed into ns.run`);
+		for (let argArray of runArgs) {
+			let updType = argArray[0] || null;
+			let updHook = argArray[1] || null;
+			let updArgs = argArray.slice(2) || [];
+			switch (updType) {
+				case "!!upd":
+					updateTextRow(updHook, updArgs);
+					break;
+				case "!!color":
+					if (updArgs.length == 0) throw new Error(`Too few args for updType "${updType}" passed into ns.run`);
+					else recolorTextRow(updHook, updArgs[0]);
+					break;
+				case "!!progr":
+					if (updArgs.length <= 1) throw new Error(`Too few args for updType "${updType}" passed into ns.run`);
+					else updateProgrBar(updHook, updArgs[0], updArgs[1]);
+					break;
+				case "!!progr color":
+					if (updArgs.length == 0) throw new Error(`Too few args for updType "${updType}" passed into ns.run`);
+					else recolorProgrBar(updHook, updArgs[0], updArgs[1] || "rgb(17, 17, 17)");
+					break;
+				case "!!progr show":
+					toggleProgrBar(updHook, "show");
+					break;
+				case "!!progr hide":
+					toggleProgrBar(updHook, "hide");
+					break;
+				case "!!progr toggle":
+					toggleProgrBar(updHook, "toggle");
+					break;
+				case "!!tooltip":
+					if (updArgs.length == 0) throw new Error(`Too few args for updType "${updType}" passed into ns.run`);
+					else addTooltip(updHook, updArgs[0]);
+					break;
+				case "!!clear":
+					// Hide all custom-made hooks
+					for (const hook of myTextHooks) { updateTextRow(hook, []) };
+					for (const hook of myProgrHooks) { toggleProgrBar(hook, "hide") };
+					for (const hook of myButtonHooks) {};
+					// Wipe all stored data
+					myTextHooks = [];
+					myProgrHooks = [];
+					myButtonHooks = [];
+					button_funcs = {};
+					break;
+				default:
+					throw new Error(`Invalid updType "${updType}" passed into ns.run`);
+			}
 		}
 
 		// If a button was clicked, run the stored function for that button.
@@ -815,6 +819,22 @@ function addTooltip(hookName, content, params = {}) {
 // Setup/Init functions
 // -------------------------------------------------------------------------------------
 
+/** Converts ns.args into an array-of-arrays that the main function can read. */
+function parseArgs() {
+	let args = ns.args
+	// Make the empty array within which to store subarrays
+	let parsedArray = []
+	for (let arg of args) {
+		// If an arg is an updType (starts with "!!"), make a new subarray and add it to parsedArray
+		if (typeof arg == "string" && arg.substring(0,2) == "!!") parsedArray.push([arg]);
+		// Otherwise add the arg to the most rercent subarray
+		else {
+			try { parsedArray[parsedArray.length-1].push(arg); }
+			catch(err) {throw new Error("Invalid args passed into ns.run") }
+		}
+	}
+	return parsedArray;
+}
 
 /** Initializes the hud for editing & handles changing default hud elements to fit your settings.*/
 function initHud() {
@@ -970,17 +990,17 @@ function setElementTooltip(el, params) {
 			// Set the tooltip to start out as invisible
 			d.getElementById(`${el.id}-tooltip`).style.visibility = "hidden";
 			d.getElementById(`${el.id}-tooltip`).style.opacity = "0";
-			d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 40px, 0px) scale3d(0.95, 0.95, 0.95)";
+			d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 25px, 0px) scale3d(0.95, 0.95, 0.95)";
 			// Add event listeners for mouseout/mouseover to hide/show the tooltip.
 			el.addEventListener('mouseover', (e) => {
 				d.getElementById(`${el.id}-tooltip`).style.visibility = "visible";
 				d.getElementById(`${el.id}-tooltip`).style.opacity = "1";
-				d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 40px, 0px) scale3d(1, 1, 1)";
+				d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 25px, 0px) scale3d(1, 1, 1)";
 			});
 			el.addEventListener('mouseout', (e) => {
 				d.getElementById(`${el.id}-tooltip`).style.visibility = "hidden";
 				d.getElementById(`${el.id}-tooltip`).style.opacity = "0";
-				d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 40px, 0px) scale3d(0.95, 0.95, 0.95)";
+				d.getElementById(`${el.id}-tooltip`).style.transform = "translate3d(0px, 25px, 0px) scale3d(0.95, 0.95, 0.95)";
 			});
 		}
 		// If the current tooltip exists but the text does not match what we want, replace it.
@@ -988,25 +1008,6 @@ function setElementTooltip(el, params) {
 			curToolTip.innerHTML = params.tooltiptext
 		}
 	}
-};
-
-
-// Incomplete - this function works, but not as intended.
-function makeToolTipFromDict(dict, format = `%key%: %val%`, exclude0 = false) {
-	let entries = [];
-	for (let key in dict) {
-		let seg1 = format.split("%key%")[0]
-		let seg2 = format.split("%key%")[1].split("%val%")[0]
-		let seg3 = format.split("%val%")[1]
-		let val = dict[key]
-		if (typeof val == "number") val = standardNotation(val, 3);
-		if (exclude0 && dict[key] != 0) {
-			entries.push(`${seg1}${key}${seg2}${val}${seg3}`)
-		} else if (!exclude0) {
-			entries.push(`${seg1}${key}${seg2}${val}${seg3}`)
-		}
-	}
-	return entries.join(`\n`);
 };
 
 	

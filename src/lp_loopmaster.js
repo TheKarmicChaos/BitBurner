@@ -340,7 +340,7 @@ export async function main(ns) {
 								queuedAugs.push(augname)
 							}
 						}
-						ns.run("hud.js", 1, "upd", "augtimer", "Aug Countdwn", tb.StandardTime(Math.ceil(countdownT)))
+						ns.run("hud.js", 1, "!!upd", "augtimer", "Aug Countdwn", tb.StandardTime(Math.ceil(countdownT)))
 						ns.print(`Buyable Augs:`);
 						for (let aug of list) { ns.print( tb.TextFloat(34, aug.substring(0,20), " ", "$" + tb.StandardNotation(data[aug].cost, 3)) ); }
 						await ns.sleep(1000);

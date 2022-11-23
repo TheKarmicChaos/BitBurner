@@ -167,7 +167,7 @@ export async function main(ns) {
             const thresholdToBuy = pre4s ? options['pre-4s-buy-threshold-return'] : options['buy-threshold'];
             const thresholdToSell = pre4s ? options['pre-4s-sell-threshold-return'] : options['sell-threshold'];
             if (myStocks.length > 0) doStatusUpdate(ns, allStocks, myStocks, disableHud);
-            else if (!disableHud) ns.run('hud.js', 1, "upd", "stock", "Stock", "$0.000");
+            else if (!disableHud) ns.run('hud.js', 1, "!!upd", "stock", "Stock", "$0.000");
             if (pre4s && allStocks[0].priceHistory.length < minTickHistory) {
                 log(ns, `Building a history of stock prices (${allStocks[0].priceHistory.length}/${minTickHistory})...`);
                 await ns.sleep(sleepInterval);
@@ -543,7 +543,7 @@ function doStatusUpdate(ns, stocks, myStocks, disableHud) {
         `Profit: ${formatMoney(totalProfit, 3)} Holdings: ${formatMoney(liquidation_value, 3)} (Cost: ${formatMoney(est_holdings_cost, 3)}) ` +
         `Net: ${formatMoney(totalProfit + liquidation_value - est_holdings_cost, 3)}`
     log(ns, status);
-    if (!disableHud) ns.run('hud.js', 1, "upd", "stock", "Stock", "" + formatMoney(liquidation_value, 6, 3));
+    if (!disableHud) ns.run('hud.js', 1, "!!upd", "stock", "Stock", "" + formatMoney(liquidation_value, 6, 3));
 }
 
 /** @param {import("../").NS} ns **/

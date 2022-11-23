@@ -83,9 +83,11 @@ export async function main(ns) {
 			await BuyServ(desiredRAM, servNum);
 		} else { debugStr = "B>Sv" }
 		// Update Hud
-		ns.run('hud.js', 1, "upd", 'buyserv', debugStr, costStr);
-		if (buyCondsMet) ns.run('hud.js', 1, "color", 'buyserv', 'money');
-		else if (!buyCondsMet) ns.run('hud.js', 1, "color", 'buyserv', 'hp');
+		let upd1 = ["!!upd", 'buyserv', debugStr, costStr];
+		let upd2;
+		if (buyCondsMet) upd2 = ["!!color", 'buyserv', 'money'];
+		else if (!buyCondsMet) upd2 = ["!!color", 'buyserv', 'hp'];
+		ns.run('hud.js', 1, ...upd1, ...upd2);
 
 		await ns.sleep(1);
 	}

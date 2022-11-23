@@ -72,7 +72,7 @@ export async function main(ns) {
 	}
 
 	nstb.updGlobals(ns, ["gang.want", false, "gang.has", true]); // Update globals, since we now have a gang.
-	ns.run("hud.js", 1, "upd", "gangtimer"); // Clear HUD gang timer
+	ns.run("hud.js", 1, "!!upd", "gangtimer"); // Clear HUD gang timer
 	ns.resizeTail(385, 675); await ns.sleep(1); ns.moveTail(1455, 225); // Resize tail window to fit the increased info we will print.
 
 
@@ -137,8 +137,8 @@ export async function main(ns) {
 		var tUntilGang = Math.ceil((54000 - Math.abs(karma)) / totalkps)
 
 		if (tUntilGang > 0 && totalkps > 0 && !GLOBAL_VARS["gang"]["has"]) {
-			ns.run("hud.js", 1, "upd", "gangtimer", "Gang in", tb.StandardTime(tUntilGang));
-		} else { ns.run("hud.js", 1, "upd", "gangtimer"); }
+			ns.run("hud.js", 1, "!!upd", "gangtimer", "Gang in", tb.StandardTime(tUntilGang));
+		} else { ns.run("hud.js", 1, "!!upd", "gangtimer"); }
 	}
 
 	/** Updates all variable stats that need updating each loop. */

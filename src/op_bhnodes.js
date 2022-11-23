@@ -6,7 +6,6 @@ export async function main(ns) {
 	//ns.tail('op_bhnodes.js'); ns.disableLog("ALL"); ns.clearLog();
 
 	// get total income
-
 	let GLOBAL_VARS = nstb.getGlobals(ns);
 	let totalCashPerSec = tb.SumDict(GLOBAL_VARS["income"])
 	let strats = GLOBAL_VARS["strats"];
@@ -23,11 +22,13 @@ export async function main(ns) {
 	let maxHash = () => ns.hacknet.hashCapacity()
 
 	let hacknetProduction = 0;
+	let hudUpdates = [];
 	await BuyNext();
 	if (ns.hacknet.numNodes()) { await SpendHash(hacknetProduction); }
 
 	nstb.updGlobals(ns, ["hash.income", hacknetProduction, "hash.count", hashes(), "hashmaxhashes", maxHash()])
-	ns.run('hud.js', 1, "upd", 'hashincome', "#/sec", `#${tb.StandardNotation(hacknetProduction, 3)}`);
+	hudUpdates.push("!!upd", 'hashincome', "#/sec", `#${tb.StandardNotation(hacknetProduction, 3)}`);
+	ns.run('hud.js', 1, ...hudUpdates);
 
 	// Functions
 
@@ -61,15 +62,14 @@ export async function main(ns) {
 				let hashStr;
 				if (hashes() < maxHash()) { hashStr = "Hashes" }
 				else { hashStr = "Hashes (MAX)" }
-				ns.run('hud.js', 1, "upd", 'hash', hashStr, `#${tb.StandardNotation(hashes(), 3)}`);
-
-				ns.run('hud.js', 1, "upd", 'buynode', debugStr, `$${tb.StandardNotation(purCost, 3)}`);
+				hudUpdates.push("!!upd", 'hash', hashStr, `#${tb.StandardNotation(hashes(), 3)}`)
+				hudUpdates.push("!!upd", 'buynode', debugStr, `$${tb.StandardNotation(purCost, 3)}`)
 
 				await ns.sleep(10);
 				buyCount++;
 			}
-			if (buyCondsMet) ns.run('hud.js', 1, "color", 'buynode', "money");
-			else if (!buyCondsMet) ns.run('hud.js', 1, "color", 'buynode', "hp");
+			if (buyCondsMet) hudUpdates.push("!!color", 'buynode', "money");
+			else if (!buyCondsMet) hudUpdates.push("!!color", 'buynode', "hp");
 		}
 
 		if (newNodes > 0) { ns.toast(`Bought ${newNodes} new hNodes`, 'warning', 4000) }
@@ -228,8 +228,8 @@ export async function main(ns) {
 			while (hashes() >= ns.hacknet.hashCost("Sell for Money")) {
 				ns.hacknet.spendHashes("Sell for Money");
 			}
-			ns.run('hud.js', 1, "upd", 'buyhash', "B>Money", `#${tb.StandardNotation(ns.hacknet.hashCost("Sell for Money"), 3)}`);
-			ns.run('hud.js', 1, "color", 'buyhash', "hack");
+			hudUpdates.push("!!upd", 'buyhash', "B>Money", `#${tb.StandardNotation(ns.hacknet.hashCost("Sell for Money"), 3)}`);
+			hudUpdates.push("!!color", 'buyhash', "hack");
 		}
 
 		// if we already have a decent income of hashes & cash, diversify hash upgrades
@@ -312,25 +312,25 @@ export async function main(ns) {
 			// Update all relevant hud elements
 			if (hasCorp) {
 				let corpStr = "B>" + nextCupgr;
-				ns.run('hud.js', 1, "upd", 'buyhashcorp', corpStr, `#${tb.StandardNotation(nextCupgrCost, 3)}`);
+				hudUpdates.push("!!upd", 'buyhashcorp', corpStr, `#${tb.StandardNotation(nextCupgrCost, 3)}`);
 				if (nextCupgrCost <= maxHash() && (shouldBuyFund || shouldBuyResr))
-					ns.run('hud.js', 1, "color", 'buyhashcorp', 'hack');
-				else ns.run('hud.js', 1, "color", 'buyhashcorp', 'hp');
-			} else ns.run('hud.js', 1, "upd", 'buyhashcorp');
+					hudUpdates.push("!!color", 'buyhashcorp', 'hack');
+				else hudUpdates.push("!!color", 'buyhashcorp', 'hp');
+			} else hudUpdates.push("!!upd", 'buyhashcorp');
 
 			if (hasBB) {
 				let bladeStr = "B>" + nextBupgr
-				ns.run('hud.js', 1, "upd", 'buyhashblade', bladeStr, `#${tb.StandardNotation(nextBupgrCost, 3)}`);
+				hudUpdates.push("!!upd", 'buyhashblade', bladeStr, `#${tb.StandardNotation(nextBupgrCost, 3)}`);
 				if (nextBupgrCost <= maxHash() && (shouldBuyRank || shouldBuySP))
-					ns.run('hud.js', 1, "color", 'buyhashblade', 'hack');
-				else ns.run('hud.js', 1, "color", 'buyhashblade', 'hp');
-			} else ns.run('hud.js', 1, "upd", 'buyhashblade');
+					hudUpdates.push("!!color", 'buyhashblade', 'hack');
+				else hudUpdates.push("!!color", 'buyhashblade', 'hp');
+			} else hudUpdates.push("!!upd", 'buyhashblade');
 
-			ns.run('hud.js', 1, "upd", 'buyhash', genericUpgrStr, genericCostStr);
+			hudUpdates.push("!!upd", 'buyhash', genericUpgrStr, genericCostStr);
 			if (hashToCashPerSec > 0 || (nextGupgrCost <= maxHash() && (shouldBuyStudy || shouldBuyGym)))
-				ns.run('hud.js', 1, "color", 'buyhash', "hack");
-			else ns.run('hud.js', 1, "color", 'buyhash', "hp");
-				ns.run('hud.js', 1, "color", 'buyhash', "hack");
+				hudUpdates.push("!!color", 'buyhash', "hack");
+			else hudUpdates.push("!!color", 'buyhash', "hp");
+			hudUpdates.push("!!color", 'buyhash', "hack");
 		}
 
 		// write income to globals
