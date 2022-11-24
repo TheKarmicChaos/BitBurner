@@ -13,7 +13,7 @@ export async function main(ns) {
 	let metaPlan = "nogang";
 	if (ns.args[0]) metaPlan = ns.args[0];
 	if (runType == "bladeburner") { metaPlan = "bladeburner" }
-	else if (GLOBAL_VARS["hackMult"] > 0 && bndata.GangSoftcap > 0 && bndata.GangUniqueAugs > 0) { metaPlan = "all" }
+	else if (GLOBAL_VARS["hackMult"] > 0 && bndata.GangSoftcap * bndata.GangUniqueAugs > 0) { metaPlan = "all" }
 	else if (GLOBAL_VARS["hackMult"] <= 0) { metaPlan = "pillonly" }
 
 	let maxSpend = player.money / 2
