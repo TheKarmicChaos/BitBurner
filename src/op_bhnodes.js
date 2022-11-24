@@ -26,7 +26,7 @@ export async function main(ns) {
 	await BuyNext();
 	if (ns.hacknet.numNodes()) { await SpendHash(hacknetProduction); }
 
-	nstb.updGlobals(ns, ["hash.income", hacknetProduction, "hash.count", hashes(), "hashmaxhashes", maxHash()])
+	nstb.updGlobals(ns, ["hash.income", hacknetProduction, "hash.count", hashes(), "hash.maxhashes", maxHash()])
 	hudUpdates.push("!!upd", 'hashincome', "#/sec", `#${tb.StandardNotation(hacknetProduction, 3)}`);
 	ns.run('hud.js', 1, ...hudUpdates);
 
