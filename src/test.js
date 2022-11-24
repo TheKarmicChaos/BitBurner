@@ -6,6 +6,8 @@ export async function main(ns) {
 	ns.tail('test.js');
 	ns.clearLog();
 	const d = eval("document");
+	const GLOBAL_VARS = nstb.getGlobals(ns);
+
 	
 
 	ns.print("INFO \n",
@@ -22,5 +24,4 @@ export async function main(ns) {
 	//ns.print(tb.RecursivePrint(ns.gang.getGangInformation()))
 	//ns.print(tb.RecursivePrint(ns.corporation.getCorporation()))
 	
-
 }
