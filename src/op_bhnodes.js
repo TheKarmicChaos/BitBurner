@@ -13,7 +13,7 @@ export async function main(ns) {
 	const BITNODE_MULT = strats["hackn"];
 	let defaultnum = 0.8; if (bitNode == 9) { defaultnum = 1};
 
-	let softCap = 0.0001; if (strats["hackn"] >= 0.1) { softCap = Math.min(defaultnum, strats["hackn"]) };
+	let softCap = 0.0001; if (strats["hackn"] > 0.1) { softCap = Math.min(defaultnum, strats["hackn"]) };
 	let hardCap = 500e12;
 	let maxSpend = Math.max(hardCap, totalCashPerSec / 1) // cap out at hardCap, but if we are making money fast enough we can keep buying
 
@@ -170,7 +170,7 @@ export async function main(ns) {
 				if (purCost <= maxSpend || purName == "1stNode") {
 					// once cost is above 500m (9b for newnodes), save up for a corp if we want one (& TIX API)
 					if ((purCost < 500e6 * BITNODE_MULT && purName != "NewNode") || (purCost < 9e9 * BITNODE_MULT && purName == "NewNode")
-					|| (!GLOBAL_VARS["corp"]["want"] && ns.stock.has4SDataTIXAPI())){
+					|| (!GLOBAL_VARS["corp"]["want"] && !GLOBAL_VARS["want4s"])){
 						buyCondsMet = true;
 						if (getMoney() >= purCost) { 
 							let nodeIndex;

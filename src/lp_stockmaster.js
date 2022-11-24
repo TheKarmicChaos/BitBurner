@@ -160,7 +160,7 @@ export async function main(ns) {
             const holdings = await refresh(ns, !pre4s, allStocks, myStocks); // Returns total stock value
             const corpus = holdings + playerStats.money; // Corpus means total stocks + cash
             const maxHoldings = (1 - fracH) * corpus; // The largest value of stock we could hold without violiating fracH (Fraction to keep as cash)
-            if ((pre4s || nstb.getGlobals(ns)["corp"]["want"]) && !mock && await tryGet4SApi(ns, playerStats, bitnodeMults, corpus * (options['buy-4s-budget'] - fracH) - reserve))
+            if (((pre4s && nstb.getGlobals(ns)["want4s"])|| nstb.getGlobals(ns)["corp"]["want"]) && !mock && await tryGet4SApi(ns, playerStats, bitnodeMults, corpus * (options['buy-4s-budget'] - fracH) - reserve))
                 continue; // Start the loop over if we just bought 4S API access or Corp
 
             // Be more conservative with our decisions if we don't have 4S data
@@ -572,33 +572,37 @@ async function tryGet4SApi(ns, playerStats, bitnodeMults, budget) {
     const has4S = await checkAccess(ns, 'has4SData');
     const totalCost = (has4S ? 0 : cost4sData) + cost4sApi;
     const needToGetCorp = nstb.getGlobals(ns)["corp"]["want"]
+    const want4S = nstb.getGlobals(ns)["want4s"]
 
-    // Liquidate shares if it would allow us to afford 4S API data
-    if (totalCost > budget + playerStats.money) /* Need to reserve some money to invest */
-        return false;
-    if (playerStats.money < totalCost)
-        await liquidate(ns);
-    if (!has4S) {
-        if (await tryBuy(ns, 'purchase4SMarketData'))
-            log(ns, `SUCCESS: Purchased 4SMarketData for ${formatMoney(cost4sData)} ` +
+    if (want4S) { // If we want 4s
+        // Liquidate shares if it would allow us to afford 4S API data
+        if (totalCost > budget + playerStats.money) /* Need to reserve some money to invest */
+            return false;
+        if (playerStats.money < totalCost)
+            await liquidate(ns);
+        if (!has4S) {
+            if (await tryBuy(ns, 'purchase4SMarketData'))
+                log(ns, `SUCCESS: Purchased 4SMarketData for ${formatMoney(cost4sData)} ` +
+                    `(At ${formatDuration(playerStats.playtimeSinceLastBitnode)} into BitNode)`, true, 'success');
+            else
+                log(ns, 'ERROR attempting to purchase 4SMarketData!', false, 'error');
+        }
+        if (await tryBuy(ns, 'purchase4SMarketDataTixApi')) {
+            log(ns, `SUCCESS: Purchased 4SMarketDataTixApi for ${formatMoney(cost4sApi)} ` +
                 `(At ${formatDuration(playerStats.playtimeSinceLastBitnode)} into BitNode)`, true, 'success');
-        else
-            log(ns, 'ERROR attempting to purchase 4SMarketData!', false, 'error');
-    }
-    if (await tryBuy(ns, 'purchase4SMarketDataTixApi')) {
-        log(ns, `SUCCESS: Purchased 4SMarketDataTixApi for ${formatMoney(cost4sApi)} ` +
-            `(At ${formatDuration(playerStats.playtimeSinceLastBitnode)} into BitNode)`, true, 'success');
-        return true;
-    } else {
-        log(ns, 'ERROR attempting to purchase 4SMarketDataTixApi!', false, 'error');
-        if (!(5 in dictSourceFiles)) { // If we do not have access to bitnode multipliers, assume the cost is double and try again later
-            log(ns, 'INFO: Bitnode mults are not available (SF5) - assuming everything is twice as expensive in the current bitnode.');
-            bitnodeMults.FourSigmaMarketDataCost *= 2;
-            bitnodeMults.FourSigmaMarketDataApiCost *= 2;
+            nstb.updGlobals(ns, ["want4s", false]);
+            return true;
+        } else {
+            log(ns, 'ERROR attempting to purchase 4SMarketDataTixApi!', false, 'error');
+            if (!(5 in dictSourceFiles)) { // If we do not have access to bitnode multipliers, assume the cost is double and try again later
+                log(ns, 'INFO: Bitnode mults are not available (SF5) - assuming everything is twice as expensive in the current bitnode.');
+                bitnodeMults.FourSigmaMarketDataCost *= 2;
+                bitnodeMults.FourSigmaMarketDataApiCost *= 2;
+            }
         }
     }
     
-    if (needToGetCorp) { // If we need a corp
+    if (needToGetCorp) { // If we want a corp
         // Liquidate shares if it would allow us to afford corp.
         if (150e9 > budget + playerStats.money) /* Need to reserve some money to invest */
             return false;

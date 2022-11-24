@@ -51,7 +51,7 @@ export async function main(ns) {
 
 	// push all elements from the each of the following arrays, in order, after sorting them based on stats gained per sec spent grafting
 	async function PrepRunAll() {
-		if ("hackn" in strats) {
+		if ("hackn" in strats && strats["hackn"] > 0.1) {
 			if (strats["hackn"] >= 0.5) { entrLimit = 8; minMoneyToGraft = 0.5e9; }
 			else if (strats["hackn"] < 0.5) { entrLimit = 6; minMoneyToGraft = 1e9; }
 			graftlist = ["Neuroreceptor Management Implant", "nickofolas Congruity Implant", "CashRoot Starter Kit", "BitRunners Neurolink"];

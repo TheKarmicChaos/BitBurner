@@ -80,7 +80,7 @@ export async function main(ns) {
 			const cost4s = cost4sData + cost4sApi;
 
 			let buyCondsMet = false;
-			if (!(upgrCost > cost4s && !ns.stock.has4SDataTIXAPI())
+			if (!(upgrCost > cost4s && GLOBAL_VARS["want4s"])
 				&& !(upgrCost > 150e9 && GLOBAL_VARS["corp"]["want"])) {
 				if (upgrCost <= maxSpend) {
 					buyCondsMet = true;
@@ -111,7 +111,7 @@ export async function main(ns) {
 			}
 			
 			// replace the hud text with misc other upgrades if we happen to be purchasing those first
-			if (upgrCost > cost4s && !ns.stock.has4SDataTIXAPI()) {
+			if (upgrCost > cost4s && GLOBAL_VARS["want4s"]) {
 				buyCondsMet = true;
 				debugStr = "B>4sAPI";
 				costStr = `$${tb.StandardNotation(cost4s, 3)}`;

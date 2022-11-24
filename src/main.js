@@ -42,6 +42,7 @@ export async function main(ns) {
 		bitNode: 0,
 		runType: "",
 		loop: 0,
+		want4s: false,
 		income: { base: 0, hacknet: 0, gang: 0, corp: 0, playerCrime: 0, sleeveCrime: 0, playerWork: 0, sleeveWork: 0, hacking: 0, bladeburner: 0 },
 		hash: { count: 0, income: 0, max: 1 },
 		sleeve: { shock: 100 },
@@ -125,9 +126,9 @@ export async function main(ns) {
 	if (bndata.InfiltrationMoney > 0) {
 		strats["infil_money"] = bndata.InfiltrationMoney
 	}
-	if (bndata.FourSigmaMarketDataApiCost < 100
-		&& bndata.FourSigmaMarketDataCost < 100) {
-		strats["stocks"] = 1
+	if (bndata.FourSigmaMarketDataApiCost > 4
+		|| bndata.FourSigmaMarketDataCost > 5) {
+		globalDict.want4s = false;
 	}
 
 	// EXP-making strategies
@@ -196,7 +197,7 @@ export async function main(ns) {
 				if ("crime_money" in strats || 'gang' in strats || "work_money" in strats) { BankStrat('op_task-manager.js'); };
 				BankStrat('op_bupgr.js');
 				if ('hackn' in strats) { BankStrat('op_bhnodes.js') };
-				if ("stocks" in strats && player.money >= 2e6) { BankStrat('lp_stockmaster.js'); };
+				if (player.money >= 2e6) { BankStrat('lp_stockmaster.js'); };
 				if (bndata.PurchasedServerLimit > 0) { BankStrat('op_bservs.js') };
 				BankStrat('lp_svhack.js');
 				BankStrat('mp_nuke-backdoor.js');
@@ -220,7 +221,7 @@ export async function main(ns) {
 				if ('hackn' in strats) { BankStrat('op_bhnodes.js') };
 				if ('gang' in strats) { BankStrat('lp_gang.js') };
 				BankStrat('op_sleeve.js');
-				if ("stocks" in strats && player.money >= 2e6) { BankStrat('lp_stockmaster.js'); };
+				if (player.money >= 2e6) { BankStrat('lp_stockmaster.js'); };
 				BankStrat('op_joinfacs.js');
 				BankStrat('op_graft.js');
 

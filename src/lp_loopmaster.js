@@ -157,8 +157,8 @@ export async function main(ns) {
 		const check6a = (ns.getTimeSinceLastAug() > 180000)
 		// Player has $20b
 		const check6b = (player.money > 20e9)
-		// - Has 4sData TIX API
-		const check6c = (ns.stock.has4SDataTIXAPI())
+		// - Has 4sData TIX API (if wanted)
+		const check6c = (!GLOBAL_VARS["want4s"])
 		// - Has decent homeRAM size
 		const check6d = (ns.getServerMaxRam("home") >= 4096)
 		const checksum6 = (check6a && check6b && check6c && check6d)

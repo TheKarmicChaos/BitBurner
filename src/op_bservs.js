@@ -98,7 +98,7 @@ export async function main(ns) {
 		didBuy = false;
 		let servCost = ns.getPurchasedServerCost(desiredRAM);
 		// once cost is above 1b, save up for a corp if we want one (& TIX API)
-		if (servCost < 1e9 || (!GLOBAL_VARS["corp"]["want"] && ns.stock.has4SDataTIXAPI())) {
+		if (servCost < 1e9 || (!GLOBAL_VARS["corp"]["want"] && !GLOBAL_VARS["want4s"])) {
 			buyCondsMet = true;
 			// if we can afford it, buy it
 			if (servCost <= maxSpend && player.money * softCap > servCost) {
