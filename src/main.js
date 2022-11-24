@@ -112,7 +112,8 @@ export async function main(ns) {
 		else globalDict.gang.want = true;
 	}
 	if (bndata.FourSigmaMarketDataApiCost > 4
-		|| bndata.FourSigmaMarketDataCost > 5) {
+		|| bndata.FourSigmaMarketDataCost > 5
+		|| ns.stock.has4SDataTIXAPI()) {
 		globalDict.want4s = false;
 	}
 
