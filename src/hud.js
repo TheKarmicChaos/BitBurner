@@ -147,8 +147,8 @@ export async function main(ns) {
 	const tailWindow = false; // Enables/Disables tail windows. Not reccommended for anything other than debugging.
 	const showHiddenRows = false; // Debug tool to unhide all hidden text rows; only applies to rows that are currently being updated, or to all rows when resetting hud via "kill all running scripts"
 	const squishWorkInfo = true; // If true, modifies the default "Working at ..." text, info, button, etc. at the bottom of the hud into a much more compact version.
-	const CAr = "◄"; // Clickable text used for "Contracted dropdown" button
-	const EAr = "▼"; // Clickable text used for "Expanded dropdown" button
+	const Cdd = "◄"; // Character used for "Collapsed dropdown" button
+	const Edd = "▼"; // Character used for "Expanded dropdown" button
 	const numColumns = 3;	// Maximum number of columns you will ever use in your hud, excluding the auto-generated column for dropdown arrows. Minimum of 3.
 	const lineColSpan = 2;	// Number of columns your separator lines should span accross.
 	const progrColSpan = 2;	// unused // Number of columns your progress bars should span accross.
@@ -204,10 +204,10 @@ export async function main(ns) {
 		// (By default, this section will contain the hud rows that I personally use.)
 
 		addTextRow("bitnode", "cha");
-		startDropdown("bitnode");
-			addTextRow("loop-sf", "cha");
+		addTextRow("loop-sf", "cha");
+		startDropdown("loop-sf");
 			addTextRow("aug", "int");
-		endDropdown("bitnode");
+		endDropdown("loop-sf");
 		addDefault("hp", "ram");
 		addTextRow("ram", "hp");
 		addLine(0);
@@ -231,9 +231,11 @@ export async function main(ns) {
 		addDefault("hack", "line3");
 		startDropdown("hack");
 			addDefault("str", "line3");
-			addDefault("def", "line3");
-			addDefault("dex", "line3");
-			addDefault("agi", "line3");
+			startDropdown("str");
+				addDefault("def", "line3");
+				addDefault("dex", "line3");
+				addDefault("agi", "line3");
+			endDropdown("str");
 			addDefault("cha", "line3");
 			addDefault("int", "line3");
 		endDropdown("hack");
@@ -511,21 +513,22 @@ function endDropdown(hookName) {
 	if (dropdownEl === null) {
 		// Create a new column element
 		let newCol = createElement("td", {
-			class: "jss11 css-7v1cxh"
+			class: "jss11 css-7v1cxh",
+			attributes: { "style": `padding: 0 ${12*(dropdownStack.container.length)}px 0 5px;`} // more padding is applied to nested dropdowns
 		});
 		// Create a new <p> (paragraph) element
 		let newPel = createElement("p", {
 			class: "css-cxl1tz",
 			id: `ovv-${hookName}-dropdown`,
-			innerText: EAr,
+			innerText: Edd,
 			attributes: { "style": `color: ${colors["secondary"]};cursor: pointer;${textStyleParams}` }
 		});
 		newPel.addEventListener("click", ((e) => {
-			if (d.getElementById(`ovv-${hookName}-dropdown`).innerText == EAr) {
-				d.getElementById(`ovv-${hookName}-dropdown`).innerText = CAr;
+			if (d.getElementById(`ovv-${hookName}-dropdown`).innerText[0] == Edd) {
+				d.getElementById(`ovv-${hookName}-dropdown`).innerText = Cdd;
 				collapseDropdown(hookName);
-			} else if (d.getElementById(`ovv-${hookName}-dropdown`).innerText == CAr) {
-				d.getElementById(`ovv-${hookName}-dropdown`).innerText = EAr;
+			} else if (d.getElementById(`ovv-${hookName}-dropdown`).innerText[0] == Cdd) {
+				d.getElementById(`ovv-${hookName}-dropdown`).innerText = Edd;
 				expandDropdown(hookName);
 			}
 		}));
@@ -540,17 +543,25 @@ function endDropdown(hookName) {
 
 
 function expandDropdown(hookName) {
+	// Iterate over dropdownChildren elements of this hookName
 	for (let hook of dropdownChildren[hookName]) {
-		//d.getElementById(`ovv-row-${hook}`).style.maxHeight = "3em"
-		d.getElementById(`ovv-row-${hook}`).querySelectorAll("p").forEach((el) => el.style.maxHeight = "3em")
+		let el = d.getElementById(`ovv-row-${hook}`)
+		// Set the maxheight of <p> elements back to default.
+		el.querySelectorAll("p").forEach((el) => el.style.maxHeight = "3em");
+		// If this row has a dropdown of its own and it should be expanded (first character is Edd), also expand that.
+		if (d.getElementById(`ovv-${hook}-dropdown`) !== null && d.getElementById(`ovv-${hook}-dropdown`).innerText[0] == Edd) expandDropdown(hook);
 	}
 }
 
 
 function collapseDropdown(hookName) {
+	// Iterate over dropdownChildren elements of this hookName
 	for (let hook of dropdownChildren[hookName]) {
-		//d.getElementById(`ovv-row-${hook}`).style.maxHeight = "0"
-		d.getElementById(`ovv-row-${hook}`).querySelectorAll("p").forEach((el) => el.style.maxHeight = "0")
+		let el = d.getElementById(`ovv-row-${hook}`)
+		// Set the maxheight of <p> elements to 0.
+		el.querySelectorAll("p").forEach((el) => el.style.maxHeight = "0");
+		// If this row has a dropdown of its own, also collapse that.
+		if (d.getElementById(`ovv-${hook}-dropdown`) !== null) collapseDropdown(hook);
 	}
 }
 
@@ -844,15 +855,15 @@ function initHud() {
 	for (let hook of hooknames) {
 		let rowElement = d.getElementById(`ovv-row-${hook}`); 
 		if (rowElement !== null) continue; // only proceed if the row-hook doesn't exist yet
-		// give every default hud element a row-level hook
+		// Give every default hud element a row-level hook
 		if (hook == "extra") { d.getElementById(`overview-extra-hook-0`).parentElement.parentElement.id = `ovv-row-extra` }
 		else { d.getElementById(`overview-${hook}-hook`).parentElement.parentElement.id = `ovv-row-${hook}`}
 		// Also give the progr bar a row-level hook, if it exists.
-		if (progrhooks.includes(hook)) { d.getElementById(`ovv-row-${hook}`).nextSibling.id = `ovv-row-${hook}-progr`}
+		if (progrhooks.includes(hook)) d.getElementById(`ovv-row-${hook}`).nextSibling.id = `ovv-row-${hook}-progr`;
 	}
 	// If the element of this id doesn't exist, then this is the first time InitHud has run, so run the following code.
-	let rowElement = d.getElementById(`ovv-row-hack`);
-	if (rowElement === null) { 
+	let hackRowEl = d.getElementById(`ovv-row-hack`);
+	if (hackRowEl === null) { 
 		// fix the broken hack hook in the default hud.
 		d.getElementById("overview-hack-hook").parentElement.parentElement.previousSibling.previousSibling.id = "ovv-row-hack";
 		let nodeToDel = d.getElementById("overview-hack-hook").parentElement.parentElement;
