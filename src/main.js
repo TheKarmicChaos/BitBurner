@@ -87,7 +87,7 @@ export async function main(ns) {
 		case 12:
 			bName = "The Recursion"; break;
 		case 13:
-			bName = "They’re lunatics"; break;
+			bName = "They're lunatics"; break;
 	}
 
 	// Update some global vars
