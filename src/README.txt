@@ -3,17 +3,19 @@
 ===========================
 {
 	bnMults: {},
-	sourceFiles: [ {"n": 1, "lvl": 3}, {"n": 2, "lvl" 2}, ... ],
-	strats: {},
-	backdoors: ["home"],
-	bitNode: 0,
-	runType: "",
+    hackMult: 0,
+    sourceFiles: [ {"n": 1, "lvl": 3}, {"n": 2, "lvl" 2}, ... ],
+    bitNode: 0,
+    loop: 0,
+    runType: "",
+    want4s: true,
 	income: { base: 0, hacknet: 0, gang: 0, corp: 0, playerCrime: 0, sleeveCrime: 0, playerWork: 0, sleeveWork: 0, hacking: 0, bladeburner: 0 },
 	hash: { count: 0, income: 0, max: 1 },
 	sleeve: { shock: 100 },
 	gang: { want: false, has: false, territory: 0, respect: 0},
 	corp: { want: false, has: false, hasProd: false, hasLab: false, hasTAII: false, research: 0, funds: 0, profit: 0, products: [] },
-	bb: { want: false, has: false, hasSimu: false, city: "Sector-12", doneOps: ["failsafe"], allOpsDone: false }
+	bb: { want: false, has: false, hasSimu: false, city: "Sector-12", doneOps: ["failsafe"], allOpsDone: false },
+    backdoors: ["home"]
 }
 
 ===========================
