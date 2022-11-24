@@ -8,12 +8,12 @@ export async function main(ns) {
 	// get total income
 	let GLOBAL_VARS = nstb.getGlobals(ns);
 	let totalCashPerSec = tb.SumDict(GLOBAL_VARS["income"])
-	let strats = GLOBAL_VARS["strats"];
-	let bitNode = GLOBAL_VARS["bitNode"];
-	const BITNODE_MULT = strats["hackn"];
+	const bndata = GLOBAL_VARS["bnMults"];
+	const bitNode = GLOBAL_VARS["bitNode"];
+	const BITNODE_MULT = bndata.HacknetNodeMoney
 	let defaultnum = 0.8; if (bitNode == 9) { defaultnum = 1};
 
-	let softCap = 0.0001; if (strats["hackn"] > 0.1) { softCap = Math.min(defaultnum, strats["hackn"]) };
+	let softCap = 0.0001; if (BITNODE_MULT > 0.1) { softCap = Math.min(defaultnum, BITNODE_MULT) };
 	let hardCap = 500e12;
 	let maxSpend = Math.max(hardCap, totalCashPerSec / 1) // cap out at hardCap, but if we are making money fast enough we can keep buying
 

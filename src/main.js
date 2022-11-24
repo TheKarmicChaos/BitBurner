@@ -26,7 +26,6 @@ export async function main(ns) {
 
 	let scriptsToRun = []; let scriptsRunning = [];
 	let hnscriptsToRun = []; let hnscriptsRunning = [];
-	let strats = {};
 	let maxRamForScripts; let coreScriptsSize;
 	let hnscriptsSize = 0;
 
@@ -37,11 +36,11 @@ export async function main(ns) {
 	let globalDict = {
 		bnMults: {},
 		sourceFiles: [],
-		strats: {},
 		backdoors: ["home"],
 		bitNode: 0,
 		runType: "",
 		loop: 0,
+		hackMult: 0,
 		want4s: false,
 		income: { base: 0, hacknet: 0, gang: 0, corp: 0, playerCrime: 0, sleeveCrime: 0, playerWork: 0, sleeveWork: 0, hacking: 0, bladeburner: 0 },
 		hash: { count: 0, income: 0, max: 1 },
@@ -91,7 +90,7 @@ export async function main(ns) {
 			bName = "They’re lunatics"; break;
 	}
 
-	// Money-making strategies
+	// Update some global vars
 	if (bndata.HackingLevelMultiplier > 0
 		&& bndata.HackExpGain > 0
 		&& bndata.ServerGrowthRate > 0
@@ -100,54 +99,21 @@ export async function main(ns) {
 		&& bndata.ServerWeakenRate > 0
 		&& bndata.ScriptHackMoney > 0
 		&& bndata.ScriptHackMoneyGain > 0) {
-		strats["hack_money"] = bndata.ServerGrowthRate * bndata.ServerMaxMoney * bndata.ServerWeakenRate * bndata.ScriptHackMoneyGain
+		globalDict.hackMult = bndata.ServerGrowthRate * bndata.ServerMaxMoney * bndata.ServerWeakenRate * bndata.ScriptHackMoneyGain
 	}
 	if (bndata.CorporationValuation > 0
 		&& bndata.CorporationSoftcap > 0) {
-		strats["corp"] = bndata.CorporationSoftcap;
 		if (player.hasCorporation) globalDict.corp.has = true;
 		else if (bndata.CorporationValuation >= 0.35) globalDict.corp.want = true;
 	}
-	if (bndata.CrimeMoney > 0) {
-		strats["crime_money"] = bndata.CrimeMoney
-	}
 	if (bndata.GangSoftcap > 0
 		&& bndata.GangUniqueAugs > 0) {
-		strats["gang"] = bndata.GangSoftcap
 		if (inGang) globalDict.gang.has = true;
 		else globalDict.gang.want = true;
-	}
-	if (bndata.HacknetNodeMoney > 0) {
-		strats["hackn"] = bndata.HacknetNodeMoney
-	}
-	if (bndata.CodingContractMoney > 0) {
-		strats["cct"] = bndata.CodingContractMoney
-	}
-	if (bndata.InfiltrationMoney > 0) {
-		strats["infil_money"] = bndata.InfiltrationMoney
 	}
 	if (bndata.FourSigmaMarketDataApiCost > 4
 		|| bndata.FourSigmaMarketDataCost > 5) {
 		globalDict.want4s = false;
-	}
-
-	// EXP-making strategies
-	if (bndata.HackingLevelMultiplier > 0
-		&& bndata.HackExpGain > 0
-		&& bndata.ServerGrowthRate > 0
-		&& bndata.ServerWeakenRate > 0) {
-		strats["hack_exp"] = bndata.HackingLevelMultiplier * bndata.HackExpGain * bndata.ServerWeakenRate * bndata.ServerGrowthRate
-	}
-	if (bndata.CompanyWorkExpGain > 0
-		&& bndata.HackExpGain > 0
-		&& bndata.ServerGrowthRate > 0
-		&& bndata.ServerWeakenRate > 0) {
-		strats["company_exp"] = bndata.HackingLevelMultiplier * bndata.HackExpGain * bndata.ServerWeakenRate * bndata.ServerGrowthRate
-	}
-
-	// Reputation-making strategies
-	if (bndata.InfiltrationMoney > 0) {
-		strats["infil_rep"] = 1
 	}
 
 	// Figure out which runType works best for this BN
@@ -160,7 +126,6 @@ export async function main(ns) {
 
 	// Update the last few initial global vars then write to file.
 	globalDict.runType = runType
-	globalDict.strats = strats
 	ns.write("global-vars.txt", JSON.stringify(globalDict), "w")
 
 	// ===========================================================================================================
@@ -194,20 +159,20 @@ export async function main(ns) {
 		// ========================================================================================================================
 		switch (runType) {
 			default:
-				if ("crime_money" in strats || 'gang' in strats || "work_money" in strats) { BankStrat('op_task-manager.js'); };
+				if (bndata.CrimeMoney > 0 || bndata.GangSoftcap * bndata.GangUniqueAugs > 0) { BankStrat('op_task-manager.js'); };
 				BankStrat('op_bupgr.js');
-				if ('hackn' in strats) { BankStrat('op_bhnodes.js') };
+				if (bndata.HacknetNodeMoney > 0) { BankStrat('op_bhnodes.js') };
 				if (player.money >= 2e6) { BankStrat('lp_stockmaster.js'); };
 				if (bndata.PurchasedServerLimit > 0) { BankStrat('op_bservs.js') };
 				BankStrat('lp_svhack.js');
 				BankStrat('mp_nuke-backdoor.js');
 				BankStrat('op_sleeve.js');
-				if ('cct' in strats) { BankStrat('cct_solve.js') }
+				if (bndata.CodingContractMoney > 0) { BankStrat('cct_solve.js') }
 				BankStrat('op_joinfacs.js');
 				BankStrat('op_graft.js');
-				if ('gang' in strats) { BankStrat('lp_gang.js') };
-				if ("corp" in strats) { BankStrat('mp_corp.js') };
-				if ('hack_money' in strats) { BankStrat('lp_loopmaster.js') };
+				if (bndata.GangSoftcap * bndata.GangUniqueAugs > 0) { BankStrat('lp_gang.js') };
+				if (bndata.CorporationValuation * bndata.CorporationSoftcap > 0) { BankStrat('mp_corp.js') };
+				if (GLOBAL_VARS["hackMult"] > 0) { BankStrat('lp_loopmaster.js') };
 
 				if (player.skills.hacking >= 3000 * bndata.WorldDaemonDifficulty || GLOBAL_VARS["bb"]["isComplete"]) {
 					let myAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
@@ -216,10 +181,10 @@ export async function main(ns) {
 				break;
 
 			case "bladeburner":
-				if ("crime_money" in strats || 'gang' in strats || "work_money" in strats) { BankStrat('op_task-manager.js'); };
+				if (bndata.CrimeMoney > 0 || bndata.GangSoftcap * bndata.GangUniqueAugs > 0) { BankStrat('op_task-manager.js'); };
 				BankStrat('op_bupgr.js');
-				if ('hackn' in strats) { BankStrat('op_bhnodes.js') };
-				if ('gang' in strats) { BankStrat('lp_gang.js') };
+				if (bndata.HacknetNodeMoney > 0) { BankStrat('op_bhnodes.js') };
+				if (bndata.GangSoftcap * bndata.GangUniqueAugs > 0) { BankStrat('lp_gang.js') };
 				BankStrat('op_sleeve.js');
 				if (player.money >= 2e6) { BankStrat('lp_stockmaster.js'); };
 				BankStrat('op_joinfacs.js');
@@ -227,12 +192,12 @@ export async function main(ns) {
 
 				BankStrat('mp_bladeburner.js');
 
-				if ('cct' in strats) { BankStrat('cct_solve.js') };
+				if (bndata.CodingContractMoney > 0) { BankStrat('cct_solve.js') };
 				BankStrat('lp_svhack.js');
 				BankStrat('mp_nuke-backdoor.js');
 				if (bndata.PurchasedServerLimit > 0) { BankStrat('op_bservs.js') };
-				if ('corp' in strats) { BankStrat('mp_corp.js') };
-				if ('hack_money' in strats) { BankStrat('lp_loopmaster.js') };
+				if (bndata.CorporationValuation * bndata.CorporationSoftcap > 0) { BankStrat('mp_corp.js') };
+				if (GLOBAL_VARS["hackMult"] > 0) { BankStrat('lp_loopmaster.js') };
 
 				if (player.skills.hacking >= 3000 * bndata.WorldDaemonDifficulty || GLOBAL_VARS["bb"]["isComplete"]) {
 					let myAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()');
@@ -249,7 +214,6 @@ export async function main(ns) {
 		if (bitNode == 8) { ns.tail('lp_stockmaster.js'); }
 		// print debug info
 		ns.clearLog();
-		ns.print("Strats: ", strats);
 		ns.print("\nrunType: ", runType);
 		ns.print("coreCoef: ", coreCoef);
 		ns.print(runningStr);

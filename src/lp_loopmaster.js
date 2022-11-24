@@ -9,7 +9,6 @@ export async function main(ns) {
 	let GLOBAL_VARS = nstb.getGlobals(ns);
 	const runType = GLOBAL_VARS["runType"]
 	const bndata = GLOBAL_VARS["bnMults"]
-	const strats = GLOBAL_VARS["strats"]
 
 	let loopnum = 0;
 
@@ -92,9 +91,9 @@ export async function main(ns) {
 		// - Has >= 3 products
 		const check3c = (!hasCorp || corpdata["products"].length >= 3)
 		// - buying funds w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
-		const check3d = (!hasCorp || !("hackn" in strats) || isFundNotNeeded || fundCost > Math.max(2000 * strats["hackn"], hashdata["income"] * 2))
+		const check3d = (!hasCorp || bndata.HacknetNodeMoney <= 0.1 || isFundNotNeeded || fundCost > Math.max(2000 * bndata.HacknetNodeMoney, hashdata["income"] * 2))
 		// - buying research w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
-		const check3e = (!hasCorp || !("hackn" in strats) || isResrNotNeeded || resrCost > Math.max(3000 * strats["hackn"], hashdata["income"] * 5))
+		const check3e = (!hasCorp || bndata.HacknetNodeMoney <= 0.1 || isResrNotNeeded || resrCost > Math.max(3000 * bndata.HacknetNodeMoney, hashdata["income"] * 5))
 		const checksum3 = (check3a && check3b && check3c && check3d && check3e)
 		let checkmark3 = "[ ]"; if (checksum3) checkmark3 = "[✓]";
 		ns.print(`\n${checkmark3} Check #3: Corporation`)
@@ -118,9 +117,9 @@ export async function main(ns) {
 		// - Has The Blade's Simulacrum
 		const check4c = (!hasBB || bbdata["hasSimu"] || ownedAugs.includes("The Blade's Simulacrum"))
 		// - buying BB rank is no longer cheap
-		const check4d = (!hasBB || BBrankCost > Math.max(4250 * strats["hackn"], hashdata["income"] * 60))
+		const check4d = (!hasBB || BBrankCost > Math.max(4250 * bndata.HacknetNodeMoney, hashdata["income"] * 60))
 		// - buying BB sp is no longer cheap
-		const check4e = (!hasBB || BBspCost > Math.max(4000 * strats["hackn"], hashdata["income"] * 60))
+		const check4e = (!hasBB || BBspCost > Math.max(4000 * bndata.HacknetNodeMoney, hashdata["income"] * 60))
 		// - not currently performing a BlackOps mission
 		const check4f = (!hasBB || ns.bladeburner.getCurrentAction().type != "BlackOp")
 		const checksum4 = (check4a && check4b && check4c && check4d && check4e)
@@ -138,7 +137,7 @@ export async function main(ns) {
 		// Check 5: Grafting
 		// -------------------------
 		let desiredEntr = 6;
-		if (("hackn" in strats) && strats["hackn"] >= 0.5) desiredEntr = 8;
+		if (bndata.HacknetNodeMoney >= 0.5) desiredEntr = 8;
 		// - Has desired entropy amount (i.e grafted the required/important augs) OR has "nickofolas Congruity Implant"
 		const check5a = (player.entropy >= desiredEntr || ownedAugs.includes("nickofolas Congruity Implant"))
 		// - Is NOT currently grafting nicofolas!

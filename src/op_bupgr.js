@@ -10,8 +10,7 @@ export async function main(ns) {
 	let totalCashPerSec = tb.SumDict(GLOBAL_VARS["income"]);
 
 	const player = () => ns.getPlayer();
-	let strats = GLOBAL_VARS["strats"];
-	let softCap = 1; if (!("hack_money" in strats)) { softCap = 0.002 };
+	let softCap = 1; if (GLOBAL_VARS["hackMult"] < 0) { softCap = 0.002 };
 	let hardCap = 100e12;
 
 	let maxSpend = Math.max(totalCashPerSec, hardCap) // cap out at 2 trillion, but if we are making money fast enough we can keep buying
@@ -67,7 +66,7 @@ export async function main(ns) {
 			//ns.print(darkStr)
 			var upgrName = "NULL"; var upgrType;
 			let upgrCost = Math.min(homeRamCost, darkCost)
-			if (GLOBAL_VARS["strats"]["hack_money"] >= 0.8) { upgrCost = Math.min(upgrCost, homeCoreCost) }
+			if (GLOBAL_VARS["hackMult"] >= 0.8) { upgrCost = Math.min(upgrCost, homeCoreCost) }
 
 			if (upgrCost == homeRamCost) { upgrType = "HomeRAM"; upgrName = "HomeRAM" }
 			else if (upgrCost == homeCoreCost) { upgrType = "HomeCore"; upgrName = "HomeCore" }

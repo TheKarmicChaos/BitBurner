@@ -8,13 +8,12 @@ export async function main(ns) {
 	let GLOBAL_VARS = nstb.getGlobals(ns);
 	let totalCashPerSec = tb.SumDict(GLOBAL_VARS["income"]); // get total income
 	let player = await nstb.RunCom(ns, 'ns.getPlayer()');
-	let strats = GLOBAL_VARS["strats"];
-	let softCap = 0.001; if ("hack_money" in strats) { softCap = Math.max(strats['hack_money'], 0.8) };
+	let softCap = 0.001; if (GLOBAL_VARS["hackMult"] > 0) { softCap = Math.max(GLOBAL_VARS["hackMult"], 0.8) };
 	const hardCap = 100e12;
 	let maxSpend = Math.max(hardCap, totalCashPerSec / 10) // cap out at hardCap, but if we are making money fast enough we can keep buying
 
 	let sv1; let sv2;
-	if ('hack_money' in strats) { sv1 = 4, sv2 = 16 }
+	if (GLOBAL_VARS["hackMult"] > 0) { sv1 = 4, sv2 = 16 }
 	else { sv1 = 7, sv2 = 10 }
 
 	let maxRAM = 2 ** sv2; // The RAM (gb) we want servs to have before we stop buying in phase 2 or 3b

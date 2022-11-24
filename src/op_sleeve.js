@@ -8,14 +8,13 @@ export async function main(ns) {
 	var player = await nstb.RunCom(ns, 'ns.getPlayer()')
 	let GLOBAL_VARS = nstb.getGlobals(ns);
 	const bndata = GLOBAL_VARS["bnMults"]
-	const strats = GLOBAL_VARS["strats"]
 	const runType = GLOBAL_VARS["runType"]
 
 	let metaPlan = "nogang";
 	if (ns.args[0]) metaPlan = ns.args[0];
 	if (runType == "bladeburner") { metaPlan = "bladeburner" }
-	else if (('hack_money' in strats) && ("gang" in strats)) { metaPlan = "all" }
-	else if (!('hack_money' in strats)) { metaPlan = "pillonly" }
+	else if (GLOBAL_VARS["hackMult"] > 0 && bndata.GangSoftcap > 0 && bndata.GangUniqueAugs > 0) { metaPlan = "all" }
+	else if (GLOBAL_VARS["hackMult"] <= 0) { metaPlan = "pillonly" }
 
 	let maxSpend = player.money / 2
 	if (metaPlan == "pillonly") { maxSpend = player.money / 900 }
