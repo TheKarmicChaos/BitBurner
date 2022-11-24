@@ -151,7 +151,7 @@ export async function main(ns) {
 	const Edd = "▼"; // Character used for "Expanded dropdown" button
 	const numColumns = 3;	// Maximum number of columns you will ever use in your hud, excluding the auto-generated column for dropdown arrows. Minimum of 3.
 	const lineColSpan = 2;	// Number of columns your separator lines should span accross.
-	const progrColSpan = 2;	// unused // Number of columns your progress bars should span accross.
+	const progrColSpan = 2;	// Number of columns your progress bars should span accross.
 	const ToolTipStyleParams = // Default css style parameters used for your tooltips.
 	`font-family: "Lucida Console", "Lucida Sans Unicode", "Fira Mono", Consolas, "Courier New", Courier, monospace, "Times New Roman";
 	padding: 4px 8px;
@@ -600,7 +600,7 @@ function addProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
 		class: "jss11 css-hadb7u",
 		attributes: {
 				"scope": "row",
-				"colspan": "2",
+				"colspan": `${progrColSpan}`,
 				"style": "padding-bottom: 2px; position: relative; top: -3px;"
 		}
 	})
@@ -881,6 +881,15 @@ function initHud() {
 		ovvTableCont.querySelectorAll("span").forEach((el) => el.className = el.className.replace("MuiLinearProgress-bar MuiLinearProgress-barColorPrimary ", ""))
 		// Add style to the default hud elements that will allow us to collapse them with dropdowns later
 		for (let hook of hooknames) d.getElementById(`ovv-row-${hook}`).querySelectorAll("p").forEach((el) => el.style = `${textStyleParams}`);
+		// Check to make sure the player didn't disable progr bars through in-game settings.
+		if (d.getElementById(`ovv-row-hack-progr`).childNodes.length > 0) {
+			// Iterate through the default hud progr bars
+			for (let hook of progrhooks) {
+				let progrbar = d.getElementById(`ovv-row-${hook}-progr`);
+				// Set the proper colspan to fit the player's settings
+				progrbar.firstChild.setAttribute("colspan", `${progrColSpan}`);
+			}
+		}
 	}
 	// Implement hud settings
 	if (squishWorkInfo) simplifyWorkInfoRows();
