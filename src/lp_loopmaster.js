@@ -87,7 +87,7 @@ export async function main(ns) {
 		// - Has corp (if we want one)
 		const check3a = (!corpdata["want"])
 		// - Has Lab
-		const check3b = (!hasCorp || corpdata["hasLab"])
+		const check3b = (!hasCorp || bndata.HacknetNodeMoney <= 0.1 || corpdata["hasLab"])
 		// - Has >= 3 products
 		const check3c = (!hasCorp || corpdata["products"].length >= 3)
 		// - buying funds w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
