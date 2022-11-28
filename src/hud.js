@@ -18,11 +18,14 @@ The functions in this script should handle all of the heavy lifting for you and 
 
 - Go down to the section labelled "LIST EACH ROW OF YOUR CUSTOM HUD BELOW"
 - List every row you want your hud to contain, in order from top to bottom, using any of the following functions:
-	(check function paramaters/definitions and the examples I use for more details)
 	- addTextRow(hook, color)
 	- addProgrBar(hook, color)
 	- addDefault(hook, nextRowHook)
 	- addLine(num)
+- (Optional) Categorize your rows into collapsable dropdowns using the following functions:
+	- startDropdown(hook)
+	- endDropdown(hook)
+(Tip: Check function paramaters/definitions and the examples rows I use for more details on what each of these functions do and how to use them)
 
 Step 2: Updating Your Hud -----------------
 
@@ -71,11 +74,10 @@ Step 4: Making Buttons -------------------
 -------------------------------------------
 
 		TODO LIST:
-	- Overhaul all "Add" functions to try to update the element if they already exist (allowing for function changes to be made without killing all scripts)
 	- Figure out how to center tooltips, like the ones the game uses for progress bars
 	- Add fancy ripple effect on button click that the game uses.
 	- Add support for hiding/showing hud buttons.
-	- Add support for lines, progr bars, & buttons to be inside dropdowns.
+	- Add support for lines & buttons to be inside dropdowns.
 
 -------------------------------------------
 */
