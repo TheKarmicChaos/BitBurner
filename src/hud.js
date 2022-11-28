@@ -242,9 +242,11 @@ export async function main(ns) {
 		addLine(3);
 		addTextRow("karma", "error");
 		addProgrBar("karma", "error");
-		addTextRow("kill", "error");
-		addProgrBar("kill", "error");
-		addTextRow("gangtimer", "info");
+		startDropdown("karma");
+			addTextRow("kill", "error");
+			addProgrBar("kill", "error");
+			addTextRow("gangtimer", "info");
+		endDropdown("karma");
 		addTextRow("augtimer", "info");
 		addLine(4);
 		addButton("buttons1", 0, "run-scanhud", "Scan Hud", "right", () => ns.run(`scan-hud.js`));
@@ -348,7 +350,7 @@ export async function main(ns) {
 function addTextRow(hookName, color) {
 	// If hookName isn't in myTextHooks, add it.
 	if (!(myTextHooks.includes(hookName))) myTextHooks.push(hookName);
-	// If the dropdownStack isn't empty, remember this hookName as a dropdownChild of the hook on the top of the stack.
+	// If the dropdownStack isn't empty this hook can be collapsed, so remember it as a dropdownChild of the hook on the top of the stack.
 	if (!dropdownStack.isEmpty()) dropdownChildren[dropdownStack.peek()].push(hookName);
 	// If a row element with this hook already exists, we don't need to make a new one, so return here.
 	if (d.getElementById(`ovv-row-${hookName}`) !== null) return;
@@ -488,7 +490,9 @@ function addButton(hookName, column = 0, buttonID, buttonText, buttonAlign = "ce
 // Dropdown functions
 // -------------------------------------------------------------------------------------
 
-
+/** Start a new dropdown category, which can be collapsed/expanded with the click of a button.
+ * @param {string} hookName - Hook name for the dropdown parent row (with the clickable arrow).
+ * */
 function startDropdown(hookName) {
 	// Check if a row element using this hook exists. If not, throw an error.
 	let rowEl = d.getElementById(`ovv-row-${hookName}`)
@@ -501,20 +505,24 @@ function startDropdown(hookName) {
 	dropdownStack.push(hookName);
 }
 
-
+/** End the previously started dropdown category (no more rows will be added to this dropdown).
+ * @param {string} hookName - Hook name for the dropdown parent row (with the clickable arrow).
+ * */
 function endDropdown(hookName) {
 	// Check if a row element using this hook exists. If not, throw an error.
 	let rowEl = d.getElementById(`ovv-row-${hookName}`)
 	if (rowEl === null) throw new Error(`Attempted to create dropdown for ${hookName}, but no ${hookName} row exists!`);
 	// Remove this hook from the top of the dropdownStack. If it is not at the top, throw an error.
 	if (dropdownStack.pop() != hookName) throw new Error(`Attempted to end dropdown for ${hookName} before ending nested dropdowns!`);
+	// Get the depth of this dropdown by checking how many times it has been nested.
+	let depth = dropdownStack.container.length
 	// Check if this hook already has an extra row element for dropdown buttons. If not, create it first.
 	let dropdownEl = d.getElementById(`ovv-${hookName}-dropdown`);
 	if (dropdownEl === null) {
 		// Create a new column element
 		let newCol = createElement("td", {
 			class: "jss11 css-7v1cxh",
-			attributes: { "style": `padding: 0 ${12*(dropdownStack.container.length)}px 0 5px;`} // more padding is applied to nested dropdowns
+			attributes: { "style": `padding: 0 ${12*depth}px 0 5px;`} // more padding is applied to nested dropdowns
 		});
 		// Create a new <p> (paragraph) element
 		let newPel = createElement("p", {
@@ -523,12 +531,13 @@ function endDropdown(hookName) {
 			innerText: Edd,
 			attributes: { "style": `color: ${colors["secondary"]};cursor: pointer;${textStyleParams}` }
 		});
+		// On click, toggle the first character of innerText between Edd & Cdd, then run the respective collapse/expand func
 		newPel.addEventListener("click", ((e) => {
 			if (d.getElementById(`ovv-${hookName}-dropdown`).innerText[0] == Edd) {
-				d.getElementById(`ovv-${hookName}-dropdown`).innerText = Cdd;
+				d.getElementById(`ovv-${hookName}-dropdown`).innerText = `${Cdd}${d.getElementById(`ovv-${hookName}-dropdown`).innerText.substring(1)}`;
 				collapseDropdown(hookName);
 			} else if (d.getElementById(`ovv-${hookName}-dropdown`).innerText[0] == Cdd) {
-				d.getElementById(`ovv-${hookName}-dropdown`).innerText = Edd;
+				d.getElementById(`ovv-${hookName}-dropdown`).innerText = `${Edd}${d.getElementById(`ovv-${hookName}-dropdown`).innerText.substring(1)}`;
 				expandDropdown(hookName);
 			}
 		}));
@@ -541,25 +550,43 @@ function endDropdown(hookName) {
 	}
 }
 
-
+/** Expands (un-collapses) all rows in dropdownChildren stored under this hookName.
+* @param {string} hookName - Hook name for the dropdown parent row (with the clickable arrow).
+* */
 function expandDropdown(hookName) {
 	// Iterate over dropdownChildren elements of this hookName
 	for (let hook of dropdownChildren[hookName]) {
 		let el = d.getElementById(`ovv-row-${hook}`)
 		// Set the maxheight of <p> elements back to default.
 		el.querySelectorAll("p").forEach((el) => el.style.maxHeight = "3em");
+		// If the hooked element is a progr bar...
+		if (hook.substring(hook.length - 6) == `-progr`) {
+			// Set the maxheight of progr bar's outer span element back to default (so it can be visible, unless we hid it)
+			el.firstChild.firstChild.style.maxHeight = "1em";
+			// Add the padding back to the column element, if it is NOT hidden
+			if (!el.firstChild.firstChild.outerHTML.includes("visibility: hidden")) el.firstChild.style.paddingBottom = "2px";
+		}
 		// If this row has a dropdown of its own and it should be expanded (first character is Edd), also expand that.
 		if (d.getElementById(`ovv-${hook}-dropdown`) !== null && d.getElementById(`ovv-${hook}-dropdown`).innerText[0] == Edd) expandDropdown(hook);
 	}
 }
 
-
+/** Collapses (hides) all rows in dropdownChildren stored under this hookName.
+* @param {string} hookName - Hook name for the dropdown parent row (with the clickable arrow).
+* */
 function collapseDropdown(hookName) {
 	// Iterate over dropdownChildren elements of this hookName
 	for (let hook of dropdownChildren[hookName]) {
 		let el = d.getElementById(`ovv-row-${hook}`)
 		// Set the maxheight of <p> elements to 0.
 		el.querySelectorAll("p").forEach((el) => el.style.maxHeight = "0");
+		// If the hooked element is a progr bar...
+		if (hook.substring(hook.length - 6) == `-progr`) {
+			// Set the maxheight of progr bar's outer span element to 0 (will retain all information, and can be updated while collapsed).
+			el.firstChild.firstChild.style.maxHeight = "0";
+			// Remove the bottom padding from the column element to save space.
+			el.firstChild.style.paddingBottom = "0";
+		}
 		// If this row has a dropdown of its own, also collapse that.
 		if (d.getElementById(`ovv-${hook}-dropdown`) !== null) collapseDropdown(hook);
 	}
@@ -584,6 +611,8 @@ function collapseDropdown(hookName) {
 function addProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
 	// add this hook to the list of custom progr hooks.
 	if (!(myProgrHooks.includes(hookName))) myProgrHooks.push(hookName);
+	// If the dropdownStack isn't empty, remember this hookName as a dropdownChild of the hook on the top of the stack.
+	if (!dropdownStack.isEmpty()) dropdownChildren[dropdownStack.peek()].push(`${hookName}-progr`);
 	// Check if this hook already has an existing row element. If so, use that.
 	let rowElement = d.getElementById(`ovv-row-${hookName}-progr`);
 	if (rowElement !== null) return rowElement;
@@ -612,7 +641,7 @@ function addProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
 			"aria-valuenow": "0",
 			"aria-valuemin": "0",
 			"aria-valuemax": "100",
-			"style": `background-color: ${backgroundColor};`  // set color of "empty" parts of bar
+			"style": `max-height: 1em; visibility: visible; background-color: ${backgroundColor};`  // set color of "empty" parts of bar
 		}
 	})
 	// Create a new bar fill element
@@ -625,7 +654,7 @@ function addProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
 	newHeader.appendChild(newEmptyBar);
 	newEmptyBar.appendChild(newFillBar);
 	// Insert our row element at the bottom of the hud
-	d.getElementById(`ovv-row-extra`).parentElement.insertBefore(newRow, d.getElementById(`ovv-row-extra`));
+	ovvTableCont.insertBefore(newRow, d.getElementById(`ovv-row-extra`));
 	return newRow;
 }
 
@@ -646,13 +675,8 @@ function recolorProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
 	// Update the style of the second-depth child, setting "background-color" to the desired color for "empty" parts of bar
 	let backElement = d.getElementById(`ovv-row-${hookName}-progr`).firstChild.firstChild
 	backElement.style = `background-color: ${backgroundColor};`;
-	// get existing HTML
-	let curHTML = backElement.parentElement.innerHTML;
-	// split the HTML so we get the sections we want to edit. We can't edit style directly since there are other style paramaters.
-	let htmlL = curHTML.split("; background-color: ")[0]
-	let htmlR = curHTML.split(`;">`)[1];
 	// Update the style of the deepest child, setting "background-color" to the desired color for "full" parts of bar
-	backElement.innerHTML = `${htmlL}; background-color: ${color};">${htmlR}`;
+	backElement.firstChild.style.backgroundColor = `${color}`;
 }
 
 
@@ -663,20 +687,15 @@ function recolorProgrBar(hookName, color, backgroundColor = "rgb(17, 17, 17)") {
  * @param {number} maxAmt - How much of the "thing" we need to have in order for progr bar to be 100% full.
  * */
 function updateProgrBar(hookName, curAmt, maxAmt) {
-	let elementToUpdate = d.getElementById(`ovv-row-${hookName}-progr`).firstChild.firstChild
+	let elementToUpdate = d.getElementById(`ovv-row-${hookName}-progr`).firstChild.firstChild.firstChild
 	// calculate the percentage progress
 	let remaining =  Math.max(0, maxAmt - curAmt)
 	let percent = Math.min(curAmt, maxAmt) * 100 / maxAmt
 	// update the tooltip
 	let ttContent = `<strong>Progress:</strong> ${standardNotation(Math.abs(curAmt), 3)} / ${standardNotation(Math.abs(maxAmt), 3)}<br /><strong>Remaining:</strong> ${standardNotation(remaining, 3)} (${percent.toFixed(2)}%)`
 	addTooltip(`${hookName}-progr`, ttContent, {textAlign: "right"});
-	// get existing HTML
-	let curHTML = elementToUpdate.innerHTML;
-	// split the HTML so we get the sections we want to edit. We can't edit style directly since there are other style paramaters.
-	let htmlL = curHTML.split("transform: translateX(")[0]
-	let htmlR = curHTML.split("%);")[1];
-	// Update the style of the deepest child, setting "transform" to "translateX(-N%)" where N is the inverse percentage of the progress bar's completion. 
-	elementToUpdate.innerHTML = `${htmlL}transform: translateX(-${(100 - percent).toFixed(2)}%);${htmlR}`;
+	// update the transform style for the deepest child
+	elementToUpdate.style.transform = `translateX(-${(100 - percent).toFixed(2)}%)`;
 }
 
 
@@ -693,47 +712,37 @@ function toggleProgrBar(hookName, visibilityChange) {
 			case "show":
 				// Replace the missing className in the deepest child
 				barElement.className = "css-14usnx9";
-				// get existing HTML
-				var curHTML = rowElement.innerHTML
-				// split the HTML so we get the sections we want to edit
-				var htmlL = curHTML.split(`-3px;"><span cl`)[0]
-				var htmlR = curHTML.split(`-3px;"><span cl`)[1]
-				// Rename "class" back to "clss" in the HTML of the second-depth child so the information can be parsed once again.
-				if (htmlR[0] != "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cla${htmlR}`; }
+				// Make the bar background element visible
+				barElement.parentElement.style.visibility = "visible";
+				barElement.style.visibility = "visible";
+				// If the bar isn't currently collapsed, re-add the bottom padding
+				if (!barElement.parentElement.outerHTML.includes("max-height: 0")) rowElement.firstChild.style.paddingBottom = "2px";
 				break;
 			case "hide":
 				// Remove the className from the deepest child so the HTML doesn't break
 				barElement.className = "";
-				// get existing HTML
-				var curHTML = rowElement.innerHTML
-				// split the HTML so we get the sections we want to edit
-				var htmlL = curHTML.split(`-3px;"><span cl`)[0]
-				var htmlR = curHTML.split(`-3px;"><span cl`)[1]
-				// Rename "class" to "clss" in the HTML of the second-depth child so the information cannot be parsed.
-				if (htmlR[0] == "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cl${htmlR.substring(1)}`; }
+				// Make the bar background element visible
+				barElement.parentElement.style.visibility = "hidden";
+				barElement.style.visibility = "hidden";
+				// Remove the bottom padding from the column element to save space.
+				rowElement.firstChild.style.paddingBottom = "0";
 				break;
 			case "toggle":
 				// Determine whether the bar is currently hidden or not, and switch it to the other state
 				if (barElement.className == "") { // Currently hidden
 					// Replace the missing className in the deepest child
 					barElement.className = "css-14usnx9";
-					// get existing HTML
-					var curHTML = rowElement.innerHTML
-					// split the HTML so we get the sections we want to edit
-					var htmlL = curHTML.split(`-3px;"><span cl`)[0]
-					var htmlR = curHTML.split(`-3px;"><span cl`)[1]
-					// Rename "class" back to "clss" in the HTML of the second-depth child so the information can be parsed once again.
-					if (htmlR[0] != "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cla${htmlR}`; }
+					// Make the bar background element visible
+					barElement.parentElement.style.visibility = "visible";
+					// If the bar isn't currently collapsed, re-add the bottom padding
+					if (!barElement.parentElement.outerHTML.includes("max-height: 0")) rowElement.firstChild.style.paddingBottom = "2px";
 				} else {  // Currently visible
 					// Remove the className from the deepest child so the HTML doesn't break
 					barElement.className = "";
-					// get existing HTML
-					var curHTML = rowElement.innerHTML
-					// split the HTML so we get the sections we want to edit
-					var htmlL = curHTML.split(`-3px;"><span cl`)[0]
-					var htmlR = curHTML.split(`-3px;"><span cl`)[1]
-					// Rename "class" to "clss" in the HTML of the second-depth child so the information cannot be parsed.
-					if (htmlR[0] == "a") { rowElement.innerHTML = `${htmlL}-3px;"><span cl${htmlR.substring(1)}`; }
+					// Make the bar background element hidden
+					barElement.parentElement.style.visibility = "hidden";
+					// Remove the bottom padding from the column element to save space.
+					rowElement.firstChild.style.paddingBottom = "0";
 				}
 				break;
 			default:
@@ -888,6 +897,8 @@ function initHud() {
 				let progrbar = d.getElementById(`ovv-row-${hook}-progr`);
 				// Set the proper colspan to fit the player's settings
 				progrbar.firstChild.setAttribute("colspan", `${progrColSpan}`);
+				// Set the maxHeight to a default value to allow us to collapse them later
+				progrbar.firstChild.firstChild.style.maxHeight = "1em";
 			}
 		}
 	}
