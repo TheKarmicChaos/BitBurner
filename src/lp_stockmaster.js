@@ -588,9 +588,9 @@ async function tryGet4SApi(ns, playerStats, bitnodeMults, budget) {
                 log(ns, 'ERROR attempting to purchase 4SMarketData!', false, 'error');
         }
         if (await tryBuy(ns, 'purchase4SMarketDataTixApi')) {
+            nstb.updGlobals(ns, ["want4s", false]);
             log(ns, `SUCCESS: Purchased 4SMarketDataTixApi for ${formatMoney(cost4sApi)} ` +
                 `(At ${formatDuration(playerStats.playtimeSinceLastBitnode)} into BitNode)`, true, 'success');
-            nstb.updGlobals(ns, ["want4s", false]);
             return true;
         } else {
             log(ns, 'ERROR attempting to purchase 4SMarketDataTixApi!', false, 'error');
