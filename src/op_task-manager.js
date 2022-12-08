@@ -177,7 +177,6 @@ export async function main(ns) {
         else { nstb.updGlobals(ns, ["income.playerWork", 0]) }
         if (!isNaN(sleeveinc)) { nstb.updGlobals(ns, ["income.sleeveWork", sleeveinc]) }
         else { nstb.updGlobals(ns, ["income.sleeveWork", 0]) }
-
 	}
 
     // Get a list of the companies that still need faction invites
