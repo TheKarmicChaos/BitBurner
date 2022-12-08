@@ -12,6 +12,7 @@ export async function main(ns) {
 
 	let player = await nstb.RunCom(ns, 'ns.getPlayer()');
 	let GLOBAL_VARS = nstb.getGlobals(ns);
+	let GANGSOFTCAP = GLOBAL_VARS["bnMults"]["GangSoftcap"]
 
 	// Default variables
 	// ==============================================================================================
@@ -275,7 +276,7 @@ export async function main(ns) {
 
 			var memResCap = ((ganginfo.territory ** 4) * (rnkmem[ij] ** 2) * memstr * 200)
 			if (memResCap > resCap) { resCap = memResCap }
-			resCap = Math.min(resCap, 2e9) // 2b respect hard cap
+			resCap = Math.min(resCap, 2e9 * GANGSOFTCAP) // 2b respect hard cap
 
 			var gangtask;
 
