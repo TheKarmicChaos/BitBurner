@@ -107,7 +107,7 @@ export async function main(ns) {
 				//solution = Hamming2(data);
 				break;
 			case "Proper 2-Coloring of a Graph":
-				//solution = Proper2ColoringGraph(data);
+				solution = colorGraph2(data);
 				break;
 			case "Compression I: RLE Compression":
 				//solution = Compression1(data);
@@ -661,84 +661,61 @@ export async function main(ns) {
 
 		// PROPER 2-COLORING OF A GRAPH
 
-		/*function Proper2ColoringGraph(data) {
-			const data = _data as [number, [number, number][]];
-	
-			//Sanitize player input
-			const sanitizedPlayerAns: string = removeBracketsFromArrayString(ans);
-	
-			//Case where the player believes there is no solution.
-			//Attempt to construct one to check if this is correct.
-			if (sanitizedPlayerAns === "") {
-				//Helper function to get neighbourhood of a vertex
-				function neighbourhood(vertex: number): number[] {
-					const adjLeft = data[1].filter(([a]) => a == vertex).map(([, b]) => b);
-					const adjRight = data[1].filter(([, b]) => b == vertex).map(([a]) => a);
-					return adjLeft.concat(adjRight);
-				}
-	
-				//Verify that there is no solution by attempting to create a proper 2-coloring.
-				const coloring: (number | undefined)[] = Array(data[0]).fill(undefined);
-				while (coloring.some((val) => val === undefined)) {
-					//Color a vertex in the graph
-					const initialVertex: number = coloring.findIndex((val) => val === undefined);
-					coloring[initialVertex] = 0;
-					const frontier: number[] = [initialVertex];
-	
-					//Propogate the coloring throughout the component containing v greedily
-					while (frontier.length > 0) {
-						const v: number = frontier.pop() || 0;
-						const neighbors: number[] = neighbourhood(v);
-	
-						//For each vertex u adjacent to v
-						for (const id in neighbors) {
-							const u: number = neighbors[id];
-	
-							//Set the color of u to the opposite of v's color if it is new,
-							//then add u to the frontier to continue the algorithm.
-							if (coloring[u] === undefined) {
-								if (coloring[v] === 0) coloring[u] = 1;
-								else coloring[u] = 0;
-	
-								frontier.push(u);
-							}
-	
-							//Assert u,v do not have the same color
-							else if (coloring[u] === coloring[v]) {
-								//If u,v do have the same color, no proper 2-coloring exists, meaning
-								//the player was correct to say there is no proper 2-coloring of the graph.
-								return true;
-							}
+		/** Find a proper 2-coloring for a given graph. If none exist, returns an empty array
+		* @param {(number | number[][])[]} data The data for the graph to color.
+		* - Should be an array with the 2 elements: # of nodes in graph & array of edges in graph.
+		*/
+		function colorGraph2(data) {
+			// Declare variables & Constants
+			const numNodes = data[0];	// numNodes = number of nodes in graph
+			const edges = data[1];		// edges = array of all edges in graph
+			let colors = Array(numNodes).fill(undefined); // Make an array of size numNodes, where each element is undefined.
+
+			// While there are still undefined elements in colors, color in the next island.
+			while (colors.some((val) => val === undefined)) {
+
+				// Get the index of the first "undefined" element in colors. (aka The lowest-numbered uncolored node)
+				const firstNode = colors.findIndex((val) => val === undefined);
+				colors[firstNode] = 0;		// Color this node w/ color 0.
+				const Queue = [firstNode];		// Make a queue
+				
+				// Loop until the queue is empty
+				while (Queue.length > 0) {
+					const v = Queue.pop() || 0;	// Get the next node (v) in the queue
+					const neighbors = getNeighbors(v, edges);
+
+					// Iterate over each node u adjacent to v.
+					for (const u of neighbors) {
+
+						// If node u is new (uncolored)...
+						if (colors[u] === undefined) {
+							// Set u's color to the opposite of v's color.
+							if (colors[v] === 0) colors[u] = 1;
+							else colors[u] = 0;
+							// Add u to the queue
+							Queue.push(u);
+						}
+						// If node u is already colored, assert that it is not the same color as v.
+						else if (colors[u] === colors[v]) {
+							// If u,v do have the same color, no proper 2-coloring exists, so return an empty array.
+							return [];
 						}
 					}
 				}
-	
-				//If this code is reached, there exists a proper 2-coloring of the input
-				//graph, and thus the player was incorrect in submitting no answer.
-				return false;
 			}
-	
-			//Solution provided case
-			const sanitizedPlayerAnsArr: string[] = sanitizedPlayerAns.split(",");
-			const coloring: number[] = sanitizedPlayerAnsArr.map((val) => parseInt(val));
-			if (coloring.length == data[0]) {
-				const edges = data[1];
-				const validColors = [0, 1];
-				//Check that the provided solution is a proper 2-coloring
-				return edges.every(([a, b]) => {
-					const aColor = coloring[a];
-					const bColor = coloring[b];
-					return (
-						validColors.includes(aColor) && //Enforce the first endpoint is color 0 or 1
-						validColors.includes(bColor) && //Enforce the second endpoint is color 0 or 1
-						aColor != bColor //Enforce the endpoints are different colors
-					);
-				});
-			}
-	
-			//Return false if the coloring is the wrong size
-			else return false;
-		}*/
+			// If this code is reached, we found a valid 2-coloring of the graph, so return it
+			return colors;
+		}
+
+		/** Get the neighbors for a given node
+		* @param {number} node The numerical ID of the node to get the neighbors of.
+		* @param {number[][]} edges The array of all edges in the graph.
+		*/
+		function getNeighbors(node, edges){
+			const adjLeft = edges.filter(([a]) => a == node).map(([, b]) => b); // get all edges where node is the 1st element
+			const adjRight = edges.filter(([, b]) => b == node).map(([a]) => a); // get all edges where node is the 2nd element
+			return adjLeft.concat(adjRight);
+		}
 
 		// COMPRESSION I: RLE COMPRESSION
 
