@@ -35,7 +35,6 @@ export async function main(ns) {
 	var bitNode = player["bitNodeN"];
 	let sourceFiles = await nstb.RunCom(ns, 'ns.singularity.getOwnedSourceFiles()');
 	let bndata = await nstb.RunCom(ns, 'ns.getBitNodeMultipliers()');
-	let runType = "redpill";
 	let PREV_VARS = nstb.getGlobals(ns);
 	let GLOBAL_VARS;
 
@@ -89,7 +88,7 @@ export async function main(ns) {
 	let globalDict = {
 		bnMults: {},
 		hackMult: 0,
-		sourceFiles: [],
+		sourceFiles: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0},
 		bitNode: 0,
 		loop: 0,
 		runType: "",
@@ -104,11 +103,17 @@ export async function main(ns) {
 	}
 	
 	globalDict.bnMults = bndata;
-	globalDict.sourceFiles = sourceFiles;
 	globalDict.bitNode = bitNode;
 
 	// Preserve loop counter if we didn't just switch bitnodes.
 	if (PREV_VARS && (PREV_VARS["bitNode"] === undefined || PREV_VARS["bitNode"] == bitNode)) globalDict.loop = PREV_VARS["loop"];
+
+	// Parse sourceFiles into a dictionary
+	for (let obj of sourceFiles) {
+		let n = Number(obj["n"])
+		let lvl = Number(obj["lvl"])
+		globalDict.sourceFiles[n] = lvl
+	}
 
 	// Set hackMult
 	if (bndata.HackingLevelMultiplier > 0
@@ -143,10 +148,11 @@ export async function main(ns) {
 	}
 
 	// Figure out which runType works best for this BN
+	let runType = "redpill";
 	if (allowBB && (bitNode == 6 || bitNode == 7 || bndata.DaedalusAugsRequirement > 60)) {
 		runType = "bladeburner";
 		globalDict.bb.want = true;
-	} else { runType = "redpill"; }
+	}
 	globalDict.runType = runType;
 
 	// Write global vars to file.
@@ -349,17 +355,12 @@ export async function main(ns) {
 	};
 
 	async function UpdHud() {
-		const sfArray = GLOBAL_VARS["sourceFiles"]
-		let sfObj = sfArray.find((obj) => obj["n"] == bitNode)
-		let sfLv;
-		if (sfObj) sfLv = sfObj["lvl"];
-		else sfLv = 0;
 		let installedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()')
 		let updArgs = []
 		updArgs.push("!!upd", "ram", "RAM", `${tb.StandardNotation(ns.getServerMaxRam('home'), 2)} GB`);
 		updArgs.push("!!upd", "aug", "Augs", `${installedAugs.length} / ${bndata.DaedalusAugsRequirement}`)
 		updArgs.push("!!upd", "bitnode", `BitNode-${bitNode}:`, bName.substring(0, 14))
-		updArgs.push("!!upd", "loop-sf", `Loop ${GLOBAL_VARS["loop"]}`, `SF ${sfLv}`)
+		updArgs.push("!!upd", "loop-sf", `Loop ${GLOBAL_VARS["loop"]}`, `SF ${GLOBAL_VARS["sourceFiles"][bitNode]}`)
 		// Tooltips
 		updArgs.push("!!tooltip", "bitnode", makeToolTipFromDict(GLOBAL_VARS["bnMults"]));
 		updArgs.push("!!tooltip", "income", makeToolTipFromDict(GLOBAL_VARS["income"], `%key%: $%val%`, true));
