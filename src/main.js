@@ -99,6 +99,7 @@ export async function main(ns) {
 		gang: { want: false, has: false, territory: 0, respect: 0},
 		corp: { want: false, has: false, hasProd: false, hasLab: false, hasTAII: false, research: 0, funds: 0, profit: 0, products: [] },
 		bb: { want: false, has: false, hasSimu: false, city: "Sector-12", doneOps: ["failsafe"], isComplete: false },
+		stanek: { want: false, has: false, height: 0, width: 0, numfragments: 0 },
 		backdoors: ["home"]
 	}
 	
@@ -137,6 +138,16 @@ export async function main(ns) {
 	if (allowGang && bndata.GangSoftcap * bndata.GangUniqueAugs > 0) {
 		if (inGang) globalDict.gang.has = true;
 		else globalDict.gang.want = true;
+	}
+
+	// Set Stanek "want", "has", "height", & "width"
+	let baseSize = 9 + bndata.StaneksGiftExtraSize + globalDict.sourceFiles["13"]
+	globalDict.stanek.height = Math.max(3, Math.min(Math.floor(baseSize / 2 + 0.6), 25));
+	globalDict.stanek.width = Math.max(2, Math.min(Math.floor(baseSize / 2 + 1), 25));
+	if (allowStanek && globalDict.stanek.height >= 5) {
+		let installedAugs = await nstb.RunCom(ns, 'ns.singularity.getOwnedAugmentations()')
+		if (installedAugs.includes("Stanek's Gift")) globalDict.stanek.has = true;
+		else globalDict.stanek.want = true;
 	}
 
 	// Set "want4s"
