@@ -63,17 +63,17 @@ export async function main(ns) {
 		// - all thugs >=lv 4
 		const check2c = (!hasGang || tb.GetMinOfArray(thugmults) >= 8)
 		// - >= 20% territory.
-		const check2d = (!hasGang || territory >= 0.20)
-		// - >= 2b resp.
-		const check2e = (!hasGang || rep >= 2e9)
+		const check2d = (!hasGang || territory >= 0.30)
+		// - >= 10m resp.
+		const check2e = (!hasGang || rep >= 2e6)
 		const checksum2 = (check2a && check2b && check2c && check2d && check2e)
 		let checkmark2 = "[ ]"; if (checksum2) checkmark2 = "[✓]";
 		ns.print(`\n${checkmark2} Check #2: Gang`)
 		if (!check2a) ns.print("• Need a gang");
 		if (!check2b) ns.print("• Need 12 thugs");
 		if (!check2c) ns.print("• Need all thugs >= lv 4");
-		if (!check2d) ns.print("• Need 20% territory");
-		if (!check2e) ns.print("• Need 2b resp");
+		if (!check2d) ns.print("• Need 30% territory");
+		if (!check2e) ns.print("• Need 2m resp");
 
 
 
@@ -86,22 +86,16 @@ export async function main(ns) {
 		const isResrNotNeeded = (corpdata["hasTAII"] && corpdata["research"] >= 10e6)
 		// - Has corp (if we want one)
 		const check3a = (!corpdata["want"])
-		// - Has Lab
-		const check3b = (!hasCorp || bndata.HacknetNodeMoney <= 0.1 || corpdata["hasLab"])
-		// - Has >= 3 products
-		const check3c = (!hasCorp || corpdata["products"].length >= 3)
 		// - buying funds w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
-		const check3d = (!hasCorp || bndata.HacknetNodeMoney <= 0.1 || isFundNotNeeded || fundCost > Math.max(2000 * bndata.HacknetNodeMoney, hashdata["income"] * 2))
+		const check3b = (!hasCorp || bndata.HacknetNodeMoney <= 0.1 || isFundNotNeeded || fundCost > Math.max(2000 * bndata.HacknetNodeMoney, hashdata["income"] * 2))
 		// - buying research w/ hashes is either not needed OR (cost >= 5k*BNmult AND cost > 1min of hash production)
-		const check3e = (!hasCorp || bndata.HacknetNodeMoney <= 0.1 || isResrNotNeeded || resrCost > Math.max(3000 * bndata.HacknetNodeMoney, hashdata["income"] * 5))
-		const checksum3 = (check3a && check3b && check3c && check3d && check3e)
+		const check3c = (!hasCorp || bndata.HacknetNodeMoney <= 0.1 || isResrNotNeeded || resrCost > Math.max(3000 * bndata.HacknetNodeMoney, hashdata["income"] * 5))
+		const checksum3 = (check3a && check3b && check3c)
 		let checkmark3 = "[ ]"; if (checksum3) checkmark3 = "[✓]";
 		ns.print(`\n${checkmark3} Check #3: Corporation`)
 		if (!check3a) ns.print("• Need Corp");
-		if (!check3b) ns.print("• Need Lab");
-		if (!check3c) ns.print("• Need 3 products");
-		if (!check3d) ns.print("• B>CorpFund# too affordable!");
-		if (!check3e) ns.print("• B>CorpResr# too affordable!");
+		if (!check3b) ns.print("• B>CorpFund# too affordable!");
+		if (!check3c) ns.print("• B>CorpResr# too affordable!");
 
 
 
@@ -134,43 +128,31 @@ export async function main(ns) {
 
 
 
-		// Check 5: Grafting
-		// -------------------------
-		let desiredEntr = 6;
-		if (bndata.HacknetNodeMoney >= 0.5) desiredEntr = 8;
-		// - Has desired entropy amount (i.e grafted the required/important augs) OR has "nickofolas Congruity Implant"
-		const check5a = (player.entropy >= desiredEntr || ownedAugs.includes("nickofolas Congruity Implant"))
-		// - Is NOT currently grafting nicofolas!
-		const check5b = (ns.singularity.getCurrentWork() == null || ns.singularity.getCurrentWork().type != "GRAFTING" || ns.singularity.getCurrentWork().augmentation != "nickofolas Congruity Implant")
-		const checksum5 = (check5a && check5b)
-		let checkmark5 = "[ ]"; if (checksum5) checkmark5 = "[✓]";
-		ns.print(`\n${checkmark5} Check #5: Grafting`)
-		if (!check5a) ns.print(`• Need ${desiredEntr} entropy OR nickofolas`);
-		if (!check5b) ns.print(`• Need to be NOT grafting nickofolas`);
-
-
-
-		// Check 6: Progression
+		// Check 5: Progression
 		// -------------------------
 		// 3 minutes have passed since the run started
-		const check6a = (ns.getTimeSinceLastAug() > 180000)
+		const check5a = (ns.getTimeSinceLastAug() > 180000)
 		// Player has $20b
-		const check6b = (player.money > 20e9)
+		const check5b = (player.money > 5e9)
 		// - Has 4sData TIX API (if wanted)
-		const check6c = (!GLOBAL_VARS["want4s"])
+		const check5c = (!GLOBAL_VARS["want4s"])
 		// - Has decent homeRAM size
-		const check6d = (ns.getServerMaxRam("home") >= 4096)
-		const checksum6 = (check6a && check6b && check6c && check6d)
-		let checkmark6 = "[ ]"; if (checksum6) checkmark6 = "[✓]";
-		ns.print(`\n${checkmark6} Check #6: Progression`)
-		if (!check6a) ns.print(`• Need to wait 3m after install.`);
-		if (!check6b) ns.print(`• Need $20b`);
-		if (!check6c) ns.print("• Need 4s TIX API");
-		if (!check6d) ns.print("• Need homeRAM >= 4TB");
+		const check5d = (ns.getServerMaxRam("home") >= 4096)
+		// - Is not currently grafting OR has "nickofolas Congruity Implant"
+		const check5e = (ownedAugs.includes("nickofolas Congruity Implant") || ns.singularity.getCurrentWork() == null || ns.singularity.getCurrentWork().type != "GRAFTING")
+		const checksum5 = (check5a && check5b && check5c && check5d && check5e)
+		let checkmark5 = "[ ]"; if (checksum5) checkmark5 = "[✓]";
+		ns.print(`\n${checkmark5} Check #5: Progression`)
+		if (!check5a) ns.print(`• Need to wait 3m after install.`);
+		if (!check5b) ns.print(`• Need $5b`);
+		if (!check5c) ns.print("• Need 4s TIX API");
+		if (!check5d) ns.print("• Need homeRAM >= 4TB");
+		if (!check5e) ns.print(`• Need nickofolas or to NOT be grafting`);
 
 
 
-		if (check1 && checksum2 && checksum3 && checksum4 && checksum5 && checksum6) { await MainFunc(); }
+
+		if (check1 && checksum2 && checksum3 && checksum4 && checksum5) { await MainFunc(); }
 		await ns.sleep(1000); loopnum++;
 
 
@@ -184,8 +166,8 @@ export async function main(ns) {
 			// PREPARATION STEPS
 			// ==============================
 
-			// 2a. Check all avaialable factions for data. Parse data into an array of augment objects including name, price, repreq, etc.
-			// 2b. Then, trim the array so it excludes ones we already own or don't have prereqs for.
+			// Check all avaialable factions for data. Parse data into an array of augment objects including name, price, repreq, etc.
+			// Then, trim the array so it excludes ones we already own or don't have prereqs for.
 			const favorReq = await nstb.RunCom(ns, 'ns.getFavorToDonate()')
 			let auglist = []; 
 			let augData = [];
