@@ -25,7 +25,7 @@ export async function main(ns) {
 	const allowBB = true;		// Can automate bladeburner (requires SF 7x1)
 	const allowHacknet = true;	// Can automate hacknet (requires SF 9x1)
 	const allowSleeves = true;	// Can automate sleeves (requires SF 10x1)
-	const allowGraft = true;	// Can automate grafting (requires SF 10x1)
+	const allowGraft = false;	// Can automate grafting (requires SF 10x1)
 	const allowStanek = false;	// Can automate stanek (requires SF 13x1)
 
 
@@ -86,6 +86,7 @@ export async function main(ns) {
 	// ============================================================
 
 	let globalDict = {
+		isBatching: false,
 		bnMults: {},
 		hackMult: 0,
 		sourceFiles: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0},

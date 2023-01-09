@@ -28,7 +28,7 @@ export async function main(ns) {
 	let pServs = await nstb.RunCom(ns, 'ns.getPurchasedServers()');
 	let debugStr = ""; // Details the next purchase of this function
 	
-	while (didBuy) { await BuyNext(); }
+	while (didBuy && !GLOBAL_VARS["isBatching"]) { await BuyNext(); }
 	if (boughtServs > 0) { ns.toast(`Bought ${boughtServs} servs, up to ${bestRAMpur} GB`, 'success', 4000); }
 
 	// Determines what we want to purchase as our next server and attempts to buy it,
