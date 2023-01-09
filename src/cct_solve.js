@@ -472,42 +472,43 @@ export async function main(ns) {
 		// SHORTEST PATH IN A GRID
 
 		/*function ShortestGridPath(data) {
-			const data = _data as number[][];
 			const width = data[0].length;
 			const height = data.length;
-			const dstY = height - 1;
+			const dstY = height - 1; // destination coords
 			const dstX = width - 1;
 	
-			const distance: [number][] = new Array(height);
+			const distance = new Array(height);
 			//const prev: [[number, number] | undefined][] = new Array(height);
-			const queue = new MinHeap < [number, number] > ();
+			const queue = new MinHeap ();
 	
+			// Prepare an array of infinities for djikstra's algorithm.
 			for (let y = 0; y < height; y++) {
-				distance[y] = new Array(width).fill(Infinity) as [number];
-				//prev[y] = new Array(width).fill(undefined) as [undefined];
+				distance[y] = new Array(width).fill(Infinity);
 			}
 	
-			function validPosition(y: number, x: number): boolean {
+			function validPosition(y, x) {
 				return y >= 0 && y < height && x >= 0 && x < width && data[y][x] == 0;
 			}
 	
 			// List in-bounds and passable neighbors
-			function* neighbors(y: number, x: number): Generator<[number, number]> {
+			function* neighbors(y, x) {
 				if (validPosition(y - 1, x)) yield [y - 1, x]; // Up
 				if (validPosition(y + 1, x)) yield [y + 1, x]; // Down
 				if (validPosition(y, x - 1)) yield [y, x - 1]; // Left
 				if (validPosition(y, x + 1)) yield [y, x + 1]; // Right
 			}
-	
+
 			// Prepare starting point
 			distance[0][0] = 0;
 			queue.push([0, 0], 0);
 	
 			// Take next-nearest position and expand potential paths from there
 			while (queue.size > 0) {
-				const [y, x] = queue.pop() as [number, number];
+				const [y, x] = queue.pop();
+				// for each neighbor
 				for (const [yN, xN] of neighbors(y, x)) {
 					const d = distance[y][x] + 1;
+					// if the new distance for this node is lower than the previous best, update the its best
 					if (d < distance[yN][xN]) {
 						if (distance[yN][xN] == Infinity)
 							// Not reached previously
@@ -521,7 +522,7 @@ export async function main(ns) {
 			}
 	
 			// No path at all?
-			if (distance[dstY][dstX] == Infinity) return ans == "";
+			if (distance[dstY][dstX] == Infinity) return "";
 	
 			// There is a solution, require that the answer path is as short as the shortest
 			// path we found
