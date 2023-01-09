@@ -54,7 +54,10 @@ itself. For text rows, you will need to add and update tooltips manually.
 
 Step 4: Making Buttons -------------------
 
-	WIP
+	WIP :: Buttons add some extra interactivity to your hud, and can be configured to run any function you so choose when clicked,
+making them super useful for running code you frequently need. However, due to the use of addEventListeners and the way that the hud updates,
+you cannot change button functions without resetting your hud (via "kill all running scripts"), and buttons will only execute their function
+the next time that hud.js runs. Please keep this in mind while customizing your hud with buttons.
 
 -------------------------------------------
 
